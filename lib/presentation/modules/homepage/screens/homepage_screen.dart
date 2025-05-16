@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:job_match/presentation/general_widgets/job_match_widget.dart';
 import 'package:job_match/presentation/modules/homepage/widgets/partner_icon.dart';
 import 'package:job_match/presentation/modules/homepage/widgets/stat_item.dart';
+import 'package:job_match/presentation/modules/login/screens/login_screen.dart';
 
 class HomepageScreen extends StatelessWidget {
   const HomepageScreen({ super.key });
@@ -29,7 +30,7 @@ class HomepageScreen extends StatelessWidget {
           SingleChildScrollView(
             child: Column(
               children: [
-                _buildTopBar(),
+                _buildTopBar(context),
                 const SizedBox(height: 40),
                 _buildHeroSection(context),
                 const SizedBox(height: 60),
@@ -45,7 +46,7 @@ class HomepageScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTopBar() {
+  Widget _buildTopBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
       child: Row(
@@ -64,7 +65,7 @@ class HomepageScreen extends StatelessWidget {
           Row(
             children: [
               TextButton(
-                onPressed: () {},
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => LoginScreen())),
                 child: const Text('Login', style: TextStyle(color: Colors.white))
               ),
               ElevatedButton(
