@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:job_match/presentation/modules/homepage/screens/homepage_screen.dart';
 
 void main() {
   runApp(const JobMatchApp());
@@ -9,12 +10,17 @@ class JobMatchApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.deepOrange,
+            foregroundColor: Colors.white
+          )
+        )
       ),
+      home: const HomepageScreen()
     );
   }
 }
