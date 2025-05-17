@@ -40,8 +40,13 @@ class JobDetailHeader extends StatelessWidget {
       context: context,
       builder: (context) {
         return Dialog(
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 40,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 480),
             child: Padding(
@@ -72,34 +77,53 @@ class JobDetailHeader extends StatelessWidget {
                       const SizedBox(height: 24),
                       const Text(
                         'Selecciona tu CV',
-                        style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 15,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
                         decoration: const InputDecoration(
                           border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
                         ),
                         value: selectedResume,
                         hint: const Text('Selecciona...'),
-                        items: [
-                          'CV_Julio_Nima.pdf',
-                          'CV_2024.pdf',
-                          'CV_Experiencia.pdf',
-                        ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-                        onChanged: (value) => setState(() => selectedResume = value),
+                        items:
+                            [
+                                  'CV_Julio_Nima.pdf',
+                                  'CV_2024.pdf',
+                                  'CV_Experiencia.pdf',
+                                ]
+                                .map(
+                                  (e) => DropdownMenuItem(
+                                    value: e,
+                                    child: Text(e),
+                                  ),
+                                )
+                                .toList(),
+                        onChanged:
+                            (value) => setState(() => selectedResume = value),
                       ),
                       const SizedBox(height: 24),
                       const Text(
                         'Carta de Presentación',
-                        style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 15,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: coverLetterController,
                         maxLines: 5,
                         decoration: const InputDecoration(
-                          hintText: 'Escribe aquí tu biografía. Hazle saber a los empleadores quién eres...',
+                          hintText:
+                              'Escribe aquí tu biografía. Hazle saber a los empleadores quién eres...',
                           border: OutlineInputBorder(),
                           contentPadding: EdgeInsets.all(12),
                         ),
@@ -108,12 +132,30 @@ class JobDetailHeader extends StatelessWidget {
                       // Simple formatting bar (icons only, no real formatting)
                       Row(
                         children: [
-                          IconButton(icon: const Icon(Icons.format_bold), onPressed: () {}),
-                          IconButton(icon: const Icon(Icons.format_italic), onPressed: () {}),
-                          IconButton(icon: const Icon(Icons.format_underline), onPressed: () {}),
-                          IconButton(icon: const Icon(Icons.link), onPressed: () {}),
-                          IconButton(icon: const Icon(Icons.format_list_bulleted), onPressed: () {}),
-                          IconButton(icon: const Icon(Icons.format_list_numbered), onPressed: () {}),
+                          IconButton(
+                            icon: const Icon(Icons.format_bold),
+                            onPressed: () {},
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.format_italic),
+                            onPressed: () {},
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.format_underline),
+                            onPressed: () {},
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.link),
+                            onPressed: () {},
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.format_list_bulleted),
+                            onPressed: () {},
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.format_list_numbered),
+                            onPressed: () {},
+                          ),
                         ],
                       ),
                       const SizedBox(height: 24),
@@ -130,7 +172,9 @@ class JobDetailHeader extends StatelessWidget {
                               // Aquí iría la lógica real de aplicar
                               Navigator.of(context).pop();
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('¡Aplicación enviada!')),
+                                const SnackBar(
+                                  content: Text('¡Aplicación enviada!'),
+                                ),
                               );
                             },
                             icon: const Icon(Icons.arrow_forward),
@@ -138,8 +182,14 @@ class JobDetailHeader extends StatelessWidget {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.blue.shade700,
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                              textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 16,
+                              ),
+                              textStyle: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
                         ],
@@ -181,10 +231,7 @@ class JobDetailHeader extends StatelessWidget {
           SizedBox(
             height: bannerHeight,
             width: double.infinity,
-            child: Image.asset(
-              'assets/images/work.png', // <-- Cambiado a imagen de trabajo
-              fit: BoxFit.cover,
-            ),
+            child: Image.asset('assets/images/work.png', fit: BoxFit.cover),
           ),
           // Card principal
           Transform.translate(
@@ -218,13 +265,19 @@ class JobDetailHeader extends StatelessWidget {
                       children: [
                         CircleAvatar(
                           radius: kRadius20 + kRadius12,
-                          backgroundImage: job.logoAsset.startsWith('assets/')
-                              ? AssetImage(job.logoAsset)
-                              : null,
+                          backgroundImage:
+                              job.logoAsset.startsWith('assets/')
+                                  ? AssetImage(job.logoAsset)
+                                  : null,
                           backgroundColor: job.logoBackgroundColor,
-                          child: job.logoAsset.startsWith('assets/')
-                              ? null
-                              : Icon(Icons.business, color: Colors.white, size: 32),
+                          child:
+                              job.logoAsset.startsWith('assets/')
+                                  ? null
+                                  : Icon(
+                                    Icons.business,
+                                    color: Colors.white,
+                                    size: 32,
+                                  ),
                         ),
                         const SizedBox(width: kSpacing20),
                         Expanded(
@@ -328,7 +381,9 @@ class JobDetailHeader extends StatelessWidget {
                                   ),
                                   textStyle: const TextStyle(fontSize: 15.0),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(kRadius8),
+                                    borderRadius: BorderRadius.circular(
+                                      kRadius8,
+                                    ),
                                   ),
                                 ),
                               ),

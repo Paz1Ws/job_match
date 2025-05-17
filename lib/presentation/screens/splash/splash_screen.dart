@@ -29,7 +29,7 @@ class _SplashScreenState extends State<SplashScreen> {
     }
 
     // Wait for a bit
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(seconds: 1));
 
     // Fade out before navigating
     if (mounted) {
@@ -41,7 +41,9 @@ class _SplashScreenState extends State<SplashScreen> {
 
     // Navigate to Login screen with fade
     if (mounted) {
-      Navigator.of(context).pushReplacement(FadeRoute(page: const HomepageScreen()));
+      Navigator.of(
+        context,
+      ).pushReplacement(FadeRoute(page: const HomepageScreen()));
     }
   }
 

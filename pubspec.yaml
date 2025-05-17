@@ -27,5 +27,4 @@ flutter:
     - assets/images/users/
     - assets/images/jobmatch_background.jpg
     - assets/images/profile_background.jpeg
-
     - assets/animations/cv_lottie.json

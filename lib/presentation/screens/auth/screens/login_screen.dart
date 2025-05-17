@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:job_match/presentation/screens/auth/widgets/info_card.dart';
 import 'package:job_match/presentation/screens/auth/widgets/left_cut_trapezoid_clipper.dart';
 import 'package:job_match/presentation/screens/profiles/user_profile.dart';
@@ -100,9 +101,8 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: Row(
           children: [
-            // Formulario (izquierda)
             Expanded(
-              flex: isWide ? 1 : 2,
+              flex: 1,
               child: SingleChildScrollView(
                 padding: EdgeInsets.symmetric(
                   horizontal: isWide ? 64.0 : 24.0,
@@ -143,18 +143,33 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       ClipPath(
                         clipper: LeftCutTrapezoidClipper(),
-                        child: Image.asset(
-                          'assets/images/login_background.png',
-                          width: double.infinity,
-                          height: double.infinity,
-                          fit: BoxFit.cover,
+                        child: ShaderMask(
+                          shaderCallback:
+                              (bounds) => LinearGradient(
+                                begin: Alignment.bottomCenter,
+                                end: Alignment.topCenter,
+                                colors: [
+                                  Colors.orange.withValues(alpha: 0.65),
+                                  Colors.orange.withValues(alpha: 0.45),
+
+                                  Colors.orange.withValues(alpha: 0.1),
+                                ],
+                                stops: const [0.3, 0.7, 1.0],
+                              ).createShader(bounds),
+                          blendMode: BlendMode.srcOver,
+                          child: SvgPicture.asset(
+                            'assets/images/login_background.svg',
+
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.all(40.0),
+                        padding: const EdgeInsets.all(60.0),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
                               'Más de 175,324 candidatos\nesperando buenas empresas.',
@@ -166,37 +181,47 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             const SizedBox(height: 120),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                InfoCard(
-                                  title: '175,324',
-                                  subtitle: 'Empleos Activos',
-                                  icon: const Icon(
-                                    Icons.work_outline,
-                                    color: Colors.white,
-                                    size: 42,
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                spacing: 20,
+                                children: [
+                                  InfoCard(
+                                    title: '175,324',
+                                    subtitle: 'Empleos Activos',
+                                    icon: const Icon(
+                                      Icons.work_outline,
+                                      color: Colors.white,
+                                      size: 42,
+                                    ),
                                   ),
-                                ),
-                                InfoCard(
-                                  title: '97,354',
-                                  subtitle: 'Empresas',
-                                  icon: const Icon(
-                                    Icons.location_city,
-                                    color: Colors.white,
-                                    size: 42,
+                                  Spacer(),
+
+                                  InfoCard(
+                                    title: '97,354',
+                                    subtitle: 'Empresas',
+                                    icon: const Icon(
+                                      Icons.location_city,
+                                      color: Colors.white,
+                                      size: 42,
+                                    ),
                                   ),
-                                ),
-                                InfoCard(
-                                  title: '7,532',
-                                  subtitle: 'Nuevos Empleos',
-                                  icon: const Icon(
-                                    Icons.work_outline,
-                                    color: Colors.white,
-                                    size: 42,
+                                  const SizedBox(width: 12),
+                                  Spacer(),
+
+                                  InfoCard(
+                                    title: '7,532',
+                                    subtitle: 'Nuevos Empleos',
+                                    icon: const Icon(
+                                      Icons.work_outline,
+                                      color: Colors.white,
+                                      size: 42,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ],
                         ),
