@@ -5,12 +5,14 @@ class InfoCard extends StatelessWidget {
     super.key,
     required this.title,
     required this.subtitle,
-    required this.icon
+    required this.icon,
+    this.textSize,
   });
 
   final String title;
   final String subtitle;
   final Icon icon;
+  final int? textSize;
 
   @override
   Widget build(BuildContext context) {
@@ -21,22 +23,27 @@ class InfoCard extends StatelessWidget {
           padding: EdgeInsets.all(16.0),
           decoration: BoxDecoration(
             color: Colors.white.withAlpha(50),
-            borderRadius: BorderRadius.circular(12.0)
+            borderRadius: BorderRadius.circular(12.0),
           ),
           child: icon,
-          // child: Icon(icon, )
         ),
 
-        const SizedBox(height: 16.0),
+        const SizedBox(height: 24.0),
 
         Text(
           title,
           style: const TextStyle(
-            color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
         ),
         Text(
           subtitle,
-          style: const TextStyle(color: Colors.white70, fontSize: 13),
+          style: TextStyle(
+            color: Colors.white70,
+            fontSize: (textSize ?? 16).toDouble(),
+          ),
         ),
       ],
     );

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:job_match/config/util/animations.dart';
-import 'package:job_match/presentation/screens/auth/login.dart';
+import 'package:job_match/presentation/screens/homepage/screens/homepage_screen.dart';
 import 'package:job_match/presentation/screens/profiles/user_profile.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -31,11 +31,17 @@ class _SplashScreenState extends State<SplashScreen> {
     // Wait for a bit
     await Future.delayed(const Duration(seconds: 2));
 
-    // Navigate to Login screen
+    // Fade out before navigating
     if (mounted) {
-      Navigator.of(
-        context,
-      ).pushReplacement(FadeRoute(page: const UserProfile()));
+      setState(() {
+        _opacity = 0.0;
+      });
+    }
+    await Future.delayed(const Duration(milliseconds: 600));
+
+    // Navigate to Login screen with fade
+    if (mounted) {
+      Navigator.of(context).pushReplacement(FadeRoute(page: const HomepageScreen()));
     }
   }
 
@@ -46,7 +52,7 @@ class _SplashScreenState extends State<SplashScreen> {
       body: Center(
         child: AnimatedOpacity(
           opacity: _opacity,
-          duration: const Duration(seconds: 2),
+          duration: const Duration(milliseconds: 600),
           child: Image.asset(
             'assets/images/job_match.jpg',
             width: 200, // Adjust size as needed

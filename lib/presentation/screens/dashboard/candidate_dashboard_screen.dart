@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'dart:math'; // Para generar números aleatorios
 import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
-import 'package:job_match/models/applied_job_model.dart';
+import 'package:job_match/core/domain/models/applied_job_model.dart';
+import 'package:job_match/presentation/screens/jobs/job_detail_screen.dart';
+import 'package:job_match/core/domain/models/job_model.dart';
 
 class CandidateDashboardScreen extends StatefulWidget {
   const CandidateDashboardScreen({super.key});
@@ -91,7 +93,6 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
     ];
   }
 
-
   Widget _buildMenuItem({
     required IconData icon,
     required String title,
@@ -176,10 +177,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
           const SizedBox(height: kSpacing8),
           Text(
             'Aquí están tus actividades diarias y alertas de trabajo.', // Traducción
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
           ),
           const SizedBox(height: kSpacing20 + kSpacing4), // kSpacing24
           Row(
@@ -223,7 +221,10 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
           const SizedBox(height: kSpacing30 + kSpacing4),
           _buildJobsTableSection(
             title: 'Aplicaciones Recientes',
-            jobs: _allAppliedJobs.take(4).toList(), // Mostrar solo algunos en overview
+            jobs:
+                _allAppliedJobs
+                    .take(4)
+                    .toList(), // Mostrar solo algunos en overview
             showViewAllButton: true,
           ),
         ],
@@ -269,7 +270,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
             spreadRadius: 1,
             blurRadius: 5,
             offset: const Offset(0, 2),
-          )
+          ),
         ],
       ),
       child: Row(
@@ -289,10 +290,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
               const SizedBox(height: kSpacing4),
               Text(
                 label,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade700,
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
               ),
             ],
           ),
@@ -307,7 +305,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
                   spreadRadius: 1,
                   blurRadius: 3,
                   offset: const Offset(0, 1),
-                )
+                ),
               ],
             ),
             child: Icon(icon, color: iconColor, size: kIconSize24),
@@ -329,7 +327,11 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
       ),
       child: Row(
         children: [
-          Icon(Icons.school_outlined, color: Colors.blue.shade700, size: kIconSize48 - kSpacing4), // kIconSize44
+          Icon(
+            Icons.school_outlined,
+            color: Colors.blue.shade700,
+            size: kIconSize48 - kSpacing4,
+          ), // kIconSize44
           const SizedBox(width: kSpacing12 + kSpacing4), // kSpacing16
           Expanded(
             child: Column(
@@ -346,14 +348,36 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
                 const SizedBox(height: kSpacing4),
                 RichText(
                   text: TextSpan(
-                    style: TextStyle(fontSize: 14, color: Colors.grey.shade700, height: 1.4),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade700,
+                      height: 1.4,
+                    ),
                     children: <TextSpan>[
                       const TextSpan(text: 'Mejora tu habilidad en '),
-                      TextSpan(text: habilidad, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue.shade700)),
+                      TextSpan(
+                        text: habilidad,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue.shade700,
+                        ),
+                      ),
                       const TextSpan(text: ', que aumenta tu match en un '),
-                      const TextSpan(text: '18% ', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+                      const TextSpan(
+                        text: '18% ',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
+                        ),
+                      ),
                       const TextSpan(text: 'en empleos de '),
-                      TextSpan(text: empleo, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue.shade700)),
+                      TextSpan(
+                        text: empleo,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue.shade700,
+                        ),
+                      ),
                       const TextSpan(text: '.'),
                     ],
                   ),
@@ -367,8 +391,13 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue.shade700,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: kPadding16, vertical: kPadding12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(kRadius8)),
+              padding: const EdgeInsets.symmetric(
+                horizontal: kPadding16,
+                vertical: kPadding12,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(kRadius8),
+              ),
             ),
             child: const Text('Ver Curso'),
           ),
@@ -393,7 +422,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
             spreadRadius: 1,
             blurRadius: 10,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -413,8 +442,9 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
               if (showViewAllButton)
                 TextButton(
                   onPressed: () {
-                     setState(() {
-                      _selectedMenu = 'Applied Jobs'; // Navegar a la sección de trabajos aplicados
+                    setState(() {
+                      _selectedMenu =
+                          'Applied Jobs'; // Navegar a la sección de trabajos aplicados
                     });
                   },
                   child: Row(
@@ -422,10 +452,17 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
                     children: [
                       Text(
                         'Ver todo',
-                        style: TextStyle(color: Colors.blue.shade700, fontSize: 14),
+                        style: TextStyle(
+                          color: Colors.blue.shade700,
+                          fontSize: 14,
+                        ),
                       ),
                       const SizedBox(width: kSpacing4),
-                      Icon(Icons.arrow_forward, color: Colors.blue.shade700, size: kIconSize18),
+                      Icon(
+                        Icons.arrow_forward,
+                        color: Colors.blue.shade700,
+                        size: kIconSize18,
+                      ),
                     ],
                   ),
                 ),
@@ -433,7 +470,11 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
           ),
           const SizedBox(height: kSpacing12),
           _buildAppliedJobsTableHeader(),
-          const Divider(height: kSpacing20, thickness: 1, color: Color(0xFFEDF1F7)),
+          const Divider(
+            height: kSpacing20,
+            thickness: 1,
+            color: Color(0xFFEDF1F7),
+          ),
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -441,7 +482,12 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
             itemBuilder: (context, index) {
               return _buildAppliedJobRow(jobs[index]);
             },
-            separatorBuilder: (context, index) => const Divider(height: 1, thickness: 1, color: Color(0xFFEDF1F7)),
+            separatorBuilder:
+                (context, index) => const Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: Color(0xFFEDF1F7),
+                ),
           ),
         ],
       ),
@@ -456,34 +502,89 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
     );
     // El padding horizontal se maneja en _buildAppliedJobRow para alineación
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: kPadding8, horizontal: kPadding12),
+      padding: const EdgeInsets.symmetric(
+        vertical: kPadding8,
+        horizontal: kPadding12,
+      ),
       child: Row(
         children: [
           Expanded(flex: 3, child: Text('PUESTOS', style: headerStyle)),
-          Expanded(flex: 2, child: Text('FECHA DE APLICACIÓN', style: headerStyle, textAlign: TextAlign.start)),
-          Expanded(flex: 1, child: Text('ESTADO', style: headerStyle, textAlign: TextAlign.start)),
-          Expanded(flex: 2, child: Text('ACCIÓN', style: headerStyle, textAlign: TextAlign.center)),
+          Expanded(
+            flex: 2,
+            child: Text(
+              'FECHA DE APLICACIÓN',
+              style: headerStyle,
+              textAlign: TextAlign.start,
+            ),
+          ),
+          Expanded(
+            flex: 1,
+            child: Text(
+              'ESTADO',
+              style: headerStyle,
+              textAlign: TextAlign.start,
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              'ACCIÓN',
+              style: headerStyle,
+              textAlign: TextAlign.center,
+            ),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildAppliedJobRow(AppliedJob job) {
-    TextStyle jobTitleStyle = const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF222B45));
-    TextStyle detailStyle = TextStyle(fontSize: 12, color: Colors.grey.shade600);
+    TextStyle jobTitleStyle = const TextStyle(
+      fontSize: 15,
+      fontWeight: FontWeight.w600,
+      color: Color(0xFF222B45),
+    );
+    TextStyle detailStyle = TextStyle(
+      fontSize: 12,
+      color: Colors.grey.shade600,
+    );
     TextStyle dateStyle = TextStyle(fontSize: 13, color: Colors.grey.shade700);
-    TextStyle statusStyle = const TextStyle(fontSize: 13, color: Colors.green, fontWeight: FontWeight.w500);
-    TextStyle matchStyle = TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: job.matchPercentage > 80 ? Colors.green.shade700 : (job.matchPercentage > 70 ? Colors.orange.shade700 : Colors.red.shade700));
-
+    TextStyle statusStyle = const TextStyle(
+      fontSize: 13,
+      color: Colors.green,
+      fontWeight: FontWeight.w500,
+    );
+    TextStyle matchStyle = TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.bold,
+      color:
+          job.matchPercentage > 80
+              ? Colors.green.shade700
+              : (job.matchPercentage > 70
+                  ? Colors.orange.shade700
+                  : Colors.red.shade700),
+    );
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: kPadding12 + kSpacing4, horizontal: kPadding12), // Aumentar padding vertical
+      padding: const EdgeInsets.symmetric(
+        vertical: kPadding12 + kSpacing4,
+        horizontal: kPadding12,
+      ), // Aumentar padding vertical
       decoration: BoxDecoration(
-        border: job.isHighlighted ? Border(
-          left: BorderSide(color: Colors.blue.shade600, width: kStroke3),
-          // bottom: BorderSide(color: Colors.grey.shade200, width: 0.5) // Optional bottom border for all rows
-        ) : null, // No special border for non-highlighted
-        color: job.isHighlighted ? Colors.blue.withOpacity(0.03) : Colors.transparent,
+        border:
+            job.isHighlighted
+                ? Border(
+                  left: BorderSide(
+                    color: Colors.blue.shade600,
+                    width: kStroke3,
+                  ),
+                  // bottom: BorderSide(color: Colors.grey.shade200, width: 0.5) // Optional bottom border for all rows
+                )
+                : null, // No special border for non-highlighted
+        color:
+            job.isHighlighted
+                ? Colors.blue.withOpacity(0.03)
+                : Colors.transparent,
       ),
       child: Row(
         children: [
@@ -515,26 +616,50 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
                     children: [
                       Row(
                         children: [
-                          Flexible(child: Text(job.jobTitle, style: jobTitleStyle, overflow: TextOverflow.ellipsis)),
+                          Flexible(
+                            child: Text(
+                              job.jobTitle,
+                              style: jobTitleStyle,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                           const SizedBox(width: kSpacing8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: kPadding8, vertical: kSpacing4/2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: kPadding8,
+                              vertical: kSpacing4 / 2,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.grey.shade200,
                               borderRadius: BorderRadius.circular(kRadius4),
                             ),
-                            child: Text(job.jobType, style: TextStyle(fontSize: 10, color: Colors.grey.shade700, fontWeight: FontWeight.w500)),
+                            child: Text(
+                              job.jobType,
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.grey.shade700,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: kSpacing4),
                       Row(
                         children: [
-                          Icon(Icons.location_on, size: kIconSize14, color: Colors.grey.shade500),
+                          Icon(
+                            Icons.location_on,
+                            size: kIconSize14,
+                            color: Colors.grey.shade500,
+                          ),
                           const SizedBox(width: kSpacing4),
                           Text(job.location, style: detailStyle),
                           const SizedBox(width: kSpacing8),
-                          Icon(Icons.attach_money, size: kIconSize14, color: Colors.grey.shade500),
+                          Icon(
+                            Icons.attach_money,
+                            size: kIconSize14,
+                            color: Colors.grey.shade500,
+                          ),
                           const SizedBox(width: kSpacing4),
                           Text(job.salary, style: detailStyle),
                           // Quitado el match percentage de aquí para evitar redundancia
@@ -547,14 +672,25 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
             ),
           ),
           // Date Applied
-          Expanded(flex: 2, child: Text(job.dateApplied, style: dateStyle, textAlign: TextAlign.start)),
+          Expanded(
+            flex: 2,
+            child: Text(
+              job.dateApplied,
+              style: dateStyle,
+              textAlign: TextAlign.start,
+            ),
+          ),
           // Status
           Expanded(
             flex: 1,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                Icon(Icons.check_circle_outline, color: Colors.green, size: kIconSize16),
+                Icon(
+                  Icons.check_circle_outline,
+                  color: Colors.green,
+                  size: kIconSize16,
+                ),
                 const SizedBox(width: kSpacing4),
                 Text(job.status, style: statusStyle),
               ],
@@ -565,14 +701,49 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
             flex: 2,
             child: Center(
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  // Navegar a JobDetailScreen pasando un Job simulado
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => JobDetailScreen(
+                        job: Job(
+                          logoAsset: job.companyLogoAsset,
+                          companyName: job.companyName,
+                          location: job.location,
+                          title: job.jobTitle,
+                          type: job.jobType,
+                          salary: job.salary,
+                          isFeatured: job.isHighlighted,
+                          logoBackgroundColor: job.logoBackgroundColor,
+                          matchPercentage: job.matchPercentage,
+                        ),
+                      ),
+                    ),
+                  );
+                },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: job.isHighlighted ? Colors.blue.shade700 : const Color(0xFFF0F4FF), // Color de fondo como en la imagen
-                  foregroundColor: job.isHighlighted ? Colors.white : Colors.blue.shade700, // Color de texto
-                  elevation: 0, // Sin elevación para un look más plano
-                  padding: const EdgeInsets.symmetric(horizontal: kPadding16, vertical: kPadding12), // Ajustar padding
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(kRadius8)),
-                  textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)
+                  backgroundColor:
+                      job.isHighlighted
+                          ? Colors.blue.shade700
+                          : const Color(
+                            0xFFF0F4FF,
+                          ),
+                  foregroundColor:
+                      job.isHighlighted
+                          ? Colors.white
+                          : Colors.blue.shade700,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: kPadding16,
+                    vertical: kPadding12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(kRadius8),
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 child: const Text('Ver Detalles'),
               ),
@@ -588,36 +759,53 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         IconButton(
-          icon: Icon(Icons.arrow_back, color: _currentPage > 1 ? Colors.blue.shade700 : Colors.grey),
-          onPressed: _currentPage > 1 ? () => setState(() => _currentPage--) : null,
+          icon: Icon(
+            Icons.arrow_back,
+            color: _currentPage > 1 ? Colors.blue.shade700 : Colors.grey,
+          ),
+          onPressed:
+              _currentPage > 1 ? () => setState(() => _currentPage--) : null,
         ),
         for (int i = 1; i <= _totalPages; i++)
           InkWell(
             onTap: () => setState(() => _currentPage = i),
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: kSpacing4),
-              padding: const EdgeInsets.symmetric(horizontal: kPadding12, vertical: kPadding8),
+              padding: const EdgeInsets.symmetric(
+                horizontal: kPadding12,
+                vertical: kPadding8,
+              ),
               decoration: BoxDecoration(
-                color: _currentPage == i ? Colors.blue.shade700 : Colors.grey.shade200,
+                color:
+                    _currentPage == i
+                        ? Colors.blue.shade700
+                        : Colors.grey.shade200,
                 borderRadius: BorderRadius.circular(kRadius4),
               ),
               child: Text(
                 i.toString().padLeft(2, '0'),
                 style: TextStyle(
-                  color: _currentPage == i ? Colors.white : Colors.grey.shade700,
+                  color:
+                      _currentPage == i ? Colors.white : Colors.grey.shade700,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
           ),
         IconButton(
-          icon: Icon(Icons.arrow_forward, color: _currentPage < _totalPages ? Colors.blue.shade700 : Colors.grey),
-          onPressed: _currentPage < _totalPages ? () => setState(() => _currentPage++) : null,
+          icon: Icon(
+            Icons.arrow_forward,
+            color:
+                _currentPage < _totalPages ? Colors.blue.shade700 : Colors.grey,
+          ),
+          onPressed:
+              _currentPage < _totalPages
+                  ? () => setState(() => _currentPage++)
+                  : null,
         ),
       ],
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -665,20 +853,25 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
                         icon: Icons.work_outline,
                         title: 'Trabajos Aplicados', // Traducción
                         isSelected: _selectedMenu == 'Applied Jobs',
-                        onTap: () => setState(() => _selectedMenu = 'Applied Jobs'),
+                        onTap:
+                            () =>
+                                setState(() => _selectedMenu = 'Applied Jobs'),
                       ),
                       _buildMenuItem(
                         icon: Icons.bookmark_border,
                         title: 'Trabajos Favoritos', // Traducción
                         isSelected: _selectedMenu == 'Favorite Jobs',
-                        onTap: () => setState(() => _selectedMenu = 'Favorite Jobs'),
+                        onTap:
+                            () =>
+                                setState(() => _selectedMenu = 'Favorite Jobs'),
                       ),
                       _buildMenuItem(
                         icon: Icons.notifications_none_outlined,
                         title: 'Alerta de Trabajo', // Traducción
                         badgeCount: '09',
                         isSelected: _selectedMenu == 'Job Alert',
-                        onTap: () => setState(() => _selectedMenu = 'Job Alert'),
+                        onTap:
+                            () => setState(() => _selectedMenu = 'Job Alert'),
                       ),
                       _buildMenuItem(
                         icon: Icons.settings_outlined,
@@ -693,19 +886,20 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
                 Expanded(
                   flex: 3,
                   child: Container(
-                    child: _selectedMenu == 'Overview'
-                        ? _buildOverviewContent()
-                        : _selectedMenu == 'Applied Jobs'
+                    child:
+                        _selectedMenu == 'Overview'
+                            ? _buildOverviewContent()
+                            : _selectedMenu == 'Applied Jobs'
                             ? _buildAppliedJobsContent()
                             : Center(
-                                child: Text(
-                                  'Contenido para $_selectedMenu',
-                                  style: const TextStyle(
-                                    fontSize: 24,
-                                    color: Colors.black54,
-                                  ),
+                              child: Text(
+                                'Contenido para $_selectedMenu',
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  color: Colors.black54,
                                 ),
                               ),
+                            ),
                   ),
                 ),
               ],

@@ -20,5 +20,7 @@ class FadeRoute extends PageRouteBuilder {
             opacity: animation,
             child: child,
           ),
+          transitionDuration: const Duration(milliseconds: 600),
+          reverseTransitionDuration: const Duration(milliseconds: 600),
         );
 }

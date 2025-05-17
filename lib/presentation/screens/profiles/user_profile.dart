@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:math'; // Para generar números aleatorios
-import 'package:job_match/models/job_model.dart';
+import 'package:job_match/core/domain/models/job_model.dart';
 import 'package:job_match/presentation/screens/dashboard/candidate_dashboard_screen.dart';
+import 'package:job_match/presentation/screens/dashboard/employer_dashboard_screen.dart';
 import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
 import 'package:job_match/presentation/widgets/auth/profile_display_elements.dart';
 import 'package:job_match/presentation/widgets/auth/related_job_card.dart';
@@ -256,7 +257,7 @@ class ProfileDetailHeader extends StatelessWidget {
                                     MaterialPageRoute(
                                       builder:
                                           (context) =>
-                                              const CandidateDashboardScreen(),
+                                              const EmployerDashboardScreen(),
                                     ),
                                   );
                                 },

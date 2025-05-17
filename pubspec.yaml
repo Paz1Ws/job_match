@@ -10,6 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_svg: ^2.1.0
+  lottie: ^3.3.1
 
 dev_dependencies:
   flutter_test:
@@ -22,9 +23,9 @@ flutter:
     - assets/images/
     - assets/custom_icons/
     - assets/images/job_match.jpg
+    - assets/images/work.png
+    - assets/images/users/
+    - assets/images/jobmatch_background.jpg
     - assets/images/profile_background.jpeg
-    # - assets/images/up_logo.png # Ejemplo si añades nuevos logos
-    # - assets/images/dribbble_logo.png # Ejemplo
-    # - assets/images/apple_logo.png # Ejemplo
-    # - assets/images/microsoft_logo.png # Ejemplo
 
+    - assets/animations/cv_lottie.json

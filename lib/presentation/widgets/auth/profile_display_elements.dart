@@ -35,15 +35,21 @@ class InfoChip extends StatelessWidget {
 class IconTextRow extends StatelessWidget {
   final IconData icon;
   final String text;
+  final Color? iconColor;
 
-  const IconTextRow({super.key, required this.icon, required this.text});
+  const IconTextRow({
+    super.key,
+    required this.icon,
+    required this.text,
+    this.iconColor,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        Icon(icon, color: Colors.blue, size: kIconSize18),
+        Icon(icon, color: iconColor ?? Colors.blue, size: kIconSize18),
         const SizedBox(width: kSpacing8),
         Text(
           text,
