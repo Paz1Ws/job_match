@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:job_match/presentation/modules/homepage/screens/homepage_screen.dart';
+
 
 void main() {
   runApp(const JobMatchApp());
@@ -10,6 +10,7 @@ class JobMatchApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -20,7 +21,10 @@ class JobMatchApp extends StatelessWidget {
           )
         )
       ),
-      home: const HomepageScreen()
+   
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: CandidateDashboardScreen(),
     );
   }
 }
