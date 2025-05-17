@@ -17,3 +17,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/images/job_match.jpg
+    - assets/images/profile_background.jpeg
+    # - assets/images/up_logo.png # Ejemplo si añades nuevos logos
+    # - assets/images/dribbble_logo.png # Ejemplo
+    # - assets/images/apple_logo.png # Ejemplo
+    # - assets/images/microsoft_logo.png # Ejemplo
