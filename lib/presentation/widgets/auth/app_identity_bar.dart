@@ -5,12 +5,24 @@ import 'package:job_match/presentation/screens/profiles/user_profile.dart';
 
 class AppIdentityBar extends StatelessWidget {
   final double height;
-  const AppIdentityBar({super.key, required this.height});
+  /// Between 0 and 4
+  final int indexSelected;
+  const AppIdentityBar({super.key, required this.height, required this.indexSelected});
 
-  Widget _buildNavButton(String text, {required VoidCallback onPressed}) {
-    return TextButton(
-      onPressed: onPressed,
-      child: Text(text, style: TextStyle(color: Colors.grey[700])),
+  Widget _buildNavButton(String text, {required VoidCallback onPressed, bool selected = false}) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        TextButton(
+          onPressed: onPressed,
+          child: Text(text, style: TextStyle(color: !selected ? Colors.grey[700] : Colors.blueAccent)),
+        ),
+        Container(
+          height: 2,
+          width: 40,
+          color: selected ? Colors.blueAccent : Colors.transparent,
+        )
+      ],
     );
   }
 
@@ -55,12 +67,12 @@ class AppIdentityBar extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: <Widget>[
-                  _buildNavButton('Home', onPressed: () {}),
-                  _buildNavButton('Buscar Empleo', onPressed: () {}),
-                  _buildNavButton('Buscar Empleadores', onPressed: () {}),
-                  _buildNavButton('Panel', onPressed: () {}),
-                  _buildNavButton('Alertas de Empleo', onPressed: () {}),
-                  _buildNavButton('Soporte', onPressed: () {}),
+                  _buildNavButton('Home', onPressed: () {}, selected: indexSelected == 0),
+                  _buildNavButton('Buscar Empleo', onPressed: () {}, selected: indexSelected == 1),
+                  _buildNavButton('Buscar Empleadores', onPressed: () {}, selected: indexSelected == 2),
+                  _buildNavButton('Panel', onPressed: () => context.go('/employee-dashboard'), selected: indexSelected == 3),
+                  _buildNavButton('Alertas de Empleo', onPressed: () {}, selected: indexSelected == 4),
+                  _buildNavButton('Soporte', onPressed: () {}, selected: indexSelected == 5),
                 ],
               ),
             ),

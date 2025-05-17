@@ -19,7 +19,7 @@ class UserProfile extends StatelessWidget {
     return Scaffold(
       body: Column(
         children: <Widget>[
-          AppIdentityBar(height: appIdentityBarHeight),
+          AppIdentityBar(height: appIdentityBarHeight, indexSelected: -1,),
           Expanded(child: SingleChildScrollView(child: ProfileDetailHeader())),
         ],
       ),

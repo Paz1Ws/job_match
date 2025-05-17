@@ -810,7 +810,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
       backgroundColor: const Color(0xFFF7F8FA),
       body: Column(
         children: <Widget>[
-          AppIdentityBar(height: appIdentityBarHeight),
+          AppIdentityBar(height: appIdentityBarHeight, indexSelected: 3),
           Expanded(
             child: Row(
               children: <Widget>[

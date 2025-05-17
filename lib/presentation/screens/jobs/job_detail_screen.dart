@@ -16,7 +16,7 @@ class JobDetailScreen extends StatelessWidget {
     return Scaffold(
       body: Column(
         children: [
-          AppIdentityBar(height: appIdentityBarHeight),
+          AppIdentityBar(height: appIdentityBarHeight, indexSelected: 1),
           Expanded(
             child: SingleChildScrollView(child: JobDetailHeader(job: job)),
           ),
