@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:job_match/core/domain/models/posted_job_model.dart';
@@ -691,12 +692,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                   icon: Icon(Icons.more_vert, color: Colors.grey.shade600),
                   onSelected: (value) {
                     if (value == 'view_detail') {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder:
-                              (context) => JobDetailScreen(job: job.jobDetails),
-                        ),
-                      );
+                      context.go('/job-details', extra: job.jobDetails);
                     }
                     // Handle other actions
                   },

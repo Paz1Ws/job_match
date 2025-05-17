@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:math'; // Para generar números aleatorios
 import 'package:job_match/core/domain/models/job_model.dart';
 import 'package:job_match/presentation/screens/dashboard/candidate_dashboard_screen.dart';
@@ -253,13 +254,7 @@ class ProfileDetailHeader extends StatelessWidget {
                                   style: TextStyle(fontSize: 15),
                                 ),
                                 onPressed: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder:
-                                          (context) =>
-                                              const EmployerDashboardScreen(),
-                                    ),
-                                  );
+                                  context.go('/employee-dashboard');
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFF3366FF),

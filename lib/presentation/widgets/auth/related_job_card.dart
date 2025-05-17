@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:job_match/core/domain/models/job_model.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:job_match/presentation/screens/jobs/job_detail_screen.dart';
@@ -13,11 +14,7 @@ class RelatedJobCard extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         // Navegar a JobDetailScreen al hacer tap en la tarjeta
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => JobDetailScreen(job: job),
-          ),
-        );
+        context.go( '/job-details', extra: job);
       },
       child: Container(
         padding: const EdgeInsets.all(kPadding20),

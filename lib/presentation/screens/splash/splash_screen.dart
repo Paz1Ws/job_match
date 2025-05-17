@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:job_match/config/config.dart';
 import 'dart:async';
 import 'package:job_match/config/util/animations.dart';
 import 'package:job_match/presentation/screens/homepage/screens/homepage_screen.dart';
@@ -13,7 +15,6 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   double _opacity = 0.0;
-
   @override
   void initState() {
     super.initState();
@@ -21,6 +22,14 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void _startAnimation() async {
+    //* Skip when you've seen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if(Config().isSplashShowed && mounted) {
+        context.go('/homepage');
+      }
+      Config().isSplashShowed = true;
+    });
+
     await Future.delayed(const Duration(milliseconds: 500));
     if (mounted) {
       setState(() {
@@ -41,7 +50,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
     // Navigate to Login screen with fade
     if (mounted) {
-      Navigator.of(context).pushReplacement(FadeRoute(page: const HomepageScreen()));
+      context.go('/homepage');
     }
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:job_match/presentation/screens/profiles/user_profile.dart';
 
@@ -84,9 +85,7 @@ class AppIdentityBar extends StatelessWidget {
           const SizedBox(width: kSpacing12 + kSpacing4), // kSpacing16
           InkWell(
             onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const UserProfile()),
-              );
+              context.go('/user-profile');
             },
             child: const CircleAvatar(
               backgroundColor: Colors.blueGrey,

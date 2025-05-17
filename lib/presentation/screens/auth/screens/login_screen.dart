@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:job_match/presentation/screens/auth/widgets/info_card.dart';
 import 'package:job_match/presentation/screens/auth/widgets/left_cut_trapezoid_clipper.dart';
 import 'package:job_match/presentation/screens/profiles/user_profile.dart';
@@ -345,17 +346,9 @@ class _LoginScreenState extends State<LoginScreen> {
               } else {
                 // Navigate based on user type for demo
                 if (_selectedUserType == 'Candidato') {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const UserProfile(),
-                    ),
-                  );
+                  context.go('/user-profile');
                 } else if (_selectedUserType == 'Empresa') {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const CompanyProfileScreen(),
-                    ),
-                  );
+                  context.go('/company-profile');
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -390,14 +383,10 @@ class _LoginScreenState extends State<LoginScreen> {
       builder: (_) => const _CVLottieDialog(),
     );
     // After animation, navigate
-    if (userType == 'Candidato') {
-      Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (context) => const UserProfile()));
-    } else if (userType == 'Empresa') {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (context) => const CompanyProfileScreen()),
-      );
+    if (userType == 'Candidato' && mounted) {
+      context.go('/user-profile');
+    } else if (userType == 'Empresa' && mounted) {
+      context.go('/company-profile');      
     }
   }
 

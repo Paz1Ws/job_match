@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:job_match/presentation/widgets/job_match_widget.dart';
 import 'package:job_match/presentation/screens/homepage/widgets/partner_icon.dart';
 import 'package:job_match/presentation/screens/homepage/widgets/stat_item.dart';
@@ -64,12 +65,7 @@ class HomepageScreen extends StatelessWidget {
             Row(
               children: [
                 TextButton(
-                  onPressed:
-                      () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
-                        ),
-                      ),
+                  onPressed: () => context.go('/login'),
                   child: const Text(
                     'Iniciar Sesión',
                     style: TextStyle(color: Colors.white),
@@ -85,12 +81,7 @@ class HomepageScreen extends StatelessWidget {
                       vertical: 0,
                     ),
                   ),
-                  onPressed:
-                      () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
-                        ),
-                      ),
+                  onPressed: () => context.go('/login'),
                   child: const Text('Registrarse'),
                 ),
               ],

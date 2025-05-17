@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:math'; // Para generar números aleatorios
 import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
@@ -703,23 +704,17 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
               child: ElevatedButton(
                 onPressed: () {
                   // Navegar a JobDetailScreen pasando un Job simulado
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => JobDetailScreen(
-                        job: Job(
-                          logoAsset: job.companyLogoAsset,
-                          companyName: job.companyName,
-                          location: job.location,
-                          title: job.jobTitle,
-                          type: job.jobType,
-                          salary: job.salary,
-                          isFeatured: job.isHighlighted,
-                          logoBackgroundColor: job.logoBackgroundColor,
-                          matchPercentage: job.matchPercentage,
-                        ),
-                      ),
-                    ),
-                  );
+                  context.go('/job-details', extra: Job(
+                    logoAsset: job.companyLogoAsset,
+                    companyName: job.companyName,
+                    location: job.location,
+                    title: job.jobTitle,
+                    type: job.jobType,
+                    salary: job.salary,
+                    isFeatured: job.isHighlighted,
+                    logoBackgroundColor: job.logoBackgroundColor,
+                    matchPercentage: job.matchPercentage,
+                  ));
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor:
