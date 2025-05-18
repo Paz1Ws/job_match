@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:job_match/core/data/auth_request.dart';
+import 'package:job_match/core/data/supabase_http_requests.dart';
 import 'package:job_match/presentation/screens/auth/widgets/info_card.dart';
 import 'package:job_match/presentation/screens/auth/widgets/left_cut_trapezoid_clipper.dart';
 import 'package:job_match/presentation/screens/profiles/user_profile.dart';
 import 'package:job_match/presentation/screens/profiles/company_profile_screen.dart'; // For company profile navigation
 import 'package:lottie/lottie.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _termsAgreed = false;
   bool _passwordVisible = false;
 
@@ -360,7 +364,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 borderRadius: BorderRadius.all(Radius.circular(5)),
               ),
             ),
-            onPressed: () {
+            onPressed: () async {
               if (!_termsAgreed) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -370,6 +374,21 @@ class _LoginScreenState extends State<LoginScreen> {
               } else {
                 // Navigate based on user type for demo
                 if (_selectedUserType == 'Candidato') {
+                  final loginAnswer = await login(
+                    _emailController.text,
+                    _passwordController.text,
+                  );
+                  final session = Supabase.instance.client.auth.currentSession;
+                  if (session == null) {
+                    // No hay sesión activa; redirige al inicio de sesión
+                    print('Usuario no autenticado.');
+                  } else {
+                    // Sesión activa; puedes proceder con operaciones autenticadas
+                    print('Usuario autenticado.');
+                  }
+
+                  final appl = await ref.watch(companiesProvider.future);
+                  print(appl);
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (context) => const UserProfile(),
