@@ -697,7 +697,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                   onPressed: () {
                     // Logic for viewing applications
                     // For now, let's switch to the Job Applications view
-                    setState(() => _selectedMenu = 'Job Applications');
+                    setState(() => _selectedMenu = 'Solicitante de empleo');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
@@ -798,7 +798,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Job Applications',
+                'Solicitantes de empleo',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -817,7 +817,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                       size: kIconSize20,
                     ),
                     label: Text(
-                      'Filter',
+                      'Filtro',
                       style: TextStyle(color: Colors.grey.shade700),
                     ),
                     style: OutlinedButton.styleFrom(
@@ -847,7 +847,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                                   onChanged: (v) {},
                                   activeColor: Colors.blue.shade700,
                                 ),
-                                const Text('Newest'),
+                                const Text('Reciente'),
                               ],
                             ),
                           ),
@@ -861,7 +861,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                                   onChanged: (v) {},
                                   activeColor: Colors.blue.shade700,
                                 ),
-                                const Text('Oldest'),
+                                const Text('Antiguo'),
                               ],
                             ),
                           ),
@@ -884,7 +884,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                             size: kIconSize20,
                           ),
                           const SizedBox(width: kSpacing4),
-                          Text('Sort', style: TextStyle(color: Colors.white)),
+                          Text('Ordenar', style: TextStyle(color: Colors.white)),
                         ],
                       ),
                     ),
@@ -894,8 +894,8 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                     onPressed: () {
                       /* Create new column logic */
                     },
-                    icon: const Icon(Icons.add, size: kIconSize20),
-                    label: const Text('Create New'),
+                    icon: const Icon(Icons.add, size: kIconSize20, color: Colors.white),
+                    label: const Text('Crear nuevo'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue.shade700,
                       foregroundColor: Colors.white,
@@ -919,7 +919,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
               children: [
                 Expanded(
                   child: _buildApplicantColumnWidget(
-                    title: 'All Application',
+                    title: 'Todos los solicitantes de empleo',
                     count: _allApplicants.length,
                     applicants: _allApplicants,
                     onColumnOptionsSelected: (value) {
@@ -930,7 +930,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                 const SizedBox(width: kSpacing20),
                 Expanded(
                   child: _buildApplicantColumnWidget(
-                    title: 'Shortlisted',
+                    title: 'Lista corta',
                     count: _shortlistedApplicants.length,
                     applicants: _shortlistedApplicants,
                     onColumnOptionsSelected: (value) {

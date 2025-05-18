@@ -11,6 +11,8 @@ import 'package:job_match/presentation/screens/jobs/job_detail_screen.dart';
 import 'package:job_match/presentation/screens/profiles/company_profile_screen.dart';
 import 'package:job_match/presentation/screens/profiles/user_profile.dart';
 import 'package:job_match/presentation/screens/splash/splash_screen.dart';
+import 'package:job_match/presentation/widgets/dashboard/employer/applicant_card.dart';
+import 'package:job_match/presentation/widgets/dashboard/employer/applicant_profile_popup.dart';
 
 import '../../core/domain/models/job_model.dart';
 
@@ -68,11 +70,26 @@ class MainRouter {
       GoRoute(
         path: '/employee-dashboard',
         pageBuilder: (context, state) => TransitionPageWithFade(state: state, child: EmployerDashboardScreen()),
+        routes: [
+          GoRoute(
+            path: 'view',
+            pageBuilder: (context, state) {
+              final applicant = state as Applicant;
+              return TransitionPageWithFade(
+                state: state,
+                child: ApplicantProfilePopup(applicant: applicant),
+                barrierDismissible: true,
+                opaque: false,
+                barrierColor: Colors.black87
+              );
+            },
+          )
+        ]        
       ),
       GoRoute(
         path: '/candidate-dashboard',
         pageBuilder: (context, state) => TransitionPageWithFade(state: state, child: CandidateDashboardScreen()),
-      ),      
+      ),
     ],
   );
 }
