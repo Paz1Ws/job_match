@@ -38,7 +38,7 @@ class _SplashScreenState extends State<SplashScreen> {
     }
 
     // Wait for a bit
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(seconds: 1));
 
     // Fade out before navigating
     if (mounted) {
@@ -49,9 +49,7 @@ class _SplashScreenState extends State<SplashScreen> {
     await Future.delayed(const Duration(milliseconds: 600));
 
     // Navigate to Login screen with fade
-    if (mounted) {
-      context.go('/homepage');
-    }
+    if (mounted) context.go('/homepage');
   }
 
   @override

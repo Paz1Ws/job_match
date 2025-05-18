@@ -1,0 +1,3 @@
+const SUPABASE_URL = 'https://zdvibikloongkbsesogk.supabase.co';
+const SUPABASE_ANON_KEY =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpkdmliaWtsb29uZ2tic2Vzb2drIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDczMTQ0OTQsImV4cCI6MjA2Mjg5MDQ5NH0.lVsFsqsli-srMgIXCSIQ_p7s0A4RGJnojX6N7cJm5uw';

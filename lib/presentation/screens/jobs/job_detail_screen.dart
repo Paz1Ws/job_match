@@ -55,10 +55,7 @@ class JobDetailHeader extends StatelessWidget {
           SizedBox(
             height: bannerHeight,
             width: double.infinity,
-            child: Image.asset(
-              'assets/images/work.png', // <-- Cambiado a imagen de trabajo
-              fit: BoxFit.cover,
-            ),
+            child: Image.asset('assets/images/work.png', fit: BoxFit.cover),
           ),
           // Card principal
           Transform.translate(
@@ -92,13 +89,19 @@ class JobDetailHeader extends StatelessWidget {
                       children: [
                         CircleAvatar(
                           radius: kRadius20 + kRadius12,
-                          backgroundImage: job.logoAsset.startsWith('assets/')
-                              ? AssetImage(job.logoAsset)
-                              : null,
+                          backgroundImage:
+                              job.logoAsset.startsWith('assets/')
+                                  ? AssetImage(job.logoAsset)
+                                  : null,
                           backgroundColor: job.logoBackgroundColor,
-                          child: job.logoAsset.startsWith('assets/')
-                              ? null
-                              : Icon(Icons.business, color: Colors.white, size: 32),
+                          child:
+                              job.logoAsset.startsWith('assets/')
+                                  ? null
+                                  : Icon(
+                                    Icons.business,
+                                    color: Colors.white,
+                                    size: 32,
+                                  ),
                         ),
                         const SizedBox(width: kSpacing20),
                         Expanded(
@@ -203,7 +206,9 @@ class JobDetailHeader extends StatelessWidget {
                                   ),
                                   textStyle: const TextStyle(fontSize: 15.0),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(kRadius8),
+                                    borderRadius: BorderRadius.circular(
+                                      kRadius8,
+                                    ),
                                   ),
                                 ),
                               ),

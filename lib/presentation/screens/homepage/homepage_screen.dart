@@ -4,8 +4,62 @@ import 'package:job_match/presentation/widgets/homepage/home_page_top_bar.dart';
 import 'package:job_match/presentation/widgets/homepage/partner_icon.dart';
 import 'package:job_match/presentation/widgets/homepage/stat_item.dart';
 
-class HomepageScreen extends StatelessWidget {
+class HomepageScreen extends StatefulWidget {
   const HomepageScreen({super.key});
+
+  @override
+  State<HomepageScreen> createState() => _HomepageScreenState();
+}
+
+class _HomepageScreenState extends State<HomepageScreen> {
+  String? _selectedJob;
+  String? _selectedLocation;
+  String? _selectedCategory;
+
+  final List<String> _jobOptions = [
+    'Diseñador UI/UX',
+    'Desarrollador Flutter',
+    'Analista de Datos',
+    'JobMatch',
+    'MercadoTech',
+    'Desarrollador Backend',
+    'Project Manager',
+    'QA Tester',
+    'Community Manager',
+    'Soporte Técnico',
+    'Ingeniero DevOps',
+    'Especialista SEO',
+  ];
+
+  final List<String> _locationOptions = [
+    'Lima',
+    'Arequipa',
+    'Cusco',
+    'Remoto',
+    'Trujillo',
+    'Piura',
+    'Tacna',
+    'Huancayo',
+    'Chiclayo',
+    'Iquitos',
+    'Puno',
+    'Callao',
+  ];
+
+  final List<String> _categoryOptions = [
+    'Tecnología',
+    'Diseño',
+    'Marketing',
+    'Administración',
+    'Soporte Técnico',
+    'Ventas',
+    'Recursos Humanos',
+    'Finanzas',
+    'Legal',
+    'Logística',
+    'Educación',
+    'Salud',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -19,22 +73,18 @@ class HomepageScreen extends StatelessWidget {
               fit: BoxFit.cover,
             ),
           ),
-
           Positioned.fill(
             child: Container(color: Colors.black.withOpacity(0.6)),
           ),
-
-          //* content
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               HomePageTopBar(),
               Spacer(),
               Center(child: _buildHeroSection(context)),
-              SizedBox(height: 40),
+              SizedBox(height: 60),
               _buildStatsSection(),
               Spacer(),
-
               _buildPartnersSection(),
               SizedBox(height: 40),
             ],
@@ -50,23 +100,19 @@ class HomepageScreen extends StatelessWidget {
         const Text(
           '¡Encuentra tu trabajo soñado hoy!',
           style: TextStyle(
-            fontSize: 50,
+            fontSize: 60,
             color: Colors.white,
             fontWeight: FontWeight.bold,
           ),
           textAlign: TextAlign.center,
         ),
-
         const SizedBox(height: 12),
-
         const Text(
           'Conectando talento con oportunidad: tu puerta al éxito profesional',
-          style: TextStyle(fontSize: 14, color: Colors.white70),
+          style: TextStyle(fontSize: 18, color: Colors.white70),
           textAlign: TextAlign.center,
         ),
-
-        const SizedBox(height: 30),
-
+        const SizedBox(height: 40),
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -75,10 +121,27 @@ class HomepageScreen extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildDropdownField('Puesto o Empresa', showDivider: true),
-              _buildDropdownField('Selecciona Ubicación', showDivider: true),
-              _buildDropdownField('Selecciona Categoría', showDivider: false),
-
+              _buildDropdownField(
+                'Puesto o Empresa',
+                showDivider: true,
+                items: _jobOptions,
+                value: _selectedJob,
+                onChanged: (val) => setState(() => _selectedJob = val),
+              ),
+              _buildDropdownField(
+                'Selecciona Ubicación',
+                showDivider: true,
+                items: _locationOptions,
+                value: _selectedLocation,
+                onChanged: (val) => setState(() => _selectedLocation = val),
+              ),
+              _buildDropdownField(
+                'Selecciona Categoría',
+                showDivider: false,
+                items: _categoryOptions,
+                value: _selectedCategory,
+                onChanged: (val) => setState(() => _selectedCategory = val),
+              ),
               _buildFindJobButton(context),
             ],
           ),
@@ -110,7 +173,13 @@ class HomepageScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDropdownField(String hint, {bool showDivider = false}) {
+  Widget _buildDropdownField(
+    String hint, {
+    bool showDivider = false,
+    List<String> items = const [],
+    String? value,
+    ValueChanged<String?>? onChanged,
+  }) {
     return Container(
       width: 200,
       decoration: BoxDecoration(
@@ -125,9 +194,21 @@ class HomepageScreen extends StatelessWidget {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           isExpanded: true,
-          hint: Text(hint, style: const TextStyle(color: Colors.black54)),
-          items: const [],
-          onChanged: (value) {},
+          value: value,
+          hint: Text(
+            value ?? hint,
+            style: const TextStyle(color: Colors.black54),
+          ),
+          items:
+              items
+                  .map(
+                    (item) => DropdownMenuItem<String>(
+                      value: item,
+                      child: Text(item),
+                    ),
+                  )
+                  .toList(),
+          onChanged: onChanged,
         ),
       ),
     );
@@ -160,6 +241,7 @@ class HomepageScreen extends StatelessWidget {
     };
     return Container(
       color: Colors.black,
+      height: 100,
       padding: const EdgeInsets.symmetric(vertical: 15),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -169,7 +251,7 @@ class HomepageScreen extends StatelessWidget {
                   (e) => Row(
                     children: [
                       e.key,
-                      const SizedBox(width: 5),
+                      const SizedBox(width: 20),
                       Text(
                         e.value,
                         style: const TextStyle(color: Colors.white),
