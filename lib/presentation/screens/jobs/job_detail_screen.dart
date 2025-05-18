@@ -133,7 +133,7 @@ class JobDetailHeader extends StatelessWidget {
                                 const SnackBar(content: Text('¡Aplicación enviada!')),
                               );
                             },
-                            icon: const Icon(Icons.arrow_forward),
+                            icon: const Icon(Icons.arrow_forward, color: Colors.white),
                             label: const Text('Aplicar Ahora'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.blue.shade700,
@@ -313,6 +313,7 @@ class JobDetailHeader extends StatelessWidget {
                                 icon: const Icon(
                                   Icons.arrow_forward,
                                   size: kIconSize20,
+                                  color: Colors.white,
                                 ),
                                 label: const Text(
                                   'Aplicar Ahora',

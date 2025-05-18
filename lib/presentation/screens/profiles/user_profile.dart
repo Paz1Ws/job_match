@@ -248,9 +248,10 @@ class ProfileDetailHeader extends StatelessWidget {
                                 icon: const Icon(
                                   Icons.arrow_forward,
                                   size: kIconSize20,
+                                  color: Colors.white,
                                 ),
                                 label: const Text(
-                                  'Dashboard',
+                                  'Ir a panel',
                                   style: TextStyle(fontSize: 15),
                                 ),
                                 onPressed: () {
