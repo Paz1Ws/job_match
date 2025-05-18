@@ -367,6 +367,40 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
               ),
             ],
           ),
+
+          const SizedBox(height: 30),
+
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 20.0),
+            decoration: BoxDecoration(
+              color: Colors.red,
+              borderRadius: BorderRadius.circular(5)
+            ),
+            child: ListTile(
+              leading: Transform.scale(
+                scale: 1.2,
+                child: ClipOval(
+                  child: AspectRatio(
+                    aspectRatio: 1,
+                    child: Image.asset(
+                      'assets/images/users/user1.png',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+              title: const Text('Tu perfil aún no esta completo', style: TextStyle(color: Colors.white)),
+              subtitle: const Text('Completa tu edición del perfil y redacta tu Resume', style: TextStyle(color: Colors.white)),
+              trailing: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                ),
+                onPressed: () {},
+                child: const Text('Editar perfil', style: TextStyle(color: Colors.red))
+              ),
+            ),
+          ),
+
           const SizedBox(height: kSpacing30 + kSpacing4),
           _buildPostedJobsTableSection(
             title: 'Empleos Publicados Recientemente',
