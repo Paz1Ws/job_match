@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:job_match/presentation/widgets/job_match_widget.dart';
+import 'package:job_match/presentation/widgets/text_link.dart';
 
 class FooterFindJobs extends StatelessWidget {
   const FooterFindJobs({ super.key });
@@ -71,6 +72,7 @@ class FooterFindJobs extends StatelessWidget {
   Widget _buildCompanyLinks() {
     return Expanded(
       child: Column(
+        spacing: 5,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: const [
           Text(
@@ -82,11 +84,11 @@ class FooterFindJobs extends StatelessWidget {
             ),
           ),
           SizedBox(height: 8.0),
-          _TextLink(text: 'Acerca de nosotros'),
-          _TextLink(text: 'Nuestro equipo'),
-          _TextLink(text: 'Socios'),
-          _TextLink(text: 'Para candidatos'),
-          _TextLink(text: 'Para empleadores'),
+          TextLink(text: 'Acerca de nosotros', normalColor: Colors.white70, hoverColor: Colors.white),
+          TextLink(text: 'Nuestro equipo', normalColor: Colors.white70, hoverColor: Colors.white),
+          TextLink(text: 'Socios', normalColor: Colors.white70, hoverColor: Colors.white),
+          TextLink(text: 'Para candidatos', normalColor: Colors.white70, hoverColor: Colors.white),
+          TextLink(text: 'Para empleadores', normalColor: Colors.white70, hoverColor: Colors.white),
         ],
       ),
     );
@@ -96,6 +98,7 @@ class FooterFindJobs extends StatelessWidget {
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 5,
         children: const [
           Text(
             'Categorías de empleo',
@@ -106,11 +109,11 @@ class FooterFindJobs extends StatelessWidget {
             ),
           ),
           SizedBox(height: 8.0),
-          _TextLink(text: 'Telecomunicaciones'),
-          _TextLink(text: 'Hotelería y Turismo'),
-          _TextLink(text: 'Construcción'),
-          _TextLink(text: 'Educación'),
-          _TextLink(text: 'Servicios Financieros'),
+          TextLink(text: 'Telecomunicaciones', normalColor: Colors.white70, hoverColor: Colors.white),
+          TextLink(text: 'Hotelería y Turismo', normalColor: Colors.white70, hoverColor: Colors.white),
+          TextLink(text: 'Construcción', normalColor: Colors.white70, hoverColor: Colors.white),
+          TextLink(text: 'Educación', normalColor: Colors.white70, hoverColor: Colors.white),
+          TextLink(text: 'Servicios Financieros', normalColor: Colors.white70, hoverColor: Colors.white),
         ],
       ),
     );
@@ -184,29 +187,6 @@ class FooterFindJobs extends StatelessWidget {
 
           _BottomBar()
         ],
-      ),
-    );
-  }
-}
-
-class _TextLink extends StatelessWidget {
-  final String text;
-  const _TextLink({required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: InkWell(
-        onTap: () {
-        },
-        child: Text(
-          text,
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 14.0,
-          ),
-        ),
       ),
     );
   }
