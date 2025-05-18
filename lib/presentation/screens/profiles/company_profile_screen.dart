@@ -18,7 +18,7 @@ class CompanyProfileScreen extends StatelessWidget {
     return Scaffold(
       body: Column(
         children: <Widget>[
-          const AppIdentityBar(height: appIdentityBarHeight, indexSelected: -1),
+          const AppIdentityBar(height: appIdentityBarHeight, indexSelected: 2),
           Expanded(child: SingleChildScrollView(child: CompanyProfileHeader())),
         ],
       ),

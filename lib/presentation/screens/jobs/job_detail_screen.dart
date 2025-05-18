@@ -4,7 +4,6 @@ import 'package:job_match/core/domain/models/job_model.dart';
 import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
 import 'package:job_match/presentation/widgets/auth/profile_display_elements.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
-import 'package:flutter/services.dart';
 
 class JobDetailScreen extends StatelessWidget {
   final Job job;

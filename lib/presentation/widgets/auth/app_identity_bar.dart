@@ -1,6 +1,9 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
+import 'package:job_match/core/domain/models/job_model.dart';
 import 'package:job_match/presentation/screens/profiles/user_profile.dart';
 
 class AppIdentityBar extends StatelessWidget {
@@ -68,10 +71,15 @@ class AppIdentityBar extends StatelessWidget {
               child: Row(
                 children: <Widget>[
                   _buildNavButton('Home', onPressed: () {}, selected: indexSelected == 0),
-                  _buildNavButton('Buscar Empleo', onPressed: () {}, selected: indexSelected == 1),
-                  _buildNavButton('Buscar Empleadores', onPressed: () {}, selected: indexSelected == 2),
+
+                  _buildNavButton('Buscar Empleo', onPressed: () => context.go('/user-profile'), selected: indexSelected == 1),
+
+                  _buildNavButton('Buscar Empleadores', onPressed: () => context.go('/company-profile'), selected: indexSelected == 2),
+
                   _buildNavButton('Panel', onPressed: () => context.go('/employee-dashboard'), selected: indexSelected == 3),
+
                   _buildNavButton('Alertas de Empleo', onPressed: () {}, selected: indexSelected == 4),
+
                   _buildNavButton('Soporte', onPressed: () {}, selected: indexSelected == 5),
                 ],
               ),
