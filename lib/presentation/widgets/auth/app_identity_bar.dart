@@ -78,7 +78,6 @@ class AppIdentityBar extends StatelessWidget {
                   _buildNavButton('Buscar Empleadores', onPressed: () => context.go('/company-profile'), selected: indexSelected == 2),
 
                   _buildNavButton('Panel', onPressed: () {
-                    print(Config().accountType);
                     if (Config().accountType == AccountType.employee) { context.go('/employee-dashboard'); }
                     else { context.go('/candidate-dashboard'); }
                   }, selected: indexSelected == 3),

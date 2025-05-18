@@ -617,7 +617,8 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
                     children: [
                       Row(
                         children: [
-                          Flexible(
+                          SizedBox(
+                            width: 200,
                             child: Text(
                               job.jobTitle,
                               style: jobTitleStyle,
@@ -701,46 +702,61 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
           Expanded(
             flex: 2,
             child: Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  // Navegar a JobDetailScreen pasando un Job simulado
-                  context.go('/job-details', extra: Job(
-                    logoAsset: job.companyLogoAsset,
-                    companyName: job.companyName,
-                    location: job.location,
-                    title: job.jobTitle,
-                    type: job.jobType,
-                    salary: job.salary,
-                    isFeatured: job.isHighlighted,
-                    logoBackgroundColor: job.logoBackgroundColor,
-                    matchPercentage: job.matchPercentage,
-                  ));
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      job.isHighlighted
-                          ? Colors.blue.shade700
-                          : const Color(
-                            0xFFF0F4FF,
-                          ),
-                  foregroundColor:
-                      job.isHighlighted
-                          ? Colors.white
-                          : Colors.blue.shade700,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: kPadding16,
-                    vertical: kPadding12,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        // Navegar a JobDetailScreen pasando un Job simulado
+                        context.go('/job-details', extra: Job(
+                          logoAsset: job.companyLogoAsset,
+                          companyName: job.companyName,
+                          location: job.location,
+                          title: job.jobTitle,
+                          type: job.jobType,
+                          salary: job.salary,
+                          isFeatured: job.isHighlighted,
+                          logoBackgroundColor: job.logoBackgroundColor,
+                          matchPercentage: job.matchPercentage,
+                        ));
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            job.isHighlighted
+                                ? Colors.blue.shade700
+                                : const Color(
+                                  0xFFF0F4FF,
+                                ),
+                        foregroundColor:
+                            job.isHighlighted
+                                ? Colors.white
+                                : Colors.blue.shade700,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: kPadding16,
+                          vertical: kPadding12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(kRadius8),
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      child: const Text('Ver Detalles'),
+                    ),
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(kRadius8),
-                  ),
-                  textStyle: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                child: const Text('Ver Detalles'),
+                  PopupMenuButton(
+                    color: Colors.white,
+                    icon: const Icon(Icons.more_vert),
+                    itemBuilder: (context) => [
+                      PopupMenuItem(value: 'promote', child: _HoverableMenuItem(icon: Icons.add_circle_outline_rounded, label: 'Promover Trabajo')),
+                      PopupMenuItem(value: 'view-details', child: _HoverableMenuItem(icon: Icons.remove_red_eye_outlined, label: 'Ver detalles')),
+                      PopupMenuItem(value: 'cancel', child: _HoverableMenuItem(icon: Icons.cancel_outlined, label: 'Cancelar'))
+                    ],
+                  )
+                ],
               ),
             ),
           ),
@@ -901,6 +917,55 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+
+class _HoverableMenuItem extends StatefulWidget {
+  final IconData icon;
+  final String label;
+
+  const _HoverableMenuItem({
+    required this.icon,
+    required this.label,
+  });
+
+  @override
+  State<_HoverableMenuItem> createState() => _HoverableMenuItemState();
+}
+
+class _HoverableMenuItemState extends State<_HoverableMenuItem> {
+  bool isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => isHovered = true),
+      onExit: (_) => setState(() => isHovered = false),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        decoration: BoxDecoration(
+          color: isHovered ? Colors.lightBlue.shade50 : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              widget.icon,
+              color: isHovered ? Colors.blue.shade700 : null,
+            ),
+            const SizedBox(width: 10),
+            Text(
+              widget.label,
+              style: TextStyle(
+                color: isHovered ? Colors.blue.shade900 : null,
+                fontWeight: isHovered ? FontWeight.w500 : null,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
