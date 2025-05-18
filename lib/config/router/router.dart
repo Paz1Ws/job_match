@@ -1,9 +1,11 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:job_match/config/util/go_router_animations.dart';
 import 'package:job_match/presentation/screens/auth/screens/login_screen.dart';
 import 'package:job_match/presentation/screens/dashboard/employer_dashboard_screen.dart';
 import 'package:job_match/presentation/screens/homepage/find_jobs_screen.dart';
 import 'package:job_match/presentation/screens/homepage/homepage_screen.dart';
+import 'package:job_match/presentation/screens/jobs/job_apply_dialog.dart';
 import 'package:job_match/presentation/screens/jobs/job_detail_screen.dart';
 import 'package:job_match/presentation/screens/profiles/company_profile_screen.dart';
 import 'package:job_match/presentation/screens/profiles/user_profile.dart';
@@ -16,11 +18,11 @@ class MainRouter {
     routes: [
       GoRoute(
         path: '/',
-        pageBuilder: (context, state) => fadeTransitionPage(state, SplashScreen()),
+        pageBuilder: (context, state) => TransitionPageWithFade(state: state, child: SplashScreen()),
       ),
       GoRoute(
         path: '/homepage',
-        pageBuilder: (context, state) => fadeTransitionPage(state, HomepageScreen()),
+        pageBuilder: (context, state) => TransitionPageWithFade(state: state, child: HomepageScreen()),
         routes: [
           GoRoute(
             path: 'find-job',
@@ -30,26 +32,41 @@ class MainRouter {
       ),
       GoRoute(
         path: '/login',
-        pageBuilder: (context, state) => fadeTransitionPage(state, LoginScreen()),
+        pageBuilder: (context, state) => TransitionPageWithFade(state: state, child: LoginScreen()),
       ),
       GoRoute(
         path: '/user-profile',
-        pageBuilder: (context, state) => fadeTransitionPage(state, UserProfile()),
+        pageBuilder: (context, state) => TransitionPageWithFade(state: state, child: UserProfile()),
       ),
       GoRoute(
         path: '/company-profile',
-        pageBuilder: (context, state) => fadeTransitionPage(state, CompanyProfileScreen()),
+        pageBuilder: (context, state) => TransitionPageWithFade(state: state, child: CompanyProfileScreen()),
       ),
       GoRoute(
         path: '/job-details',
         pageBuilder: (context, state) {
           final data = state.extra as Job;
-          return fadeTransitionPage(state, JobDetailScreen(job: data));
+          return TransitionPageWithFade(state: state, child: JobDetailScreen(job: data));
         },
+        routes: [
+          GoRoute(
+            path: 'apply',
+            pageBuilder: (context, state) {
+              final jobTitle = state.extra as String? ?? '-';
+              return TransitionPageWithFade(
+                state: state,
+                child: JobApplyDialog(jobTitle: jobTitle),
+                barrierDismissible: true,
+                opaque: false,
+                barrierColor: Colors.black87
+              );
+            },
+          )
+        ]
       ),
       GoRoute(
         path: '/employee-dashboard',
-        pageBuilder: (context, state) => fadeTransitionPage(state, EmployerDashboardScreen()),
+        pageBuilder: (context, state) => TransitionPageWithFade(state: state, child: EmployerDashboardScreen()),
       ),
     ],
   );

@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-CustomTransitionPage fadeTransitionPage(GoRouterState state, Widget child) {
-  return CustomTransitionPage(
-    key: state.pageKey,
-    child: child,
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      return FadeTransition(opacity: animation, child: child);
-    },
+class TransitionPageWithFade extends CustomTransitionPage {
+
+  TransitionPageWithFade({
+    required super.child,
+    required GoRouterState state,
+    super.opaque,
+    super.barrierDismissible,
+    super.barrierColor
+  }) : super(
+    transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child),
+    key: state.pageKey
   );
 }
