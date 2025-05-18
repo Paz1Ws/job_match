@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:job_match/config/util/go_router_animations.dart';
 import 'package:job_match/presentation/screens/auth/screens/login_screen.dart';
 import 'package:job_match/presentation/screens/dashboard/employer_dashboard_screen.dart';
+import 'package:job_match/presentation/screens/homepage/screens/find_jobs_screen.dart';
 import 'package:job_match/presentation/screens/homepage/screens/homepage_screen.dart';
 import 'package:job_match/presentation/screens/jobs/job_detail_screen.dart';
 import 'package:job_match/presentation/screens/profiles/company_profile_screen.dart';
@@ -20,6 +21,12 @@ class MainRouter {
       GoRoute(
         path: '/homepage',
         pageBuilder: (context, state) => fadeTransitionPage(state, HomepageScreen()),
+        routes: [
+          GoRoute(
+            path: 'find-job',
+            builder: (context, state) => FindJobsScreen(),
+          )
+        ]
       ),
       GoRoute(
         path: '/login',

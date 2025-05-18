@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:job_match/presentation/widgets/job_match_widget.dart';
+import 'package:job_match/presentation/screens/homepage/widgets/home_page_top_bar.dart';
 import 'package:job_match/presentation/screens/homepage/widgets/partner_icon.dart';
 import 'package:job_match/presentation/screens/homepage/widgets/stat_item.dart';
-import 'package:job_match/presentation/screens/auth/screens/login_screen.dart';
 
 class HomepageScreen extends StatelessWidget {
   const HomepageScreen({super.key});
@@ -29,7 +28,7 @@ class HomepageScreen extends StatelessWidget {
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildTopBar(context),
+              HomePageTopBar(),
               Spacer(),
               Center(child: _buildHeroSection(context)),
               SizedBox(height: 40),
@@ -41,63 +40,6 @@ class HomepageScreen extends StatelessWidget {
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildTopBar(BuildContext context) {
-    return Align(
-      alignment: Alignment.topCenter,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            JobMatchWidget(),
-            Row(
-              children: [
-                _buildTopBarButton('Inicio', selected: true),
-                _buildTopBarButton('Empleos'),
-                _buildTopBarButton('Sobre Nosotros'),
-                _buildTopBarButton('Contáctanos'),
-              ],
-            ),
-            Row(
-              children: [
-                TextButton(
-                  onPressed: () => context.go('/login'),
-                  child: const Text(
-                    'Iniciar Sesión',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 0,
-                    ),
-                  ),
-                  onPressed: () => context.go('/login'),
-                  child: const Text('Registrarse'),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTopBarButton(String title, {bool selected = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0),
-      child: Text(
-        title,
-        style: TextStyle(color: selected ? Colors.white : Colors.white38),
       ),
     );
   }
@@ -137,7 +79,7 @@ class HomepageScreen extends StatelessWidget {
               _buildDropdownField('Selecciona Ubicación', showDivider: true),
               _buildDropdownField('Selecciona Categoría', showDivider: false),
 
-              _buildFindJobButton(),
+              _buildFindJobButton(context),
             ],
           ),
         ),
@@ -145,9 +87,9 @@ class HomepageScreen extends StatelessWidget {
     );
   }
 
-  ElevatedButton _buildFindJobButton() {
+  ElevatedButton _buildFindJobButton(BuildContext context) {
     return ElevatedButton(
-      onPressed: () {},
+      onPressed: () => context.go('/homepage/find-job'),
       style: ElevatedButton.styleFrom(
         fixedSize: const Size(200, 75),
         shape: const RoundedRectangleBorder(
