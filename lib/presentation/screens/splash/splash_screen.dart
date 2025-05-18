@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:job_match/config/config.dart';
 import 'dart:async';
 import 'package:job_match/config/util/animations.dart';
-import 'package:job_match/presentation/screens/homepage/screens/homepage_screen.dart';
+import 'package:job_match/presentation/screens/homepage/homepage_screen.dart';
 import 'package:job_match/presentation/screens/profiles/user_profile.dart';
 
 class SplashScreen extends StatefulWidget {

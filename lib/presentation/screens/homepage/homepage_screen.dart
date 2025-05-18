@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:job_match/presentation/screens/homepage/widgets/home_page_top_bar.dart';
-import 'package:job_match/presentation/screens/homepage/widgets/partner_icon.dart';
-import 'package:job_match/presentation/screens/homepage/widgets/stat_item.dart';
+import 'package:job_match/presentation/widgets/homepage/home_page_top_bar.dart';
+import 'package:job_match/presentation/widgets/homepage/partner_icon.dart';
+import 'package:job_match/presentation/widgets/homepage/stat_item.dart';
 
 class HomepageScreen extends StatelessWidget {
   const HomepageScreen({super.key});

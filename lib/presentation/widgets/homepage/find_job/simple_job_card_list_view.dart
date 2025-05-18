@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:job_match/models/simple_job_view_model.dart';
-import 'package:job_match/presentation/screens/homepage/widgets/simple_job_card.dart';
+import 'package:job_match/presentation/widgets/homepage/find_job/simple_job_card.dart';
 
 class SimpleJobCardListView extends StatelessWidget {
   const SimpleJobCardListView({super.key});

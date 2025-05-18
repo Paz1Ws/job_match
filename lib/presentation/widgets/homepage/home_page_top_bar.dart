@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:job_match/presentation/screens/homepage/widgets/home_page_top_bar_button.dart';
+import 'package:job_match/presentation/widgets/homepage/home_page_top_bar_button.dart';
 import 'package:job_match/presentation/widgets/job_match_widget.dart';
 
 class HomePageTopBar extends StatelessWidget {
