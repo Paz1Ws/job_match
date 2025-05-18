@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:job_match/config/config.dart';
 import 'dart:math'; // For random numbers in mock data
 import 'package:job_match/core/domain/models/job_model.dart';
 import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
@@ -179,7 +180,8 @@ class CompanyProfileHeader extends StatelessWidget {
                                 icon: const Icon(Icons.dashboard_outlined, size: kIconSize20),
                                 label: const Text('Dashboard', style: TextStyle(fontSize: 15)),
                                 onPressed: () {
-                                  context.go('/employee-dashboard');
+                                  if (Config().accountType == AccountType.employee) { context.go('/employee-dashboard'); }
+                                  else { context.go('/candidate-dashboard'); }
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFF3366FF),

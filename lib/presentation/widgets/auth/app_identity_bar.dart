@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:job_match/config/config.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:job_match/core/domain/models/job_model.dart';
 import 'package:job_match/presentation/screens/profiles/user_profile.dart';
@@ -76,7 +77,11 @@ class AppIdentityBar extends StatelessWidget {
 
                   _buildNavButton('Buscar Empleadores', onPressed: () => context.go('/company-profile'), selected: indexSelected == 2),
 
-                  _buildNavButton('Panel', onPressed: () => context.go('/employee-dashboard'), selected: indexSelected == 3),
+                  _buildNavButton('Panel', onPressed: () {
+                    print(Config().accountType);
+                    if (Config().accountType == AccountType.employee) { context.go('/employee-dashboard'); }
+                    else { context.go('/candidate-dashboard'); }
+                  }, selected: indexSelected == 3),
 
                   _buildNavButton('Alertas de Empleo', onPressed: () {}, selected: indexSelected == 4),
 

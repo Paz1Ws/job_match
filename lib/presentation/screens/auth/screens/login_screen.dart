@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:job_match/config/config.dart';
 import 'package:job_match/presentation/screens/auth/widgets/info_card.dart';
 import 'package:job_match/presentation/screens/auth/widgets/left_cut_trapezoid_clipper.dart';
 import 'package:job_match/presentation/screens/profiles/user_profile.dart';
@@ -62,11 +63,13 @@ class _LoginScreenState extends State<LoginScreen> {
         _emailController.text = _candidateData['email']!;
         _passwordController.text = _candidateData['password']!;
         _termsAgreed = true;
+        Config().accountType = AccountType.candidate;
       } else if (userType == 'Empresa') {
         _usernameController.text = _companyData['username']!;
         _emailController.text = _companyData['email']!;
         _passwordController.text = _companyData['password']!;
         _termsAgreed = true;
+        Config().accountType = AccountType.employee;
       } else {
         _usernameController.clear();
         _emailController.clear();
@@ -255,13 +258,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 decoration: defaultIconDecoration('Tipo de usuario'),
                 value: _selectedUserType,
                 items:
-                    ['Candidato', 'Empresa'].map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value, style: defaultTextStyle),
-                      );
-                    }).toList(),
-                onChanged: (String? newValue) {
+                  ['Candidato', 'Empresa'].map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value, style: defaultTextStyle),
+                    );
+                  }).toList(),
+                onChanged: (String? newValue) {             
                   _prefillForm(newValue);
                 },
               ),

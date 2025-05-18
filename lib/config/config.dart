@@ -4,4 +4,7 @@ class Config {
   Config._internal();
 
   bool isSplashShowed = false;
+  AccountType accountType = AccountType.employee;
 }
+
+enum AccountType { employee, candidate }

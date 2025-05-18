@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:job_match/config/util/go_router_animations.dart';
 import 'package:job_match/presentation/screens/auth/screens/login_screen.dart';
+import 'package:job_match/presentation/screens/dashboard/candidate_dashboard_screen.dart';
 import 'package:job_match/presentation/screens/dashboard/employer_dashboard_screen.dart';
 import 'package:job_match/presentation/screens/homepage/find_jobs_screen.dart';
 import 'package:job_match/presentation/screens/homepage/homepage_screen.dart';
@@ -68,6 +69,10 @@ class MainRouter {
         path: '/employee-dashboard',
         pageBuilder: (context, state) => TransitionPageWithFade(state: state, child: EmployerDashboardScreen()),
       ),
+      GoRoute(
+        path: '/candidate-dashboard',
+        pageBuilder: (context, state) => TransitionPageWithFade(state: state, child: CandidateDashboardScreen()),
+      ),      
     ],
   );
 }
