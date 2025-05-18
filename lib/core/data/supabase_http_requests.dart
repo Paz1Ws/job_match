@@ -4,23 +4,17 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 // Cliente global
 final supabase = Supabase.instance.client;
 
-// 2.1. Profiles
-final profilesProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>(
-  (ref) async {
-    final res = await supabase
-        .from('profiles')
-        .select('user_id, name, experience, education, skills, parsed_at')
-        .order('name');
-    return res;
-  },
-);
+// 2.1. Candidates
+final candidatesProvider =
+    FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
+      final res = await supabase.from('candidates').select('*').order('name');
+      return res;
+    });
 
 // 2.2. Companies
 final companiesProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
-      final res = await supabase
-          .from('companies')
-          .select('user_id, company_name, description, logo');
+      final res = await supabase.from('companies').select('*');
       return res;
     });
 
@@ -30,7 +24,7 @@ final jobsProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((
 ) async {
   final res = await supabase
       .from('jobs')
-      .select('id, company_id, title, description, created_at')
+      .select('*')
       .order('created_at', ascending: false);
   return res;
 });
@@ -40,7 +34,7 @@ final applicationsProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
       final res = await supabase
           .from('applications')
-          .select('id, job_id, user_id, status, applied_at')
+          .select('*')
           .order('applied_at', ascending: false);
       return res;
     });

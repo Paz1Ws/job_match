@@ -43,7 +43,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (mounted) {
       Navigator.of(
         context,
-      ).pushReplacement(FadeRoute(page: const HomepageScreen()));
+      ).pushReplacement(SlideUpFadePageRoute(page: const HomepageScreen()));
     }
   }
 

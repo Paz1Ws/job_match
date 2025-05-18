@@ -1,96 +1,726 @@
 import 'package:flutter/material.dart';
-import 'dart:math'; // Para generar números aleatorios
+import 'dart:math';
+import 'package:animate_do/animate_do.dart';
 import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:job_match/core/domain/models/applied_job_model.dart';
 import 'package:job_match/presentation/screens/jobs/job_detail_screen.dart';
 import 'package:job_match/core/domain/models/job_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:job_match/core/data/supabase_http_requests.dart';
+import 'package:job_match/core/data/mock_data.dart';
+import 'package:job_match/presentation/widgets/simulation/notification_overlay.dart';
+import 'package:job_match/presentation/widgets/simulation/job_card_with_fit.dart';
+import 'package:job_match/presentation/widgets/simulation/chatbot_widget.dart';
+import 'package:job_match/presentation/screens/simulation/micro_course_screen.dart';
 
-class CandidateDashboardScreen extends StatefulWidget {
-  const CandidateDashboardScreen({super.key});
+class CandidateDashboardScreen extends ConsumerStatefulWidget {
+  final Map<String, dynamic>? candidateData;
+
+  const CandidateDashboardScreen({super.key, this.candidateData});
 
   @override
-  State<CandidateDashboardScreen> createState() =>
+  ConsumerState<CandidateDashboardScreen> createState() =>
       _CandidateDashboardScreenState();
 }
 
-class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
+class _CandidateDashboardScreenState
+    extends ConsumerState<CandidateDashboardScreen> {
   String _selectedMenu = 'Overview';
-  final Random _random = Random();
   int _currentPage = 1;
-  final int _totalPages = 5; // Ejemplo de total de páginas
-
-  // Mock data for recently applied jobs - Communications field
-  // Esta lista se usará tanto para Overview como para Applied Jobs por ahora
-  late List<AppliedJob> _allAppliedJobs;
+  final int _totalPages = 5;
+  bool _showNotification = false;
+  String _notificationMessage = '';
+  int _notificationFitPercentage = 0;
+  bool _showChatbot = false;
+  bool _applicationAccepted = false;
 
   @override
   void initState() {
     super.initState();
-    _allAppliedJobs = [
-      AppliedJob(
-        companyLogoAsset: 'assets/images/job_match.jpg',
-        jobTitle: 'Especialista en Comunicación Corporativa',
-        jobType: 'Remoto',
-        companyName: 'Soluciones Creativas SA',
-        location: 'Lima, Perú',
-        salary: 'S/5k-7k/mes',
-        dateApplied: 'Feb 2, 2024 10:30',
-        status: 'Activo',
-        logoBackgroundColor: Colors.green.shade400,
-        matchPercentage: _random.nextInt(41) + 60, // 60-100%
+    // Simulate receiving notification after a delay
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() {
+          _showNotification = true;
+          _notificationMessage =
+              'JobMatch publicó "Especialista en Comunicaciones"';
+          _notificationFitPercentage = 92;
+        });
+
+        // Hide notification after 5 seconds
+        Future.delayed(const Duration(seconds: 5), () {
+          if (mounted) {
+            setState(() {
+              _showNotification = false;
+            });
+          }
+        });
+      }
+    });
+
+    // Show chatbot after a delay
+    Future.delayed(const Duration(seconds: 10), () {
+      if (mounted) {
+        setState(() {
+          _showChatbot = true;
+        });
+      }
+    });
+  }
+
+  void _showApplicationSuccessMessage() {
+    setState(() {
+      _showNotification = true;
+      _notificationMessage = '¡Postulación enviada con éxito!';
+      _notificationFitPercentage = 100;
+    });
+
+    // Hide notification after 3 seconds
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() {
+          _showNotification = false;
+        });
+      }
+    });
+
+    // Show chatbot with specific message after application
+    Future.delayed(const Duration(seconds: 4), () {
+      if (mounted) {
+        setState(() {
+          _showChatbot = true;
+        });
+      }
+    });
+  }
+
+  void _showAcceptedDialog() {
+    setState(() {
+      _applicationAccepted = true;
+    });
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green.shade700),
+                const SizedBox(width: 8),
+                const Text('¡Felicitaciones!'),
+              ],
+            ),
+            content: const Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Tu postulación fue ACEPTADA.'),
+                SizedBox(height: 16),
+                Text(
+                  'El equipo de JobMatch se pondrá en contacto contigo para coordinar los siguientes pasos.',
+                  style: TextStyle(fontSize: 14),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cerrar'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  // Here you would navigate to a details screen about the job
+                },
+                child: const Text('Ver Detalles'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Solo usa providers existentes de supabase_http_requests.dart
+    final applicationsAsync = ref.watch(applicationsProvider);
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF7F8FA),
+      body: Stack(
+        children: [
+          Column(
+            children: <Widget>[
+              // AppIdentityBar con botón de atrás
+              FadeInDown(
+                duration: const Duration(milliseconds: 600),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.blue),
+                      onPressed: () => Navigator.of(context).maybePop(),
+                      tooltip: 'Atrás',
+                    ),
+                    Expanded(child: AppIdentityBar(height: 80)),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Row(
+                  children: <Widget>[
+                    // Left side: Selector Menu
+                    FadeInLeft(
+                      duration: const Duration(milliseconds: 700),
+                      child: Container(
+                        width: 260,
+                        color: Colors.white,
+                        padding: const EdgeInsets.only(top: kPadding20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: kPadding16,
+                                vertical: kPadding8,
+                              ),
+                              child: Text(
+                                'PANEL DEL CANDIDATO',
+                                style: TextStyle(
+                                  color: Colors.grey.shade500,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: kSpacing8),
+                            ...[
+                              _buildMenuItem(
+                                icon: Icons.layers_outlined,
+                                title: 'Resumen',
+                                isSelected: _selectedMenu == 'Overview',
+                                onTap:
+                                    () => setState(
+                                      () => _selectedMenu = 'Overview',
+                                    ),
+                              ),
+                              _buildMenuItem(
+                                icon: Icons.work_outline,
+                                title: 'Trabajos Aplicados',
+                                isSelected: _selectedMenu == 'Applied Jobs',
+                                onTap:
+                                    () => setState(
+                                      () => _selectedMenu = 'Applied Jobs',
+                                    ),
+                              ),
+                              _buildMenuItem(
+                                icon: Icons.bookmark_border,
+                                title: 'Trabajos Favoritos',
+                                isSelected: _selectedMenu == 'Favorite Jobs',
+                                onTap:
+                                    () => setState(
+                                      () => _selectedMenu = 'Favorite Jobs',
+                                    ),
+                              ),
+                              _buildMenuItem(
+                                icon: Icons.notifications_none_outlined,
+                                title: 'Alerta de Trabajo',
+                                badgeCount: '01',
+                                isSelected: _selectedMenu == 'Job Alert',
+                                onTap:
+                                    () => setState(
+                                      () => _selectedMenu = 'Job Alert',
+                                    ),
+                              ),
+                              _buildMenuItem(
+                                icon: Icons.settings_outlined,
+                                title: 'Configuración',
+                                isSelected: _selectedMenu == 'Settings',
+                                onTap:
+                                    () => setState(
+                                      () => _selectedMenu = 'Settings',
+                                    ),
+                              ),
+                            ].asMap().entries.map((entry) {
+                              // Animate each menu item with a slight delay
+                              return FadeInLeft(
+                                delay: Duration(milliseconds: 80 * entry.key),
+                                duration: const Duration(milliseconds: 400),
+                                child: entry.value,
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // Right side: Main content area
+                    Expanded(
+                      flex: 3,
+                      child: FadeInUp(
+                        duration: const Duration(milliseconds: 700),
+                        child:
+                            _selectedMenu == 'Overview'
+                                ? _buildOverviewContent()
+                                : _selectedMenu == 'Applied Jobs'
+                                ? applicationsAsync.when(
+                                  loading:
+                                      () => const Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                  error:
+                                      (error, stack) =>
+                                          Center(child: Text('Error: $error')),
+                                  data:
+                                      (applications) =>
+                                          _buildAppliedJobsContent(
+                                            applications,
+                                          ),
+                                )
+                                : Center(
+                                  child: Text(
+                                    'Contenido para $_selectedMenu',
+                                    style: const TextStyle(
+                                      fontSize: 24,
+                                      color: Colors.black54,
+                                    ),
+                                  ),
+                                ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          // Show notification if enabled
+          if (_showNotification)
+            NotificationOverlay(
+              message: _notificationMessage,
+              fitPercentage: _notificationFitPercentage,
+              onDismiss: () => setState(() => _showNotification = false),
+            ),
+          // Show chatbot if enabled
+          if (_showChatbot)
+            ChatbotWidget(
+              initialMessage:
+                  _applicationAccepted
+                      ? '¡Felicidades por tu aceptación en JobMatch! Añade métricas de alcance en tus campañas para brillar en tu nuevo rol.'
+                      : '¡Hola Julio! Tu postulación fue registrada. Tip: añade métricas de alcance en tus campañas para brillar.',
+            ),
+        ],
       ),
-      AppliedJob(
-        companyLogoAsset: 'assets/images/job_match.jpg',
-        jobTitle: 'Content Manager Jr.',
-        jobType: 'Tiempo Completo',
-        companyName: 'Media Pro Network',
-        location: 'Arequipa, Perú',
-        salary: 'S/3k-4k/mes',
-        dateApplied: 'Ene 15, 2024 14:20',
-        status: 'Activo',
-        logoBackgroundColor: Colors.pink.shade300,
-        matchPercentage: _random.nextInt(41) + 60,
+    );
+  }
+
+  Widget _buildOverviewContent() {
+    // Use simulated component for course recommendation
+    final course = MockCourses.courses.first;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(kPadding20 + kSpacing4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          FadeInDown(
+            duration: const Duration(milliseconds: 600),
+            child: const Text(
+              'Hola, Julio César Nima',
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF222B45),
+              ),
+            ),
+          ),
+          const SizedBox(height: kSpacing8),
+          FadeIn(
+            duration: const Duration(milliseconds: 700),
+            child: Text(
+              'Aquí están tus actividades diarias y alertas de trabajo.',
+              style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+            ),
+          ),
+          const SizedBox(height: kSpacing20 + kSpacing4),
+          Row(
+            children: <Widget>[
+              FadeInLeft(
+                duration: const Duration(milliseconds: 700),
+                child: Expanded(
+                  child: _buildSummaryCard(
+                    count: '1',
+                    label: 'Trabajos Aplicados',
+                    icon: Icons.work_outline,
+                    iconColor: Colors.blue.shade700,
+                    backgroundColor: Colors.blue.shade50.withOpacity(0.5),
+                    iconBackgroundColor: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(width: kSpacing20),
+              FadeInUp(
+                duration: const Duration(milliseconds: 700),
+                child: Expanded(
+                  child: _buildSummaryCard(
+                    count: '2',
+                    label: 'Trabajos Favoritos',
+                    icon: Icons.bookmark_border,
+                    iconColor: Colors.orange.shade700,
+                    backgroundColor: Colors.orange.shade50.withOpacity(0.5),
+                    iconBackgroundColor: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(width: kSpacing20),
+              FadeInRight(
+                duration: const Duration(milliseconds: 700),
+                child: Expanded(
+                  child: _buildSummaryCard(
+                    count: '1',
+                    label: 'Alertas de Trabajo',
+                    icon: Icons.notifications_none_outlined,
+                    iconColor: Colors.green.shade700,
+                    backgroundColor: Colors.green.shade50.withOpacity(0.5),
+                    iconBackgroundColor: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: kSpacing20 + kSpacing4),
+          FadeInUp(
+            delay: const Duration(milliseconds: 200),
+            duration: const Duration(milliseconds: 700),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.purple.shade50,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.purple.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: Colors.purple.shade100,
+                        child: Icon(
+                          Icons.school,
+                          color: Colors.purple.shade700,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Mejora tu Fit: Storytelling Avanzado',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Incrementa tu match en un ${course['fitBoost']}% completando este curso',
+                              style: TextStyle(color: Colors.grey.shade700),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Aprende técnicas avanzadas de storytelling para destacar tus habilidades de comunicación en el entorno laboral.',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Text(
+                        'Duración: ${course['duration']}',
+                        style: TextStyle(
+                          color: Colors.grey.shade700,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const Spacer(),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) =>
+                                      MicroCourseScreen(course: course),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.purple.shade700,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Comenzar Ahora'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: kSpacing20),
+          FadeInUp(
+            delay: const Duration(milliseconds: 300),
+            duration: const Duration(milliseconds: 700),
+            child: const Text(
+              'Trabajos Recomendados',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF222B45),
+              ),
+            ),
+          ),
+          const SizedBox(height: kSpacing12),
+          FadeInUp(
+            delay: const Duration(milliseconds: 400),
+            duration: const Duration(milliseconds: 700),
+            child: JobCardWithFit(
+              title: 'Especialista en Comunicaciones',
+              company: 'JobMatch Recruiting',
+              location: 'Lima, Perú',
+              timeAgo: 'hace 2 horas',
+              fitPercentage: 92,
+              fitReasons: [
+                '+50% por experiencia en PR',
+                '+42% por Storytelling',
+              ],
+            ),
+          ),
+          FadeInUp(
+            delay: const Duration(milliseconds: 500),
+            duration: const Duration(milliseconds: 700),
+            child: JobCardWithFit(
+              title: 'Content Manager',
+              company: 'Digital Solutions',
+              location: 'Lima, Perú',
+              timeAgo: 'hace 1 día',
+              fitPercentage: 78,
+              fitReasons: ['+50% por comunicación', '+28% por estrategia'],
+            ),
+          ),
+          const SizedBox(height: kSpacing30 + kSpacing4),
+        ],
       ),
-      AppliedJob(
-        companyLogoAsset: 'assets/images/job_match.jpg',
-        jobTitle: 'Analista de Redes Sociales',
-        jobType: 'Temporal',
-        companyName: 'Digital Impact Agency',
-        location: 'Trujillo, Perú',
-        salary: 'S/2.5k-3.5k/mes',
-        dateApplied: 'Ene 5, 2024 09:00',
-        status: 'Activo',
-        logoBackgroundColor: Colors.grey.shade700,
-        matchPercentage: _random.nextInt(41) + 60,
+    );
+  }
+
+  Widget _buildAppliedJobsContent(List<Map<String, dynamic>> applications) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(kPadding20 + kSpacing4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          FadeInDown(
+            duration: const Duration(milliseconds: 600),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Trabajos Aplicados',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF222B45),
+                  ),
+                ),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.download_outlined),
+                  label: const Text('Descargar PDF'),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Aplicaciones exportadas a PDF'),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue.shade700,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: kSpacing20),
+          // "Especialista en Comunicaciones" job application with accepted status
+          FadeInUp(
+            duration: const Duration(milliseconds: 700),
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color:
+                      _applicationAccepted
+                          ? Colors.green.shade200
+                          : Colors.grey.shade200,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.1),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'JM',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue.shade800,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Especialista en Comunicaciones',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'JobMatch Recruiting • Lima, Perú',
+                              style: TextStyle(color: Colors.grey.shade600),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color:
+                              _applicationAccepted
+                                  ? Colors.green.shade100
+                                  : Colors.orange.shade100,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Text(
+                          _applicationAccepted ? 'Aceptado' : 'Pendiente',
+                          style: TextStyle(
+                            color:
+                                _applicationAccepted
+                                    ? Colors.green.shade800
+                                    : Colors.orange.shade800,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Divider(),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Aplicado:',
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 13,
+                              ),
+                            ),
+                            const Text(
+                              '14 Junio, 2024',
+                              style: TextStyle(fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Match:',
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 13,
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.analytics_outlined,
+                                  size: 16,
+                                  color: Colors.green.shade700,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '92%',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green.shade700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (!_applicationAccepted)
+                        ElevatedButton(
+                          onPressed: _showAcceptedDialog,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green.shade600,
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text('Simular Aceptación'),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: kSpacing20 + kSpacing4),
+          FadeInUp(
+            duration: const Duration(milliseconds: 600),
+            child: _buildPaginationControls(),
+          ),
+        ],
       ),
-      AppliedJob(
-        companyLogoAsset: 'assets/images/job_match.jpg',
-        jobTitle: 'Redactor Creativo Publicitario',
-        jobType: 'Por Contrato',
-        companyName: 'Ideas Frescas Co.',
-        location: 'Cusco, Perú',
-        salary: 'S/4k-6k/mes',
-        dateApplied: 'Dic 20, 2023 18:00',
-        status: 'Activo',
-        logoBackgroundColor: Colors.lightBlue.shade300,
-        isHighlighted: true,
-        matchPercentage: _random.nextInt(41) + 60,
-      ),
-      // Añadir más trabajos para simular paginación si es necesario
-      AppliedJob(
-        companyLogoAsset: 'assets/images/job_match.jpg',
-        jobTitle: 'Coordinador de Eventos y RRPP',
-        jobType: 'Tiempo Completo',
-        companyName: 'Global Connect',
-        location: 'Lima, Perú',
-        salary: 'S/4.5k-6.5k/mes',
-        dateApplied: 'Nov 10, 2023 11:00',
-        status: 'Activo',
-        logoBackgroundColor: Colors.purple.shade300,
-        matchPercentage: _random.nextInt(41) + 60,
-      ),
-    ];
+    );
   }
 
   Widget _buildMenuItem({
@@ -142,111 +772,23 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
                   vertical: kSpacing4 / 2,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(kRadius4),
+                  color:
+                      isSelected
+                          ? selectedColor
+                          : Colors.grey.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(kRadius12),
                 ),
                 child: Text(
                   badgeCount,
                   style: TextStyle(
-                    color: selectedColor,
-                    fontWeight: FontWeight.bold,
+                    color: isSelected ? Colors.white : Colors.grey.shade700,
                     fontSize: 12,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildOverviewContent() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(kPadding20 + kSpacing4), // kPadding24
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          const Text(
-            'Hola, Julio Cesar Nima',
-            style: TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF222B45),
-            ),
-          ),
-          const SizedBox(height: kSpacing8),
-          Text(
-            'Aquí están tus actividades diarias y alertas de trabajo.', // Traducción
-            style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
-          ),
-          const SizedBox(height: kSpacing20 + kSpacing4), // kSpacing24
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: _buildSummaryCard(
-                  count: '589',
-                  label: 'Trabajos Aplicados', // Traducción
-                  icon: Icons.work_outline,
-                  iconColor: Colors.blue.shade700,
-                  backgroundColor: Colors.blue.shade50.withOpacity(0.5),
-                  iconBackgroundColor: Colors.white,
-                ),
-              ),
-              const SizedBox(width: kSpacing20),
-              Expanded(
-                child: _buildSummaryCard(
-                  count: '238',
-                  label: 'Trabajos Favoritos', // Traducción
-                  icon: Icons.bookmark_border,
-                  iconColor: Colors.orange.shade700,
-                  backgroundColor: Colors.orange.shade50.withOpacity(0.5),
-                  iconBackgroundColor: Colors.white,
-                ),
-              ),
-              const SizedBox(width: kSpacing20),
-              Expanded(
-                child: _buildSummaryCard(
-                  count: '574',
-                  label: 'Alertas de Trabajo', // Traducción
-                  icon: Icons.notifications_none_outlined,
-                  iconColor: Colors.green.shade700,
-                  backgroundColor: Colors.green.shade50.withOpacity(0.5),
-                  iconBackgroundColor: Colors.white,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: kSpacing20 + kSpacing4), // kSpacing24
-          _buildRecommendedCourseSection(),
-          const SizedBox(height: kSpacing30 + kSpacing4),
-          _buildJobsTableSection(
-            title: 'Aplicaciones Recientes',
-            jobs:
-                _allAppliedJobs
-                    .take(4)
-                    .toList(), // Mostrar solo algunos en overview
-            showViewAllButton: true,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAppliedJobsContent() {
-    // Simular paginación: aquí podrías tener lógica para cargar diferentes trabajos por página
-    // Por ahora, mostramos todos los trabajos de la lista _allAppliedJobs
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(kPadding20 + kSpacing4), // kPadding24
-      child: Column(
-        children: [
-          _buildJobsTableSection(
-            title: 'Trabajos Aplicados (${_allAppliedJobs.length})',
-            jobs: _allAppliedJobs,
-            showViewAllButton: false, // No necesitamos "Ver todo" aquí
-          ),
-          const SizedBox(height: kSpacing20 + kSpacing4), // kSpacing24
-          _buildPaginationControls(),
-        ],
       ),
     );
   }
@@ -264,33 +806,25 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(kRadius12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.05),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
+            children: [
               Text(
                 count,
                 style: TextStyle(
-                  fontSize: 32,
+                  fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  color: iconColor.withOpacity(0.85),
+                  color: iconColor.withOpacity(0.9),
                 ),
               ),
               const SizedBox(height: kSpacing4),
               Text(
                 label,
-                style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+                style: const TextStyle(fontSize: 15, color: Colors.black87),
               ),
             ],
           ),
@@ -299,14 +833,6 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
             decoration: BoxDecoration(
               color: iconBackgroundColor,
               borderRadius: BorderRadius.circular(kRadius8),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
-                  spreadRadius: 1,
-                  blurRadius: 3,
-                  offset: const Offset(0, 1),
-                ),
-              ],
             ),
             child: Icon(icon, color: iconColor, size: kIconSize24),
           ),
@@ -315,598 +841,75 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
     );
   }
 
-  Widget _buildRecommendedCourseSection() {
-    String habilidad = "Storytelling Digital"; // Habilidad de ejemplo
-    String empleo = "Gestor de Contenidos"; // Empleo de ejemplo
-    return Container(
-      padding: const EdgeInsets.all(kPadding20),
-      decoration: BoxDecoration(
-        color: Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(kRadius12),
-        border: Border.all(color: Colors.blue.shade200, width: kStroke1),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.school_outlined,
-            color: Colors.blue.shade700,
-            size: kIconSize48 - kSpacing4,
-          ), // kIconSize44
-          const SizedBox(width: kSpacing12 + kSpacing4), // kSpacing16
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Curso Recomendado',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue.shade800,
-                  ),
-                ),
-                const SizedBox(height: kSpacing4),
-                RichText(
-                  text: TextSpan(
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade700,
-                      height: 1.4,
-                    ),
-                    children: <TextSpan>[
-                      const TextSpan(text: 'Mejora tu habilidad en '),
-                      TextSpan(
-                        text: habilidad,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue.shade700,
-                        ),
-                      ),
-                      const TextSpan(text: ', que aumenta tu match en un '),
-                      const TextSpan(
-                        text: '18% ',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
-                        ),
-                      ),
-                      const TextSpan(text: 'en empleos de '),
-                      TextSpan(
-                        text: empleo,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue.shade700,
-                        ),
-                      ),
-                      const TextSpan(text: '.'),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: kSpacing12),
-          ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue.shade700,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(
-                horizontal: kPadding16,
-                vertical: kPadding12,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(kRadius8),
-              ),
-            ),
-            child: const Text('Ver Curso'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildJobsTableSection({
-    required String title,
-    required List<AppliedJob> jobs,
-    bool showViewAllButton = false,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(kPadding20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(kRadius12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.08),
-            spreadRadius: 1,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF222B45),
-                ),
-              ),
-              if (showViewAllButton)
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _selectedMenu =
-                          'Applied Jobs'; // Navegar a la sección de trabajos aplicados
-                    });
-                  },
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Ver todo',
-                        style: TextStyle(
-                          color: Colors.blue.shade700,
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(width: kSpacing4),
-                      Icon(
-                        Icons.arrow_forward,
-                        color: Colors.blue.shade700,
-                        size: kIconSize18,
-                      ),
-                    ],
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: kSpacing12),
-          _buildAppliedJobsTableHeader(),
-          const Divider(
-            height: kSpacing20,
-            thickness: 1,
-            color: Color(0xFFEDF1F7),
-          ),
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: jobs.length,
-            itemBuilder: (context, index) {
-              return _buildAppliedJobRow(jobs[index]);
-            },
-            separatorBuilder:
-                (context, index) => const Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: Color(0xFFEDF1F7),
-                ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAppliedJobsTableHeader() {
-    TextStyle headerStyle = TextStyle(
-      color: Colors.grey.shade600,
-      fontSize: 13,
-      fontWeight: FontWeight.w500,
-    );
-    // El padding horizontal se maneja en _buildAppliedJobRow para alineación
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        vertical: kPadding8,
-        horizontal: kPadding12,
-      ),
-      child: Row(
-        children: [
-          Expanded(flex: 3, child: Text('PUESTOS', style: headerStyle)),
-          Expanded(
-            flex: 2,
-            child: Text(
-              'FECHA DE APLICACIÓN',
-              style: headerStyle,
-              textAlign: TextAlign.start,
-            ),
-          ),
-          Expanded(
-            flex: 1,
-            child: Text(
-              'ESTADO',
-              style: headerStyle,
-              textAlign: TextAlign.start,
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Text(
-              'ACCIÓN',
-              style: headerStyle,
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAppliedJobRow(AppliedJob job) {
-    TextStyle jobTitleStyle = const TextStyle(
-      fontSize: 15,
-      fontWeight: FontWeight.w600,
-      color: Color(0xFF222B45),
-    );
-    TextStyle detailStyle = TextStyle(
-      fontSize: 12,
-      color: Colors.grey.shade600,
-    );
-    TextStyle dateStyle = TextStyle(fontSize: 13, color: Colors.grey.shade700);
-    TextStyle statusStyle = const TextStyle(
-      fontSize: 13,
-      color: Colors.green,
-      fontWeight: FontWeight.w500,
-    );
-    TextStyle matchStyle = TextStyle(
-      fontSize: 12,
-      fontWeight: FontWeight.bold,
-      color:
-          job.matchPercentage > 80
-              ? Colors.green.shade700
-              : (job.matchPercentage > 70
-                  ? Colors.orange.shade700
-                  : Colors.red.shade700),
-    );
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        vertical: kPadding12 + kSpacing4,
-        horizontal: kPadding12,
-      ), // Aumentar padding vertical
-      decoration: BoxDecoration(
-        border:
-            job.isHighlighted
-                ? Border(
-                  left: BorderSide(
-                    color: Colors.blue.shade600,
-                    width: kStroke3,
-                  ),
-                  // bottom: BorderSide(color: Colors.grey.shade200, width: 0.5) // Optional bottom border for all rows
-                )
-                : null, // No special border for non-highlighted
-        color:
-            job.isHighlighted
-                ? Colors.blue.withOpacity(0.03)
-                : Colors.transparent,
-      ),
-      child: Row(
-        children: [
-          // Job Info
-          Expanded(
-            flex: 3,
-            child: Row(
-              children: [
-                Container(
-                  width: kRadius40 + kSpacing4, // 44
-                  height: kRadius40 + kSpacing4, // 44
-                  padding: kPaddingAll8,
-                  decoration: BoxDecoration(
-                    color: job.logoBackgroundColor.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(kRadius8),
-                  ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Image.asset(job.companyLogoAsset, fit: BoxFit.contain),
-                      // El match percentage se muestra abajo ahora
-                    ],
-                  ),
-                ),
-                const SizedBox(width: kSpacing12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              job.jobTitle,
-                              style: jobTitleStyle,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: kSpacing8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: kPadding8,
-                              vertical: kSpacing4 / 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade200,
-                              borderRadius: BorderRadius.circular(kRadius4),
-                            ),
-                            child: Text(
-                              job.jobType,
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.grey.shade700,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: kSpacing4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.location_on,
-                            size: kIconSize14,
-                            color: Colors.grey.shade500,
-                          ),
-                          const SizedBox(width: kSpacing4),
-                          Text(job.location, style: detailStyle),
-                          const SizedBox(width: kSpacing8),
-                          Icon(
-                            Icons.attach_money,
-                            size: kIconSize14,
-                            color: Colors.grey.shade500,
-                          ),
-                          const SizedBox(width: kSpacing4),
-                          Text(job.salary, style: detailStyle),
-                          // Quitado el match percentage de aquí para evitar redundancia
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Date Applied
-          Expanded(
-            flex: 2,
-            child: Text(
-              job.dateApplied,
-              style: dateStyle,
-              textAlign: TextAlign.start,
-            ),
-          ),
-          // Status
-          Expanded(
-            flex: 1,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.check_circle_outline,
-                  color: Colors.green,
-                  size: kIconSize16,
-                ),
-                const SizedBox(width: kSpacing4),
-                Text(job.status, style: statusStyle),
-              ],
-            ),
-          ),
-          // Action
-          Expanded(
-            flex: 2,
-            child: Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  // Navegar a JobDetailScreen pasando un Job simulado
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => JobDetailScreen(
-                        job: Job(
-                          logoAsset: job.companyLogoAsset,
-                          companyName: job.companyName,
-                          location: job.location,
-                          title: job.jobTitle,
-                          type: job.jobType,
-                          salary: job.salary,
-                          isFeatured: job.isHighlighted,
-                          logoBackgroundColor: job.logoBackgroundColor,
-                          matchPercentage: job.matchPercentage,
-                        ),
-                      ),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      job.isHighlighted
-                          ? Colors.blue.shade700
-                          : const Color(
-                            0xFFF0F4FF,
-                          ),
-                  foregroundColor:
-                      job.isHighlighted
-                          ? Colors.white
-                          : Colors.blue.shade700,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: kPadding16,
-                    vertical: kPadding12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(kRadius8),
-                  ),
-                  textStyle: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                child: const Text('Ver Detalles'),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
+  // Pagination controls for applied jobs
   Widget _buildPaginationControls() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         IconButton(
           icon: Icon(
-            Icons.arrow_back,
-            color: _currentPage > 1 ? Colors.blue.shade700 : Colors.grey,
+            Icons.arrow_back_ios_rounded,
+            color:
+                _currentPage > 1 ? Colors.blue.shade700 : Colors.grey.shade400,
+            size: kIconSize16,
           ),
           onPressed:
-              _currentPage > 1 ? () => setState(() => _currentPage--) : null,
+              _currentPage > 1
+                  ? () {
+                    setState(() {
+                      _currentPage--;
+                    });
+                  }
+                  : null,
         ),
         for (int i = 1; i <= _totalPages; i++)
-          InkWell(
-            onTap: () => setState(() => _currentPage = i),
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: kSpacing4),
-              padding: const EdgeInsets.symmetric(
-                horizontal: kPadding12,
-                vertical: kPadding8,
-              ),
-              decoration: BoxDecoration(
-                color:
-                    _currentPage == i
-                        ? Colors.blue.shade700
-                        : Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(kRadius4),
-              ),
-              child: Text(
-                i.toString().padLeft(2, '0'),
-                style: TextStyle(
-                  color:
-                      _currentPage == i ? Colors.white : Colors.grey.shade700,
-                  fontWeight: FontWeight.bold,
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: kSpacing4),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    i == _currentPage ? Colors.blue.shade700 : Colors.white,
+                foregroundColor:
+                    i == _currentPage ? Colors.white : Colors.grey.shade700,
+                padding: EdgeInsets.zero,
+                minimumSize: const Size(36, 36),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(kRadius4),
+                  side: BorderSide(
+                    color:
+                        i == _currentPage
+                            ? Colors.blue.shade700
+                            : Colors.grey.shade300,
+                  ),
                 ),
               ),
+              onPressed: () {
+                setState(() {
+                  _currentPage = i;
+                });
+              },
+              child: Text('$i'),
             ),
           ),
         IconButton(
           icon: Icon(
-            Icons.arrow_forward,
+            Icons.arrow_forward_ios_rounded,
             color:
-                _currentPage < _totalPages ? Colors.blue.shade700 : Colors.grey,
+                _currentPage < _totalPages
+                    ? Colors.blue.shade700
+                    : Colors.grey.shade400,
+            size: kIconSize16,
           ),
           onPressed:
               _currentPage < _totalPages
-                  ? () => setState(() => _currentPage++)
+                  ? () {
+                    setState(() {
+                      _currentPage++;
+                    });
+                  }
                   : null,
         ),
       ],
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    const double appIdentityBarHeight = 70.0;
-
-    return Scaffold(
-      backgroundColor: const Color(0xFFF7F8FA),
-      body: Column(
-        children: <Widget>[
-          AppIdentityBar(height: appIdentityBarHeight),
-          Expanded(
-            child: Row(
-              children: <Widget>[
-                // Left side: Selector Menu
-                Container(
-                  width: 260,
-                  color: Colors.white,
-                  padding: const EdgeInsets.only(top: kPadding20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: kPadding16,
-                          vertical: kPadding8,
-                        ),
-                        child: Text(
-                          'PANEL DEL CANDIDATO', // Traducción
-                          style: TextStyle(
-                            color: Colors.grey.shade500,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: kSpacing8),
-                      _buildMenuItem(
-                        icon: Icons.layers_outlined,
-                        title: 'Resumen', // Traducción
-                        isSelected: _selectedMenu == 'Overview',
-                        onTap: () => setState(() => _selectedMenu = 'Overview'),
-                      ),
-                      _buildMenuItem(
-                        icon: Icons.work_outline,
-                        title: 'Trabajos Aplicados', // Traducción
-                        isSelected: _selectedMenu == 'Applied Jobs',
-                        onTap:
-                            () =>
-                                setState(() => _selectedMenu = 'Applied Jobs'),
-                      ),
-                      _buildMenuItem(
-                        icon: Icons.bookmark_border,
-                        title: 'Trabajos Favoritos', // Traducción
-                        isSelected: _selectedMenu == 'Favorite Jobs',
-                        onTap:
-                            () =>
-                                setState(() => _selectedMenu = 'Favorite Jobs'),
-                      ),
-                      _buildMenuItem(
-                        icon: Icons.notifications_none_outlined,
-                        title: 'Alerta de Trabajo', // Traducción
-                        badgeCount: '09',
-                        isSelected: _selectedMenu == 'Job Alert',
-                        onTap:
-                            () => setState(() => _selectedMenu = 'Job Alert'),
-                      ),
-                      _buildMenuItem(
-                        icon: Icons.settings_outlined,
-                        title: 'Configuración', // Traducción
-                        isSelected: _selectedMenu == 'Settings',
-                        onTap: () => setState(() => _selectedMenu = 'Settings'),
-                      ),
-                    ],
-                  ),
-                ),
-                // Right side: Main content area
-                Expanded(
-                  flex: 3,
-                  child: Container(
-                    child:
-                        _selectedMenu == 'Overview'
-                            ? _buildOverviewContent()
-                            : _selectedMenu == 'Applied Jobs'
-                            ? _buildAppliedJobsContent()
-                            : Center(
-                              child: Text(
-                                'Contenido para $_selectedMenu',
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  color: Colors.black54,
-                                ),
-                              ),
-                            ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

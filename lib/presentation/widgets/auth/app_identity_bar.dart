@@ -1,10 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
+import 'package:job_match/config/util/animations.dart';
+import 'package:job_match/presentation/screens/homepage/find_jobs_screen.dart';
 import 'package:job_match/presentation/screens/profiles/user_profile.dart';
+import 'package:job_match/presentation/screens/profiles/company_profile_screen.dart';
 
-class AppIdentityBar extends StatelessWidget {
+import '../../screens/homepage/screens/homepage_screen.dart';
+
+// Provider to control user type (candidate or company)
+final isCandidateProvider = StateProvider<bool>((ref) => true);
+
+class AppIdentityBar extends ConsumerWidget {
   final double height;
-  const AppIdentityBar({super.key, required this.height});
+  final VoidCallback? onProfileTap;
+
+  const AppIdentityBar({super.key, required this.height, this.onProfileTap});
 
   Widget _buildNavButton(String text, {required VoidCallback onPressed}) {
     return TextButton(
@@ -14,7 +25,9 @@ class AppIdentityBar extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isCandidate = ref.watch(isCandidateProvider);
+
     return Container(
       height: height,
       color: Colors.white,
@@ -22,7 +35,7 @@ class AppIdentityBar extends StatelessWidget {
       child: Row(
         children: <Widget>[
           Container(
-            padding: kPaddingAll8, // Adjusted from kPaddingAll10
+            padding: kPaddingAll8,
             decoration: BoxDecoration(
               color: Colors.black,
               borderRadius: BorderRadius.circular(2),
@@ -41,21 +54,36 @@ class AppIdentityBar extends StatelessWidget {
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
-                    fontSize:
-                        kIconSize18, // Using kIconSize for font size as an example
+                    fontSize: kIconSize18,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: kSpacing20 + kSpacing4), // kSpacing24
+          const SizedBox(width: kSpacing20 + kSpacing4),
           Expanded(
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: <Widget>[
-                  _buildNavButton('Home', onPressed: () {}),
-                  _buildNavButton('Buscar Empleo', onPressed: () {}),
+                  _buildNavButton(
+                    'Home',
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        SlideUpFadePageRoute(page: const HomepageScreen()),
+                      );
+                    },
+                  ),
+                  _buildNavButton(
+                    'Buscar Empleo',
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const FindJobsScreen(),
+                        ),
+                      );
+                    },
+                  ),
                   _buildNavButton('Buscar Empleadores', onPressed: () {}),
                   _buildNavButton('Panel', onPressed: () {}),
                   _buildNavButton('Alertas de Empleo', onPressed: () {}),
@@ -69,7 +97,7 @@ class AppIdentityBar extends StatelessWidget {
               Icons.search,
               color: Colors.grey[700],
               size: kIconSize24 + kSpacing4,
-            ), // kIconSize28
+            ),
             onPressed: () {},
           ),
           const SizedBox(width: kSpacing8),
@@ -77,17 +105,25 @@ class AppIdentityBar extends StatelessWidget {
             icon: Icon(
               Icons.notifications_none,
               color: Colors.grey[700],
-              size: kIconSize24 + kSpacing4, // kIconSize28
+              size: kIconSize24 + kSpacing4,
             ),
             onPressed: () {},
           ),
-          const SizedBox(width: kSpacing12 + kSpacing4), // kSpacing16
+          const SizedBox(width: kSpacing12 + kSpacing4),
           InkWell(
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const UserProfile()),
-              );
-            },
+            onTap:
+                onProfileTap ??
+                () {
+                  if (isCandidate) {
+                    Navigator.of(
+                      context,
+                    ).push(SlideUpFadePageRoute(page: const UserProfile()));
+                  } else {
+                    Navigator.of(context).push(
+                      SlideUpFadePageRoute(page: const CompanyProfileScreen()),
+                    );
+                  }
+                },
             child: const CircleAvatar(
               backgroundColor: Colors.blueGrey,
               radius: kRadius20,

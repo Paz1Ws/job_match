@@ -5,6 +5,7 @@ import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
 import 'package:job_match/presentation/widgets/auth/profile_display_elements.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:flutter/services.dart';
+import 'package:job_match/config/util/animations.dart';
 
 class JobDetailScreen extends StatelessWidget {
   final Job job;
@@ -288,14 +289,26 @@ class JobDetailHeader extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Expanded(
-                                    child: Text(
-                                      job.title,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 22.0,
-                                        color: Color(0xFF222B45),
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
+                                    child: Row(
+                                      spacing: kSpacing12,
+                                      children: [
+                                        Text(
+                                          job.title,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 22.0,
+                                            color: Color(0xFF222B45),
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        InfoChip(
+                                          label: job.type,
+                                          backgroundColor: const Color(
+                                            0xFF3366FF,
+                                          ),
+                                          textColor: Colors.white,
+                                        ),
+                                      ],
                                     ),
                                   ),
                                   const SizedBox(width: 10.0),
@@ -306,11 +319,6 @@ class JobDetailHeader extends StatelessWidget {
                                       textColor: Colors.white,
                                     ),
                                   const SizedBox(width: 8.0),
-                                  InfoChip(
-                                    label: job.type,
-                                    backgroundColor: const Color(0xFF3366FF),
-                                    textColor: Colors.white,
-                                  ),
                                 ],
                               ),
                               const SizedBox(height: 14.0),

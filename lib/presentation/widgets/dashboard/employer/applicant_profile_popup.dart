@@ -115,6 +115,7 @@ class ApplicantProfilePopup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
+      backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(kRadius12),
       ),
@@ -330,7 +331,7 @@ class ApplicantProfilePopup extends StatelessWidget {
                       vertical: kPadding12,
                     ),
                   ),
-                  child: const Text('Close', style: TextStyle(fontSize: 15)),
+                  child: const Text('Cerrar', style: TextStyle(fontSize: 15)),
                 ),
               ),
             ),

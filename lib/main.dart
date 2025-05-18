@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:job_match/config/secrets/supabase_secrets.dart';
-// import 'package:job_match/presentation/screens/dashboard/candidate_dashboard_screen.dart';
-import 'package:job_match/presentation/screens/profiles/company_profile_screen.dart';
 import 'package:job_match/presentation/screens/splash/splash_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'; // Import new screen
 
@@ -21,11 +19,11 @@ class JobMatchApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const SplashScreen(), // Changed to CompanyProfileScreen for testing
+      home: const SplashScreen(),
       theme: ThemeData(
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.deepOrange, // Default button color
+            backgroundColor: Colors.deepOrange,
             foregroundColor: Colors.white,
           ),
         ),

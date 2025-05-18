@@ -1,38 +1,43 @@
+import 'package:job_match/core/domain/models/company_model.dart';
+import 'package:job_match/core/domain/models/candidate_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 final supabaseClient = Supabase.instance.client;
-Future<void> login(String email, String password) async {
+Future<User> login(String email, String password) async {
   try {
+    await signOut(); // Cierra sesión antes de intentar login
     final AuthResponse res = await supabaseClient.auth.signInWithPassword(
       email: email,
       password: password,
     );
-    final Session? session = res.session;
     final User? user = res.user;
 
     if (user != null) {
-      // Inicio de sesión exitoso
       print('Usuario autenticado: ${user.email}');
-      // Puedes navegar a la siguiente pantalla o cargar datos aquí
+      return user;
     } else {
-      // Manejo de caso donde el usuario es null
-      print('No se pudo autenticar al usuario.');
+      throw Exception('No se pudo autenticar al usuario.');
     }
   } on AuthException catch (e) {
-    // Manejo de errores de autenticación
-    print('Error de autenticación: ${e.message}');
+    throw Exception('Error de autenticación: ${e.message}');
   } catch (e) {
     // Manejo de otros errores
-    print('Error inesperado: $e');
+    throw Exception('Error inesperado: $e');
   }
 }
 
-Future<void> signUpWithEmailAndPassword({
+Future<void> signOut() async {
+  await supabaseClient.auth.signOut();
+}
+
+Future<User> signUpWithEmailAndPassword({
   required String email,
   required String password,
   required String role,
 }) async {
   try {
+    await signOut(); // Cierra sesión antes de intentar sign up
     final response = await supabaseClient.auth.signUp(
       email: email,
       password: password,
@@ -44,28 +49,140 @@ Future<void> signUpWithEmailAndPassword({
     }
 
     // Insertar en tabla 'users'
-    final insertRes = await supabaseClient.from('users').insert({
+    await supabaseClient.from('users').insert({
       'id': user.id,
       'email': email,
       'role': role,
     });
-
-    if (insertRes.error != null) {
-      throw Exception(
-        'Error insertando en tabla users: ${insertRes.error!.message}',
-      );
-    }
 
     // Guardar sesión si es necesario
     final session = response.session;
     if (session != null) {
       await supabaseClient.auth.setSession(session.refreshToken ?? '');
     }
-  } on AuthException catch (e) {
-    print('Auth error: ${e.message}');
-    rethrow;
+    return user;
   } catch (e) {
     print('Error en signup: $e');
     rethrow;
   }
+}
+
+Future<bool> registerCandidate({
+  required String email,
+  required String password,
+  required String name,
+  required String phone,
+  required String location,
+  required String experienceLevel,
+  required List<String> skills,
+  required String education,
+  required String experience,
+
+  String? bio,
+  String? resumeUrl,
+}) async {
+  try {
+    final user = await signUpWithEmailAndPassword(
+      email: email,
+      password: password,
+      role: 'postulante',
+    );
+
+    final candidate = Candidate(
+      userId: user.id,
+      name: name,
+      phone: phone,
+      location: location,
+      experienceLevel: experienceLevel,
+      skills: skills,
+      bio: bio,
+      resumeUrl: resumeUrl,
+      education: education,
+      experience: experience,
+    );
+
+    await supabaseClient.from('candidates').insert(candidate.toJson());
+
+    return true;
+  } catch (e) {
+    print('Error registering candidate: $e');
+    return false;
+  }
+}
+
+Future<void> registerCompany({
+  required String email,
+  required String password,
+  required String companyName,
+  required String phone,
+  required String address,
+  required String industry,
+  String? description,
+  String? website,
+  String? logo,
+}) async {
+  final user = await signUpWithEmailAndPassword(
+    email: email,
+    password: password,
+    role: 'empresa',
+  );
+
+  final company = Company(
+    userId: user.id,
+    companyName: companyName,
+    phone: phone,
+    address: address,
+    industry: industry,
+    description: description,
+    website: website,
+    logo: logo,
+  );
+
+  final res = await supabaseClient.from('companies').insert(company.toJson());
+  if (res.error != null) {
+    throw Exception('Error en tabla companies: ${res.error!.message}');
+  }
+}
+
+// Providers to store the authenticated user profile (candidate or company)
+final candidateProfileProvider = StateProvider<Candidate?>((ref) => null);
+final companyProfileProvider = StateProvider<Company?>((ref) => null);
+
+Future<void> fetchUserProfile(WidgetRef ref) async {
+  final user = supabaseClient.auth.currentUser;
+  if (user == null) throw Exception('Usuario no autenticado');
+
+  final userId = user.id;
+
+  // Intenta obtener primero el perfil como candidato
+  final candidateResponse =
+      await supabaseClient
+          .from('candidates')
+          .select()
+          .eq('user_id', userId)
+          .maybeSingle();
+
+  if (candidateResponse != null) {
+    final candidate = Candidate.fromJson(candidateResponse);
+    ref.read(candidateProfileProvider.notifier).state = candidate;
+    ref.read(companyProfileProvider.notifier).state = null;
+    return;
+  }
+
+  // Si no es candidato, intenta obtener como empresa
+  final companyResponse =
+      await supabaseClient
+          .from('companies')
+          .select()
+          .eq('user_id', userId)
+          .maybeSingle();
+
+  if (companyResponse != null) {
+    final company = Company.fromJson(companyResponse);
+    ref.read(companyProfileProvider.notifier).state = company;
+    ref.read(candidateProfileProvider.notifier).state = null;
+    return;
+  }
+
+  throw Exception('No se encontró perfil de usuario');
 }

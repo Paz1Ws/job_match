@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
-import 'package:job_match/presentation/screens/homepage/widgets/partner_icon.dart';
-import 'package:job_match/presentation/screens/homepage/widgets/stat_item.dart';
+import 'package:job_match/config/util/animations.dart';
 import 'package:job_match/presentation/screens/auth/screens/login_screen.dart';
+import 'package:job_match/presentation/screens/homepage/find_jobs_screen.dart';
+import 'package:job_match/presentation/widgets/homepage/partner_icon.dart';
+import 'package:job_match/presentation/widgets/homepage/stat_item.dart';
+import 'package:animate_do/animate_do.dart';
 
 class HomepageScreen extends StatefulWidget {
   const HomepageScreen({super.key});
@@ -79,14 +82,26 @@ class _HomepageScreenState extends State<HomepageScreen> {
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildTopBar(context),
-              Spacer(),
-              Center(child: _buildHeroSection(context)),
-              SizedBox(height: 60),
-              _buildStatsSection(),
-              Spacer(),
-              _buildPartnersSection(),
-              SizedBox(height: 40),
+              FadeInDown(
+                duration: const Duration(milliseconds: 800),
+                child: _buildTopBar(context),
+              ),
+              const Spacer(),
+              FadeIn(
+                duration: const Duration(milliseconds: 900),
+                child: Center(child: _buildHeroSection(context)),
+              ),
+              const SizedBox(height: 60),
+              FadeInUp(
+                duration: const Duration(milliseconds: 900),
+                child: _buildStatsSection(),
+              ),
+              const Spacer(),
+              FadeInUpBig(
+                duration: const Duration(milliseconds: 1000),
+                child: _buildPartnersSection(),
+              ),
+              const SizedBox(height: 40),
             ],
           ),
         ],
@@ -100,43 +115,42 @@ class _HomepageScreenState extends State<HomepageScreen> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Image.asset(
-              'assets/images/job_match_transparent.png',
-              width: 80,
-              height: 80,
-            ),
-            Spacer(),
-            SizedBox(width: 100),
-            Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildTopBarButton('Inicio', selected: true),
-                  _buildTopBarButton('Empleos'),
-                  _buildTopBarButton('Sobre Nosotros'),
-                  _buildTopBarButton('Contáctanos'),
-                ],
+            ElasticInLeft(
+              duration: const Duration(milliseconds: 900),
+              child: Image.asset(
+                'assets/images/job_match_transparent.png',
+                width: 80,
+                height: 80,
               ),
             ),
-            Spacer(),
-
-            FittedBox(
-              child: Row(
-                children: [
-                  TextButton(
+            Row(
+              children: [
+                _buildTopBarButton('Inicio', selected: true),
+                _buildTopBarButton('Empleos'),
+                _buildTopBarButton('Sobre Nosotros'),
+                _buildTopBarButton('Contáctanos'),
+              ],
+            ),
+            Row(
+              children: [
+                FadeInRight(
+                  duration: const Duration(milliseconds: 700),
+                  child: TextButton(
                     onPressed:
-                        () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const LoginScreen(),
-                          ),
-                        ),
+                        () => Navigator.of(
+                          context,
+                        ).push(SlideUpFadePageRoute(page: const LoginScreen())),
                     child: const Text(
                       'Iniciar Sesión',
                       style: TextStyle(color: Colors.white),
                     ),
                   ),
-                  ElevatedButton(
+                ),
+                FadeInRight(
+                  duration: const Duration(milliseconds: 900),
+                  child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(4),
@@ -147,15 +161,13 @@ class _HomepageScreenState extends State<HomepageScreen> {
                       ),
                     ),
                     onPressed:
-                        () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const LoginScreen(),
-                          ),
-                        ),
+                        () => Navigator.of(
+                          context,
+                        ).push(SlideUpFadePageRoute(page: const LoginScreen())),
                     child: const Text('Registrarse'),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ],
         ),
@@ -176,53 +188,65 @@ class _HomepageScreenState extends State<HomepageScreen> {
   Widget _buildHeroSection(BuildContext context) {
     return Column(
       children: [
-        const Text(
-          '¡Encuentra tu trabajo soñado hoy!',
-          style: TextStyle(
-            fontSize: 60,
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
+        FadeInDownBig(
+          duration: const Duration(milliseconds: 900),
+          child: const Text(
+            '¡Encuentra tu trabajo soñado hoy!',
+            style: TextStyle(
+              fontSize: 60,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
           ),
-          textAlign: TextAlign.center,
         ),
         const SizedBox(height: 12),
-        const Text(
-          'Conectando talento con oportunidad: tu puerta al éxito profesional',
-          style: TextStyle(fontSize: 18, color: Colors.white70),
-          textAlign: TextAlign.center,
+        FadeIn(
+          duration: const Duration(milliseconds: 1200),
+          child: const Text(
+            'Conectando talento con oportunidad: tu puerta al éxito profesional',
+            style: TextStyle(fontSize: 18, color: Colors.white70),
+            textAlign: TextAlign.center,
+          ),
         ),
         const SizedBox(height: 40),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildDropdownField(
-                'Puesto o Empresa',
-                showDivider: true,
-                items: _jobOptions,
-                value: _selectedJob,
-                onChanged: (val) => setState(() => _selectedJob = val),
-              ),
-              _buildDropdownField(
-                'Selecciona Ubicación',
-                showDivider: true,
-                items: _locationOptions,
-                value: _selectedLocation,
-                onChanged: (val) => setState(() => _selectedLocation = val),
-              ),
-              _buildDropdownField(
-                'Selecciona Categoría',
-                showDivider: false,
-                items: _categoryOptions,
-                value: _selectedCategory,
-                onChanged: (val) => setState(() => _selectedCategory = val),
-              ),
-              _buildFindJobButton(),
-            ],
+        FadeInUp(
+          duration: const Duration(milliseconds: 1000),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildDropdownField(
+                  'Puesto o Empresa',
+                  showDivider: true,
+                  items: _jobOptions,
+                  value: _selectedJob,
+                  onChanged: (val) => setState(() => _selectedJob = val),
+                ),
+                _buildDropdownField(
+                  'Selecciona Ubicación',
+                  showDivider: true,
+                  items: _locationOptions,
+                  value: _selectedLocation,
+                  onChanged: (val) => setState(() => _selectedLocation = val),
+                ),
+                _buildDropdownField(
+                  'Selecciona Categoría',
+                  showDivider: false,
+                  items: _categoryOptions,
+                  value: _selectedCategory,
+                  onChanged: (val) => setState(() => _selectedCategory = val),
+                ),
+                BounceInRight(
+                  duration: const Duration(milliseconds: 900),
+                  child: _buildFindJobButton(),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -231,7 +255,11 @@ class _HomepageScreenState extends State<HomepageScreen> {
 
   ElevatedButton _buildFindJobButton() {
     return ElevatedButton(
-      onPressed: () {},
+      onPressed: () {
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (context) => const FindJobsScreen()));
+      },
       style: ElevatedButton.styleFrom(
         fixedSize: const Size(200, 75),
         shape: const RoundedRectangleBorder(
@@ -296,16 +324,33 @@ class _HomepageScreenState extends State<HomepageScreen> {
   Widget _buildStatsSection() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: const [
-        StatItem(icon: Icons.work_outline, count: '25,850', label: 'Empleos'),
-        SizedBox(width: 60),
-        StatItem(
-          icon: Icons.people_outline,
-          count: '10,250',
-          label: 'Candidatos',
+      children: [
+        FadeInLeft(
+          duration: Duration(milliseconds: 900),
+          child: StatItem(
+            icon: Icons.work_outline,
+            count: '25,850',
+            label: 'Empleos',
+          ),
         ),
         SizedBox(width: 60),
-        StatItem(icon: Icons.business, count: '18,400', label: 'Empresas'),
+        FadeInUp(
+          duration: Duration(milliseconds: 900),
+          child: StatItem(
+            icon: Icons.people_outline,
+            count: '10,250',
+            label: 'Candidatos',
+          ),
+        ),
+        SizedBox(width: 60),
+        FadeInRight(
+          duration: Duration(milliseconds: 900),
+          child: StatItem(
+            icon: Icons.business,
+            count: '18,400',
+            label: 'Empresas',
+          ),
+        ),
       ],
     );
   }
@@ -327,15 +372,18 @@ class _HomepageScreenState extends State<HomepageScreen> {
         children:
             logos.entries
                 .map(
-                  (e) => Row(
-                    children: [
-                      e.key,
-                      const SizedBox(width: 20),
-                      Text(
-                        e.value,
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ],
+                  (e) => FadeInUp(
+                    duration: const Duration(milliseconds: 900),
+                    child: Row(
+                      children: [
+                        e.key,
+                        const SizedBox(width: 20),
+                        Text(
+                          e.value,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ],
+                    ),
                   ),
                 )
                 .toList(),
