@@ -29,6 +29,15 @@ final jobsProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((
   return res;
 });
 
+final jobsProviderWithCompanyName = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
+  final res = await supabase
+      .from('jobs')
+      .select('*, users!company_id(companies(company_name))')
+      .order('created_at', ascending: false);
+
+  return res;
+});
+
 // 2.4. Applications
 final applicationsProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:job_match/presentation/widgets/homepage/find_job/job_filter_provider.dart';
 
 class JobFilterSidebar extends StatefulWidget {
   const JobFilterSidebar({super.key});
@@ -9,7 +11,17 @@ class JobFilterSidebar extends StatefulWidget {
 }
 
 class _JobFilterSidebarState extends State<JobFilterSidebar> {
+
+  final _jobTitleTextController = TextEditingController();
+
+  JobFilterState _filter = JobFilterState();
   RangeValues salaryRange = const RangeValues(0, 9999);
+
+  @override
+  void dispose() {
+    _jobTitleTextController.dispose();
+    super.dispose();
+  }
 
   Widget buildSectionTitle(String title) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -87,16 +99,17 @@ class _JobFilterSidebarState extends State<JobFilterSidebar> {
             buildSectionTitle('Buscar por título del trabajo'),
             FadeInLeft(
               duration: const Duration(milliseconds: 400),
-              child: const TextField(
+              child: TextField(
+                controller: _jobTitleTextController,
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: Colors.white,
-                  border: OutlineInputBorder(
+                  border: const OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(10)),
                     borderSide: BorderSide.none,
                   ),
                   hintText: 'Titulo del trabajo o compañia',
-                  prefixIcon: Icon(Icons.search),
+                  prefixIcon: const Icon(Icons.search),
                 ),
               ),
             ),
@@ -199,12 +212,19 @@ class _JobFilterSidebarState extends State<JobFilterSidebar> {
                   Text(
                     'Salario: \$${salaryRange.start.round()} - \$${salaryRange.end.round()}',
                   ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                    ),
-                    onPressed: () {},
-                    child: const Text('Applicar'),
+                  Consumer(
+                    builder: (context, ref, _) {
+                      return ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                        ),
+                        onPressed: () {
+                          _filter = _filter.copyWith(jobTitleLike: _jobTitleTextController.text.trim());
+                          ref.read(jobFilterProvider.notifier).state = _filter;
+                        },
+                        child: const Text('Applicar'),
+                      );
+                    }
                   ),
                 ],
               ),

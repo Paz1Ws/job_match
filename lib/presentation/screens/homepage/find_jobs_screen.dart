@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:job_match/config/util/animations.dart';
 import 'package:job_match/presentation/screens/auth/screens/login_screen.dart';
 import 'package:job_match/presentation/widgets/homepage/find_job/footer_find_jobs.dart';
-import 'package:job_match/presentation/widgets/homepage/home_page_top_bar.dart';
 import 'package:job_match/presentation/widgets/homepage/find_job/job_filter_sidebar.dart';
 import 'package:job_match/presentation/widgets/homepage/find_job/simple_job_card_list_view.dart';
 import 'package:job_match/presentation/widgets/homepage/find_job/top_companies.dart';

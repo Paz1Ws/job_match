@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
+import 'package:job_match/core/data/auth_request.dart';
 import 'package:job_match/core/data/supabase_http_requests.dart';
+import 'package:job_match/core/domain/models/candidate_model.dart';
 import 'package:job_match/core/domain/models/posted_job_model.dart';
 import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
 import 'package:job_match/presentation/widgets/dashboard/employer/post_job_form.dart';
@@ -25,6 +27,14 @@ class _EmployerDashboardScreenState
     // Solo usa providers existentes de supabase_http_requests.dart
     final jobsAsync = ref.watch(jobsProvider);
     final applicationsAsync = ref.watch(applicationsProvider);
+    
+    // Cargar el perfil si aún no está cargado
+    final candidate = ref.watch(candidateProfileProvider);
+    if (candidate == null) {
+      // Intentar cargar el perfil si no está en memoria
+      Future.microtask(() => fetchUserProfile(ref));
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FA),
@@ -146,7 +156,7 @@ class _EmployerDashboardScreenState
                         ? jobsAsync.when(
                             loading: () => const Center(child: CircularProgressIndicator()),
                             error: (error, stack) => Center(child: Text('Error: $error')),
-                            data: (jobs) => _buildOverviewContent(jobs),
+                            data: (jobs) => _buildOverviewContent(jobs, candidate),
                           )
                         : _selectedMenu == 'Post a Job'
                             ? const PostJobForm()
@@ -222,7 +232,7 @@ class _EmployerDashboardScreenState
     );
   }
 
-  Widget _buildOverviewContent(List<Map<String, dynamic>> jobs) {
+  Widget _buildOverviewContent(List<Map<String, dynamic>> jobs, Candidate candidate) {
     // Solo muestra la cantidad de empleos, no uses providers que no existen
     return SingleChildScrollView(
       padding: const EdgeInsets.all(kPadding20 + kSpacing4),
@@ -231,9 +241,9 @@ class _EmployerDashboardScreenState
         children: [
           FadeInDown(
             duration: const Duration(milliseconds: 600),
-            child: const Text(
-              'Hola, Empresa',
-              style: TextStyle(
+            child: Text(
+              'Hola, ${candidate.name}',
+              style: const TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF222B45),

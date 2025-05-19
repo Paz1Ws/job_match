@@ -91,7 +91,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                 duration: const Duration(milliseconds: 900),
                 child: Center(child: _buildHeroSection(context)),
               ),
-              const SizedBox(height: 60),
+              const SizedBox(height: 40),
               FadeInUp(
                 duration: const Duration(milliseconds: 900),
                 child: _buildStatsSection(),

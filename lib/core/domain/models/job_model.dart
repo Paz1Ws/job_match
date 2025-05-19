@@ -22,4 +22,18 @@ class Job {
     required this.logoBackgroundColor,
     required this.matchPercentage,
   });
+
+  factory Job.fromMap(Map<String, dynamic> map) {
+    return Job(
+      logoAsset: 'assets/images/job_match.jpg', //* Default value
+      companyName: map['users']?['companies']?['company_name'] ?? 'Empresa', //* ...
+      location: map['location'] ?? 'Lima, Perú',
+      title: map['title'] ?? '',
+      type: map['job_type'] ?? 'Tiempo Completo',
+      salary: map['salary_range'] ?? 'S/5000',
+      isFeatured: map['is_featured'] ?? false,
+      logoBackgroundColor: Colors.blue.shade100, //* Default value
+      matchPercentage: 80 //* Default value
+    );
+  }
 }
