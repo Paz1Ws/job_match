@@ -5,7 +5,7 @@ import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:intl/intl.dart';
 
 class PostJobForm extends ConsumerStatefulWidget {
-  final int companyId; // Assuming companyId is passed to the form
+  final String companyId; // Company ID from auth user
 
   const PostJobForm({super.key, required this.companyId});
 
@@ -25,9 +25,7 @@ class _PostJobFormState extends ConsumerState<PostJobForm> {
   final _locationController = TextEditingController(
     text: 'Lima, Perú (Remoto Opcional)',
   );
-  final _jobTypeController = TextEditingController(
-    text: 'Tiempo Completo',
-  ); // Could be a Dropdown
+  String _jobTypeValue = 'full-time'; // From the DB constraint options
   final _salaryMinController = TextEditingController(text: '7000');
   final _salaryMaxController = TextEditingController(text: '10000');
   final _applicationDeadlineController = TextEditingController(
@@ -35,7 +33,7 @@ class _PostJobFormState extends ConsumerState<PostJobForm> {
       'yyyy-MM-dd',
     ).format(DateTime.now().add(const Duration(days: 30))),
   );
-  String _statusValue = 'open'; // Default status
+  String _statusValue = 'open'; // From the DB constraint options
   final _requiredSkillsController = TextEditingController(
     text: 'Flutter, Dart, Firebase, Git, API REST',
   );
@@ -66,7 +64,6 @@ class _PostJobFormState extends ConsumerState<PostJobForm> {
     _titleController.dispose();
     _descriptionController.dispose();
     _locationController.dispose();
-    _jobTypeController.dispose();
     _salaryMinController.dispose();
     _salaryMaxController.dispose();
     _applicationDeadlineController.dispose();
@@ -77,57 +74,78 @@ class _PostJobFormState extends ConsumerState<PostJobForm> {
 
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
-      try {
-        final title = _titleController.text;
-        final description = _descriptionController.text;
-        final location = _locationController.text;
-        final jobType =
-            _jobTypeController
-                .text; // Consider using a dropdown for fixed values
-        final salaryMin = num.tryParse(_salaryMinController.text);
-        final salaryMax = num.tryParse(_salaryMaxController.text);
-        final applicationDeadline = DateTime.tryParse(
-          _applicationDeadlineController.text,
-        );
-        final status = _statusValue;
-        final requiredSkills =
-            _requiredSkillsController.text
-                .split(',')
-                .map((s) => s.trim())
-                .where((s) => s.isNotEmpty)
-                .toList();
-        final maxApplications = int.tryParse(_maxApplicationsController.text);
-
-        final postedJob = await ref.read(createJobProvider)(
-          widget.companyId,
-          title,
-          description,
-          location,
-          jobType,
-          salaryMin,
-          salaryMax,
-          applicationDeadline,
-          status,
-          requiredSkills,
-          maxApplications,
-        );
-
+      if (widget.companyId.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Empleo "${postedJob.title}" publicado con éxito! ID: ${postedJob.id}',
-            ),
+          const SnackBar(
+            content: Text('Error: No se pudo identificar la empresa'),
           ),
         );
+        return;
+      }
+
+      setState(() => _isLoading = true);
+
+      try {
+        // Prepare the data according to DB schema
+        final Map<String, dynamic> jobData = {
+          'company_id': widget.companyId,
+          'title': _titleController.text,
+          'description': _descriptionController.text,
+          'location': _locationController.text,
+          'job_type': _jobTypeValue,
+          'salary_min': num.tryParse(_salaryMinController.text),
+          'salary_max': num.tryParse(_salaryMaxController.text),
+          'application_deadline': _applicationDeadlineController.text,
+          'status': _statusValue,
+          'required_skills':
+              _requiredSkillsController.text
+                  .split(',')
+                  .map((s) => s.trim())
+                  .where((s) => s.isNotEmpty)
+                  .toList(),
+          'max_applications': int.tryParse(_maxApplicationsController.text),
+        };
+
+        await ref.read(createJobProvider)(jobData);
+
+        // Show success message
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '¡Empleo "${_titleController.text}" publicado con éxito!',
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+
+        // Reset form or navigate as needed
         _formKey.currentState?.reset();
-        // Optionally clear controllers or navigate
+
+        // Clear the form or set to default values
+        _titleController.clear();
+        _descriptionController.clear();
+        _locationController.clear();
+        _jobTypeValue = 'full-time';
+        _salaryMinController.clear();
+        _salaryMaxController.clear();
+        _applicationDeadlineController.text = DateFormat(
+          'yyyy-MM-dd',
+        ).format(DateTime.now().add(const Duration(days: 30)));
+        _statusValue = 'open';
+        _requiredSkillsController.clear();
+        _maxApplicationsController.clear();
       } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error al publicar empleo: $e')));
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error al publicar empleo: $e')),
+          );
+        }
       } finally {
-        setState(() => _isLoading = false);
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
       }
     }
   }
@@ -182,10 +200,49 @@ class _PostJobFormState extends ConsumerState<PostJobForm> {
               maxLines: 5,
             ),
             _buildTextField(_locationController, 'Ubicación (ej: Lima, Perú)'),
-            _buildTextField(
-              _jobTypeController,
-              'Tipo de Empleo (ej: Tiempo Completo, Medio Tiempo, Contrato)',
+
+            // Job Type Dropdown (from DB constraints)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: kSpacing8),
+              child: DropdownButtonFormField<String>(
+                value: _jobTypeValue,
+                decoration: const InputDecoration(
+                  labelText: 'Tipo de Empleo',
+                  border: OutlineInputBorder(),
+                ),
+                items:
+                    ['full-time', 'part-time', 'contract', 'freelance'].map((
+                      String value,
+                    ) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(
+                          value == 'full-time'
+                              ? 'Tiempo Completo'
+                              : value == 'part-time'
+                              ? 'Medio Tiempo'
+                              : value == 'contract'
+                              ? 'Contrato'
+                              : 'Freelance',
+                        ),
+                      );
+                    }).toList(),
+                onChanged: (String? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      _jobTypeValue = newValue;
+                    });
+                  }
+                },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor, seleccione el tipo de empleo';
+                  }
+                  return null;
+                },
+              ),
             ),
+
             Row(
               children: [
                 Expanded(
@@ -242,8 +299,12 @@ class _PostJobFormState extends ConsumerState<PostJobForm> {
                       return DropdownMenuItem<String>(
                         value: value,
                         child: Text(
-                          value[0].toUpperCase() + value.substring(1),
-                        ), // Capitalize
+                          value == 'open'
+                              ? 'Abierto'
+                              : value == 'paused'
+                              ? 'Pausado'
+                              : 'Cerrado',
+                        ),
                       );
                     }).toList(),
                 onChanged: (String? newValue) {

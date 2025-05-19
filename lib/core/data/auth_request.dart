@@ -37,8 +37,9 @@ Future<User> signUpWithEmailAndPassword({
   required String role,
 }) async {
   try {
-    if ( supabaseClient.auth.currentSession!= null || supabaseClient.auth.currentUser!=null ) {
-         await signOut();
+    if (supabaseClient.auth.currentSession != null ||
+        supabaseClient.auth.currentUser != null) {
+      await signOut();
     }
     final response = await supabaseClient.auth.signUp(
       email: email,
@@ -123,26 +124,32 @@ Future<void> registerCompany({
   String? website,
   String? logo,
 }) async {
-  final user = await signUpWithEmailAndPassword(
-    email: email,
-    password: password,
-    role: 'empresa',
-  );
+  try {
+    if (supabaseClient.auth.currentSession != null ||
+        supabaseClient.auth.currentUser != null) {
+      await signOut();
+    }
+    final user = await signUpWithEmailAndPassword(
+      email: email,
+      password: password,
+      role: 'empresa',
+    );
 
-  final company = Company(
-    userId: user.id,
-    companyName: companyName,
-    phone: phone,
-    address: address,
-    industry: industry,
-    description: description,
-    website: website,
-    logo: logo,
-  );
+    final company = Company(
+      userId: user.id,
+      companyName: companyName,
+      phone: phone,
+      address: address,
+      industry: industry,
+      description: description,
+      website: website,
+      logo: logo,
+    );
 
-  final res = await supabaseClient.from('companies').insert(company.toJson());
-  if (res.error != null) {
-    throw Exception('Error en tabla companies: ${res.error!.message}');
+    await supabaseClient.from('companies').insert(company.toJson());
+  } catch (e) {
+    print('Error registering company: $e');
+    rethrow;
   }
 }
 

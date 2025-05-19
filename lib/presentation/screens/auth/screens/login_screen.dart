@@ -701,7 +701,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 } else {
                                   // REGISTRO EMPRESA
                                   try {
-                                    await signOut(); // Cierra sesión antes de sign up
                                     await registerCompany(
                                       email: _emailController.text,
                                       password: _passwordController.text,

@@ -93,50 +93,47 @@ final updateCompanyProvider = Provider((ref) {
 
 /// 3. Crear una vacante (POST /jobs)
 /// Permite a una empresa publicar una nueva vacante.
-final createJobProvider = Provider((ref) {
-  return (
-    int companyId,
-    String title,
-    String description,
-    String location,
-    String jobType,
-    num? salaryMin,
-    num? salaryMax,
-    DateTime? applicationDeadline,
-    String status, // e.g., 'open', 'paused'
-    List<String>? requiredSkills,
-    int? maxApplications,
-  ) async {
-    final Map<String, dynamic> jobData = {
-      'company_id': companyId,
-      'title': title,
-      'description': description,
-      'location': location,
-      'job_type': jobType,
-      'status': status,
-      'views_count': 0, // Default views_count to 0 on creation
-    };
+final createJobProvider = Provider<
+  Future<Map<String, dynamic>> Function(Map<String, dynamic>)
+>((ref) {
+  return (Map<String, dynamic> jobData) async {
+    try {
+      // Attempt to insert the job data into the 'jobs' table and select the inserted row.
+      final List<Map<String, dynamic>> insertedData =
+          await supabase // Ensure 'supabase' is your initialized Supabase client
+              .from('jobs')
+              .insert(jobData)
+              .select();
 
-    if (salaryMin != null) jobData['salary_min'] = salaryMin;
-    if (salaryMax != null) jobData['salary_max'] = salaryMax;
-    if (applicationDeadline != null) {
-      jobData['application_deadline'] = applicationDeadline.toIso8601String();
-    }
-    if (requiredSkills != null && requiredSkills.isNotEmpty) {
-      jobData['required_skills'] = requiredSkills;
-    }
-    if (maxApplications != null) {
-      jobData['max_applications'] = maxApplications;
-    }
+      if (insertedData.isEmpty) {
+        // This case is unexpected if the insert was successful and RLS allows reading the row.
+        // It might indicate an issue with RLS policies preventing the read-back of the inserted data.
+        throw Exception(
+          'Job creation seemingly succeeded, but no data was returned. Review RLS policies on the "jobs" table.',
+        );
+      }
 
-    final response =
-        await Supabase.instance.client
-            .from('jobs')
-            .insert(jobData)
-            .select()
-            .single(); // Assuming insert returns the created row
-
-    return PostedJob.fromJson(response);
+      // Return the data of the newly created job.
+      return insertedData.first;
+    } on PostgrestException catch (e) {
+      // Specifically handle PostgrestExceptions.
+      // The error "relation 'profiles' does not exist" (code: 42P01) strongly suggests
+      // a database-side issue. It's likely that a trigger on the 'jobs' table
+      // (such as 'trg_new_job' which executes the 'notify_new_job()' function)
+      // or an RLS policy is attempting to query a table named "profiles" which is not defined.
+      print(
+        'PostgrestException during job creation: ${e.message} (Code: ${e.code}, Details: ${e.details})',
+      );
+      throw Exception(
+        'Database error: "${e.message}". This is likely caused by a server-side trigger (e.g., the "notify_new_job()" function) or an RLS policy on the "jobs" table that incorrectly references a non-existent "profiles" table. Please review your database schema and triggers.',
+      );
+    } catch (e) {
+      // Catch-all for other types of errors.
+      print('Unexpected error during job creation: $e');
+      throw Exception(
+        'An unexpected error occurred while creating the job: $e',
+      );
+    }
   };
 });
 
@@ -181,7 +178,7 @@ final updateProfileProvider = Provider((ref) {
 
     final response =
         await Supabase.instance.client
-            .from('profiles')
+            .from('candidates')
             .update(updates)
             .eq('user_id', userId)
             .select();
@@ -215,3 +212,25 @@ final uploadCvProvider = Provider((ref) {
     }
   };
 });
+
+/// Provider to fetch jobs posted by a specific company
+final jobsByCompanyIdProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>((
+      ref,
+      companyId,
+    ) async {
+      if (companyId.isEmpty) return [];
+
+      try {
+        final response = await supabase
+            .from('jobs')
+            .select('*')
+            .eq('company_id', companyId)
+            .order('created_at', ascending: false);
+
+        return response;
+      } catch (e) {
+        print('Error fetching company jobs: $e');
+        return [];
+      }
+    });

@@ -39,9 +39,7 @@ class RelatedJobCard extends StatelessWidget {
               padding: const EdgeInsets.all(kPadding20),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(
-                  kRadius12 + kRadius4 / 2,
-                ),
+                borderRadius: BorderRadius.circular(kRadius12 + kRadius4 / 2),
                 border: Border.all(
                   color: Colors.grey.shade200,
                   width: kStroke1 * 1.2,
@@ -72,26 +70,25 @@ class RelatedJobCard extends StatelessWidget {
                               kRadius8 + kRadius4 / 2,
                             ),
                           ),
-                          child: job.logoAsset.startsWith('assets/')
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(
-                                    kRadius8 + kRadius4 / 2,
+                          child:
+                              job.logoAsset.startsWith('assets/')
+                                  ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(
+                                      kRadius8 + kRadius4 / 2,
+                                    ),
+                                    child: Image.asset(
+                                      job.logoAsset,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                  : Icon(
+                                    Icons.business,
+                                    color: Colors.white,
+                                    size: kIconSize24 + kSpacing4 / 2,
                                   ),
-                                  child: Image.asset(
-                                    job.logoAsset,
-                                    fit: BoxFit.cover,
-                                  ),
-                                )
-                              : Icon(
-                                  Icons.business,
-                                  color: Colors.white,
-                                  size: kIconSize24 + kSpacing4 / 2,
-                                ),
                         ),
                       ),
-                      const SizedBox(
-                        width: kSpacing12 + kSpacing4 / 2,
-                      ),
+                      const SizedBox(width: kSpacing12 + kSpacing4 / 2),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -141,7 +138,9 @@ class RelatedJobCard extends StatelessWidget {
                               delay: const Duration(milliseconds: 200),
                               duration: const Duration(milliseconds: 400),
                               child: Container(
-                                margin: const EdgeInsets.only(bottom: kSpacing4),
+                                margin: const EdgeInsets.only(
+                                  bottom: kSpacing4,
+                                ),
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: kPadding8,
                                   vertical: kSpacing4 / 2 + kSpacing4 / 4,
@@ -163,12 +162,16 @@ class RelatedJobCard extends StatelessWidget {
                             ),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: kPadding8, vertical: kSpacing4 / 2),
+                              horizontal: kPadding8,
+                              vertical: kSpacing4 / 2,
+                            ),
                             decoration: BoxDecoration(
-                                color: fitColor.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(kRadius8),
-                                border: Border.all(
-                                    color: fitColor.withOpacity(0.3))),
+                              color: fitColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(kRadius8),
+                              border: Border.all(
+                                color: fitColor.withOpacity(0.3),
+                              ),
+                            ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -229,7 +232,11 @@ class RelatedJobCard extends StatelessWidget {
               top: 8,
               left: 8,
               child: IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.blue, size: 20),
+                icon: const Icon(
+                  Icons.arrow_back,
+                  color: Colors.blue,
+                  size: 20,
+                ),
                 onPressed: () => Navigator.of(context).maybePop(),
                 tooltip: 'Atrás',
                 padding: EdgeInsets.zero,

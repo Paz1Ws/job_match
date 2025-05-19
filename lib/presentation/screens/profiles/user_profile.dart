@@ -60,6 +60,7 @@ class ProfileDetailHeader extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Stack(
+            clipBehavior: Clip.none,
             children: <Widget>[
               // Banner (bottom layer of the Stack)
               FadeInDownBig(
@@ -80,365 +81,355 @@ class ProfileDetailHeader extends ConsumerWidget {
                 ), // Position after banner
                 child: FadeInUp(
                   duration: const Duration(milliseconds: 700),
-                  child: Transform.translate(
-                    offset: Offset(0, -cardOverlap), // Translate upwards
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: pageHorizontalPadding,
-                      ),
-                      child: Container(
-                        padding: const EdgeInsets.all(kPadding28),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(
-                            kRadius12 + kRadius4,
-                          ),
-                          border: Border.all(
-                            color: Colors.grey.shade200,
-                            width: kStroke1 * 1.2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.07),
-                              spreadRadius: kStroke1,
-                              blurRadius: kSpacing8,
-                              offset: const Offset(0, kSpacing4 / 2),
-                            ),
-                          ],
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: pageHorizontalPadding,
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(kPadding28),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(
+                          kRadius12 + kRadius4,
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            FadeIn(
-                              duration: const Duration(milliseconds: 700),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: <Widget>[
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.arrow_back,
-                                      color: Colors.blue,
-                                    ),
-                                    onPressed:
-                                        () => Navigator.of(context).maybePop(),
-                                    tooltip: 'Atrás',
+                        border: Border.all(
+                          color: Colors.grey.shade200,
+                          width: kStroke1 * 1.2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.07),
+                            spreadRadius: kStroke1,
+                            blurRadius: kSpacing8,
+                            offset: const Offset(0, kSpacing4 / 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          FadeIn(
+                            duration: const Duration(milliseconds: 700),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.arrow_back,
+                                    color: Colors.blue,
                                   ),
-                                  BounceInDown(
-                                    duration: const Duration(milliseconds: 900),
-                                    child: CircleAvatar(
-                                      radius: kRadius20 + kRadius12,
-                                      backgroundImage: const AssetImage(
-                                        'assets/images/job_match.jpg',
+                                  onPressed:
+                                      () => Navigator.of(context).maybePop(),
+                                  tooltip: 'Atrás',
+                                ),
+                                BounceInDown(
+                                  duration: const Duration(milliseconds: 900),
+                                  child: CircleAvatar(
+                                    radius: kRadius20 + kRadius12,
+                                    backgroundImage: const AssetImage(
+                                      'assets/images/job_match.jpg',
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: kSpacing20),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      FadeInLeft(
+                                        duration: const Duration(
+                                          milliseconds: 700,
+                                        ),
+                                        child: Text(
+                                          candidate.name ?? '',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 22.0,
+                                            color: Color(0xFF222B45),
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: kSpacing20),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: <Widget>[
-                                        FadeInLeft(
-                                          duration: const Duration(
-                                            milliseconds: 700,
-                                          ),
-                                          child: Text(
-                                            candidate.name ?? '',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 22.0,
-                                              color: Color(0xFF222B45),
-                                            ),
-                                            overflow: TextOverflow.ellipsis,
+                                      const SizedBox(height: kSpacing8),
+                                      FadeInLeft(
+                                        delay: const Duration(
+                                          milliseconds: 200,
+                                        ),
+                                        duration: const Duration(
+                                          milliseconds: 700,
+                                        ),
+                                        child: Text(
+                                          candidate.location ?? '',
+                                          style: const TextStyle(
+                                            fontSize: 15.0,
+                                            color: Color(0xFF6C757D),
                                           ),
                                         ),
-                                        const SizedBox(height: kSpacing8),
-                                        FadeInLeft(
-                                          delay: const Duration(
-                                            milliseconds: 200,
-                                          ),
-                                          duration: const Duration(
-                                            milliseconds: 700,
-                                          ),
-                                          child: Text(
-                                            candidate.location ?? '',
-                                            style: const TextStyle(
-                                              fontSize: 15.0,
-                                              color: Color(0xFF6C757D),
-                                            ),
-                                          ),
+                                      ),
+                                      const SizedBox(height: kSpacing12),
+                                      FadeInLeft(
+                                        delay: const Duration(
+                                          milliseconds: 300,
                                         ),
-                                        const SizedBox(height: kSpacing12),
-                                        FadeInLeft(
-                                          delay: const Duration(
-                                            milliseconds: 300,
-                                          ),
-                                          duration: const Duration(
-                                            milliseconds: 700,
-                                          ),
-                                          child: SingleChildScrollView(
-                                            scrollDirection: Axis.horizontal,
-                                            child: Row(
-                                              children: [
-                                                if (candidate.skills != null)
-                                                  ...candidate.skills!.map(
-                                                    (skill) => Padding(
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                            right: 8.0,
+                                        duration: const Duration(
+                                          milliseconds: 700,
+                                        ),
+                                        child: SingleChildScrollView(
+                                          scrollDirection: Axis.horizontal,
+                                          child: Row(
+                                            children: [
+                                              if (candidate.skills != null)
+                                                ...candidate.skills!.map(
+                                                  (skill) => Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                          right: 8.0,
+                                                        ),
+                                                    child: InfoChip(
+                                                      label: skill,
+                                                      backgroundColor:
+                                                          const Color(
+                                                            0xFF3366FF,
                                                           ),
-                                                      child: InfoChip(
-                                                        label: skill,
-                                                        backgroundColor:
-                                                            const Color(
-                                                              0xFF3366FF,
-                                                            ),
-                                                        textColor: Colors.white,
-                                                      ),
+                                                      textColor: Colors.white,
                                                     ),
                                                   ),
-                                              ],
-                                            ),
+                                                ),
+                                            ],
                                           ),
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(width: kSpacing20),
-                                  FadeInRight(
-                                    duration: const Duration(milliseconds: 700),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: <Widget>[
-                                        Container(
-                                          width: kRadius40 + kSpacing4,
-                                          height: kRadius40 + kSpacing4,
-                                          decoration: BoxDecoration(
-                                            color: Colors.lightBlue[100],
-                                            borderRadius: BorderRadius.circular(
-                                              kRadius8,
-                                            ),
+                                ),
+                                const SizedBox(width: kSpacing20),
+                                FadeInRight(
+                                  duration: const Duration(milliseconds: 700),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: <Widget>[
+                                      Container(
+                                        width: kRadius40 + kSpacing4,
+                                        height: kRadius40 + kSpacing4,
+                                        decoration: BoxDecoration(
+                                          color: Colors.lightBlue[100],
+                                          borderRadius: BorderRadius.circular(
+                                            kRadius8,
                                           ),
-                                          child: IconButton(
+                                        ),
+                                        child: IconButton(
+                                          icon: const Icon(
+                                            Icons.bookmark_border,
+                                            color: Colors.blue,
+                                            size: kIconSize24 + kSpacing4,
+                                          ),
+                                          onPressed: () {
+                                            print(
+                                              'Bookmark button tapped in UserProfile',
+                                            );
+                                          },
+                                          tooltip: 'Guardar',
+                                          iconSize: kIconSize24 + kSpacing4,
+                                        ),
+                                      ),
+                                      const SizedBox(
+                                        width: kSpacing12 + kSpacing4 / 2,
+                                      ),
+                                      SizedBox(
+                                        height: kRadius40 + kSpacing4,
+                                        child: Material(
+                                          color: Colors.transparent,
+                                          child: ElevatedButton.icon(
                                             icon: const Icon(
-                                              Icons.bookmark_border,
-                                              color: Colors.blue,
-                                              size: kIconSize24 + kSpacing4,
+                                              Icons.arrow_forward,
+                                              size: kIconSize20,
+                                            ),
+                                            label: const Text(
+                                              'Dashboard',
+                                              style: TextStyle(fontSize: 15),
                                             ),
                                             onPressed: () {
                                               print(
-                                                'Bookmark button tapped in UserProfile',
+                                                'Dashboard button tapped in UserProfile',
+                                              );
+                                              Navigator.of(context).push(
+                                                FadeThroughPageRoute(
+                                                  page:
+                                                      const CandidateDashboardScreen(),
+                                                ),
                                               );
                                             },
-                                            tooltip: 'Guardar',
-                                            iconSize: kIconSize24 + kSpacing4,
-                                          ),
-                                        ),
-                                        const SizedBox(
-                                          width: kSpacing12 + kSpacing4 / 2,
-                                        ),
-                                        SizedBox(
-                                          height: kRadius40 + kSpacing4,
-                                          child: Material(
-                                            color: Colors.transparent,
-                                            child: ElevatedButton.icon(
-                                              icon: const Icon(
-                                                Icons.arrow_forward,
-                                                size: kIconSize20,
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: const Color(
+                                                0xFF3366FF,
                                               ),
-                                              label: const Text(
-                                                'Dashboard',
-                                                style: TextStyle(fontSize: 15),
-                                              ),
-                                              onPressed: () {
-                                                print(
-                                                  'Dashboard button tapped in UserProfile',
-                                                );
-                                                Navigator.of(context).push(
-                                                  FadeThroughPageRoute(
-                                                    page:
-                                                        const CandidateDashboardScreen(),
+                                              foregroundColor: Colors.white,
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal:
+                                                        kPadding20 + kSpacing4,
+                                                    vertical: 0,
                                                   ),
-                                                );
-                                              },
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: const Color(
-                                                  0xFF3366FF,
-                                                ),
-                                                foregroundColor: Colors.white,
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal:
-                                                          kPadding20 +
-                                                          kSpacing4,
-                                                      vertical: 0,
+                                              textStyle: const TextStyle(
+                                                fontSize: 15.0,
+                                              ),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                      kRadius8,
                                                     ),
-                                                textStyle: const TextStyle(
-                                                  fontSize: 15.0,
-                                                ),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                        kRadius8,
-                                                      ),
-                                                ),
-                                                tapTargetSize:
-                                                    MaterialTapTargetSize
-                                                        .shrinkWrap,
-                                                minimumSize: Size.zero,
                                               ),
+                                              tapTargetSize:
+                                                  MaterialTapTargetSize
+                                                      .shrinkWrap,
+                                              minimumSize: Size.zero,
                                             ),
                                           ),
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 12),
-                            FadeInUp(
-                              duration: const Duration(milliseconds: 700),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    flex: 2,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const SectionTitle(
-                                          text: 'Perfil Profesional',
-                                        ),
-                                        JustifiedText(
-                                          text: candidate.bio ?? '',
-                                        ),
-                                        // --- CV LINK SECTION ---
-                                        if (candidate.resumeUrl != null &&
-                                            candidate.resumeUrl!.isNotEmpty)
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                              top: 12,
-                                              bottom: 8,
-                                            ),
-                                            child: Row(
-                                              children: [
-                                                const Icon(
-                                                  Icons.picture_as_pdf,
-                                                  color: Colors.red,
-                                                  size: 22,
-                                                ),
-                                                const SizedBox(width: 8),
-                                                const Text(
-                                                  'Link al CV:',
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.w500,
-                                                    fontSize: 15,
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Flexible(
-                                                  child: SelectableText(
-                                                    candidate.resumeUrl!,
-                                                    style: const TextStyle(
-                                                      color: Colors.blue,
-                                                      decoration:
-                                                          TextDecoration
-                                                              .underline,
-                                                      fontSize: 14,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          FadeInUp(
+                            duration: const Duration(milliseconds: 700),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  flex: 2,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const SectionTitle(
+                                        text: 'Perfil Profesional',
+                                      ),
+                                      JustifiedText(text: candidate.bio ?? ''),
+                                      // --- CV LINK SECTION ---
+                                      if (candidate.resumeUrl != null &&
+                                          candidate.resumeUrl!.contains('http'))
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            top: 12,
+                                            bottom: 8,
                                           ),
-                                        // --- END CV LINK SECTION ---
-                                        const SectionTitle(text: 'Educación'),
-                                        Text(candidate.education ?? ''),
-                                        const SectionTitle(text: 'Experiencia'),
-                                        Text(candidate.experience ?? ''),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                    width: kSpacing30 + kSpacing4 / 2,
-                                  ),
-                                  Expanded(
-                                    flex: 1,
-                                    child: Column(
-                                      children: [
-                                        FadeInRight(
-                                          duration: const Duration(
-                                            milliseconds: 700,
-                                          ),
-                                          child: Container(
-                                            padding: kPaddingAll20,
-                                            decoration: BoxDecoration(
-                                              color: const Color(0xFFF7F8FA),
-                                              border: Border.all(
-                                                color: Colors.grey.shade200,
-                                                width: kStroke1,
+                                          child: Row(
+                                            children: [
+                                              const Icon(
+                                                Icons.picture_as_pdf,
+                                                color: Colors.red,
+                                                size: 22,
                                               ),
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                    kRadius12 + kRadius4 / 2,
+                                              const SizedBox(width: 8),
+                                              const Text(
+                                                'Link al CV:',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w500,
+                                                  fontSize: 15,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Flexible(
+                                                child: SelectableText(
+                                                  candidate.resumeUrl!,
+                                                  style: const TextStyle(
+                                                    color: Colors.blue,
+                                                    decoration:
+                                                        TextDecoration
+                                                            .underline,
+                                                    fontSize: 14,
                                                   ),
-                                            ),
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                const Text(
-                                                  'Características del Perfil',
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 16,
-                                                    color: Color(0xFF222B45),
-                                                  ),
                                                 ),
-                                                const SizedBox(
-                                                  height: kSpacing12,
-                                                ),
-                                                ProfileOverviewItem(
-                                                  icon: Icons.person,
-                                                  label: 'Nivel',
-                                                  value:
-                                                      candidate
-                                                          .experienceLevel ??
-                                                      '',
-                                                ),
-                                                ProfileOverviewItem(
-                                                  icon: Icons.location_on,
-                                                  label: 'Ubicación',
-                                                  value:
-                                                      candidate.location ?? '',
-                                                ),
-                                                ProfileOverviewItem(
-                                                  icon: Icons.school,
-                                                  label: 'Educación',
-                                                  value:
-                                                      candidate.education ?? '',
-                                                ),
-                                                ProfileOverviewItem(
-                                                  icon: Icons.work,
-                                                  label: 'Experiencia',
-                                                  value:
-                                                      candidate.experience ??
-                                                      '',
-                                                ),
-                                              ],
-                                            ),
+                                              ),
+                                            ],
                                           ),
                                         ),
-                                      ],
-                                    ),
+                                      // --- END CV LINK SECTION ---
+                                      const SectionTitle(text: 'Educación'),
+                                      Text(candidate.education ?? ''),
+                                      const SectionTitle(text: 'Experiencia'),
+                                      Text(candidate.experience ?? ''),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                ),
+                                const SizedBox(
+                                  width: kSpacing30 + kSpacing4 / 2,
+                                ),
+                                Expanded(
+                                  flex: 1,
+                                  child: Column(
+                                    children: [
+                                      FadeInRight(
+                                        duration: const Duration(
+                                          milliseconds: 700,
+                                        ),
+                                        child: Container(
+                                          padding: kPaddingAll20,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFF7F8FA),
+                                            border: Border.all(
+                                              color: Colors.grey.shade200,
+                                              width: kStroke1,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              kRadius12 + kRadius4 / 2,
+                                            ),
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                'Características del Perfil',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 16,
+                                                  color: Color(0xFF222B45),
+                                                ),
+                                              ),
+                                              const SizedBox(
+                                                height: kSpacing12,
+                                              ),
+                                              ProfileOverviewItem(
+                                                icon: Icons.person,
+                                                label: 'Nivel',
+                                                value:
+                                                    candidate.experienceLevel ??
+                                                    '',
+                                              ),
+                                              ProfileOverviewItem(
+                                                icon: Icons.location_on,
+                                                label: 'Ubicación',
+                                                value: candidate.location ?? '',
+                                              ),
+                                              ProfileOverviewItem(
+                                                icon: Icons.school,
+                                                label: 'Educación',
+                                                value:
+                                                    candidate.education ?? '',
+                                              ),
+                                              ProfileOverviewItem(
+                                                icon: Icons.work,
+                                                label: 'Experiencia',
+                                                value:
+                                                    candidate.experience ?? '',
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

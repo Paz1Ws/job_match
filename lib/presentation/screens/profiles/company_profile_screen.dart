@@ -1,27 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:job_match/config/constants/layer_constants.dart';
+import 'package:job_match/config/util/animations.dart';
+import 'package:job_match/core/data/auth_request.dart';
 import 'package:job_match/core/data/supabase_http_requests.dart';
-import 'package:job_match/core/domain/models/job_model.dart';
+import 'package:job_match/core/domain/models/company_model.dart';
+import 'package:job_match/presentation/screens/dashboard/employer_dashboard_screen.dart';
 import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
 import 'package:job_match/presentation/widgets/auth/profile_display_elements.dart';
 import 'package:job_match/presentation/widgets/auth/related_job_card.dart';
-import 'package:job_match/config/constants/layer_constants.dart';
-import 'package:job_match/presentation/screens/dashboard/employer_dashboard_screen.dart'; // For navigation example
-import 'package:job_match/config/util/animations.dart';
+import 'package:job_match/core/domain/models/job_model.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-class CompanyProfileScreen extends StatelessWidget {
+class CompanyProfileScreen extends ConsumerWidget {
   const CompanyProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     const double appIdentityBarHeight = 70.0;
+
+    // Get company data from provider
+    final company = ref.watch(companyProfileProvider);
+    if (company == null) {
+      // Try to load profile if not in memory
+      Future.microtask(() => fetchUserProfile(ref));
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
     return Scaffold(
       body: Column(
         children: <Widget>[
           AppIdentityBar(height: appIdentityBarHeight, onProfileTap: () {}),
-          Expanded(child: SingleChildScrollView(child: CompanyProfileHeader())),
+          Expanded(
+            child: SingleChildScrollView(
+              child: CompanyProfileHeader(company: company),
+            ),
+          ),
         ],
       ),
     );
@@ -29,7 +44,9 @@ class CompanyProfileScreen extends StatelessWidget {
 }
 
 class CompanyProfileHeader extends ConsumerWidget {
-  const CompanyProfileHeader({super.key});
+  final Company company;
+
+  const CompanyProfileHeader({super.key, required this.company});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -38,442 +55,392 @@ class CompanyProfileHeader extends ConsumerWidget {
     final double cardOverlap = 70.0;
     final double pageHorizontalPadding = kPadding28 + kSpacing4;
 
-    // Usar jobsProvider para mostrar trabajos relacionados a la empresa
-    final jobsAsync = ref.watch(jobsProvider);
+    // Use real company jobs from Supabase
+    final jobsAsync = ref.watch(jobsByCompanyIdProvider(company.userId));
 
     return Container(
       color: const Color(0xFFF7F8FA),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          FadeInDownBig(
-            duration: const Duration(milliseconds: 700),
-            child: SizedBox(
-              height: bannerHeight,
-              width: double.infinity,
-              child: Image.asset(
-                'assets/images/jobmatch_background.jpg', // Company specific banner
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-          FadeInUp(
-            duration: const Duration(milliseconds: 700),
-            child: Transform.translate(
-              offset: Offset(0, -cardOverlap),
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: pageHorizontalPadding,
-                ),
-                child: Container(
-                  padding: const EdgeInsets.all(kPadding28),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(kRadius12 + kRadius4),
-                    border: Border.all(
-                      color: Colors.grey.shade200,
-                      width: kStroke1 * 1.2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.07),
-                        spreadRadius: kStroke1,
-                        blurRadius: kSpacing8,
-                        offset: const Offset(0, kSpacing4 / 2),
-                      ),
-                    ],
+          Stack(
+            clipBehavior: Clip.none, // Allow card shadow to extend if necessary
+            children: <Widget>[
+              // Banner Image (Bottom layer)
+              FadeInDownBig(
+                duration: const Duration(milliseconds: 700),
+                child: SizedBox(
+                  height: bannerHeight,
+                  width: double.infinity,
+                  child: Image.asset(
+                    'assets/images/jobmatch_background.jpg', // Default banner
+                    fit: BoxFit.cover,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      FadeIn(
-                        duration: const Duration(milliseconds: 700),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            IconButton(
-                              icon: const Icon(
-                                Icons.arrow_back,
-                                color: Colors.blue,
-                              ),
-                              onPressed: () => Navigator.of(context).maybePop(),
-                              tooltip: 'Atrás',
-                            ),
-                            BounceInDown(
-                              duration: const Duration(milliseconds: 900),
-                              child: CircleAvatar(
-                                radius: kRadius20 + kRadius12,
-                                backgroundImage: const AssetImage(
-                                  'assets/images/job_match.jpg',
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: kSpacing20),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: <Widget>[
-                                  FadeInLeft(
-                                    duration: const Duration(milliseconds: 700),
-                                    child: const Text(
-                                      'JobMatch Recruiting',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 22.0,
-                                        color: Color(0xFF222B45),
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  const SizedBox(height: kSpacing4),
-                                  FadeInLeft(
-                                    delay: const Duration(milliseconds: 200),
-                                    duration: const Duration(milliseconds: 700),
-                                    child: const Text(
-                                      'Connecting Talent with Opportunity', // Company Tagline
-                                      style: TextStyle(
-                                        fontSize: 15.0,
-                                        color: Color(0xFF6C757D),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: kSpacing12),
-                                  FadeInLeft(
-                                    delay: const Duration(milliseconds: 300),
-                                    duration: const Duration(milliseconds: 700),
-                                    child: SingleChildScrollView(
-                                      scrollDirection: Axis.horizontal,
-                                      child: Row(
-                                        children: [
-                                          const IconTextRow(
-                                            icon: Icons.link,
-                                            text: 'www.jobmatch.com',
-                                          ),
-                                          SizedBox(
-                                            width: screenSize.width * 0.03,
-                                          ),
-                                          const IconTextRow(
-                                            icon: Icons.phone,
-                                            text: '+51 1 555 0101',
-                                          ),
-                                          SizedBox(
-                                            width: screenSize.width * 0.03,
-                                          ),
-                                          const IconTextRow(
-                                            icon: Icons.email,
-                                            text: 'info@jobmatch.com',
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: kSpacing20),
-                            Row(
-                              mainAxisSize:
-                                  MainAxisSize.min, // Ensure this is present
+                ),
+              ),
+              // Overlapping Card (Top layer)
+              Padding(
+                // Position the card to overlap the banner
+                padding: EdgeInsets.only(top: bannerHeight - cardOverlap),
+                child: FadeInUp(
+                  duration: const Duration(milliseconds: 700),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: pageHorizontalPadding,
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(kPadding28),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(kRadius12 + kRadius4),
+                        border: Border.all(
+                          color: Colors.grey.shade200,
+                          width: kStroke1 * 1.2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.07),
+                            spreadRadius: kStroke1,
+                            blurRadius: kSpacing8,
+                            offset: const Offset(0, kSpacing4 / 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          FadeIn(
+                            duration: const Duration(milliseconds: 700),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: <Widget>[
-                                SizedBox(
-                                  height: kRadius40 + kSpacing4,
-                                  child: Material(
-                                    color: Colors.transparent,
-                                    child: ElevatedButton.icon(
-                                      icon: const Icon(
-                                        Icons.work_outline,
-                                        size: kIconSize20,
-                                      ),
-                                      label: const Text(
-                                        'View Our Jobs',
-                                        style: TextStyle(fontSize: 15),
-                                      ),
-                                      onPressed: () {
-                                        print('View Our Jobs button tapped');
-                                        // Navigate to a screen showing jobs by JobMatch
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.orange.shade700,
-                                        foregroundColor: Colors.white,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: kPadding20,
-                                          vertical: 0,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            kRadius8,
-                                          ),
-                                        ),
-                                        tapTargetSize:
-                                            MaterialTapTargetSize.shrinkWrap,
-                                        minimumSize: Size.zero,
-                                      ),
-                                    ),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.arrow_back,
+                                    color: Colors.blue,
+                                  ),
+                                  onPressed: () => Navigator.of(context).maybePop(),
+                                  tooltip: 'Atrás',
+                                ),
+                                BounceInDown(
+                                  duration: const Duration(milliseconds: 900),
+                                  child: CircleAvatar(
+                                    radius: kRadius20 + kRadius12,
+                                    backgroundImage:
+                                        company.logo != null
+                                            ? NetworkImage(company.logo!)
+                                            : const AssetImage(
+                                                  'assets/images/job_match.jpg',
+                                                )
+                                                as ImageProvider,
                                   ),
                                 ),
-                                const SizedBox(width: kSpacing12),
-                                SizedBox(
-                                  height: kRadius40 + kSpacing4,
-                                  child: Material(
-                                    color: Colors.transparent,
-                                    child: ElevatedButton.icon(
-                                      icon: const Icon(
-                                        Icons.dashboard_outlined,
-                                        size: kIconSize20,
-                                      ),
-                                      label: const Text(
-                                        'Dashboard',
-                                        style: TextStyle(fontSize: 15),
-                                      ),
-                                      onPressed: () {
-                                        print(
-                                          'Company Dashboard button tapped',
-                                        );
-                                        Navigator.of(context).push(
-                                          FadeThroughPageRoute(
-                                            page:
-                                                const EmployerDashboardScreen(),
+                                const SizedBox(width: kSpacing20),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      FadeInLeft(
+                                        duration: const Duration(milliseconds: 700),
+                                        child: Text(
+                                          company.companyName ?? 'Company',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 22.0,
+                                            color: Color(0xFF222B45),
                                           ),
-                                        );
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(
-                                          0xFF3366FF,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
-                                        foregroundColor: Colors.white,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: kPadding20,
-                                          vertical: 0,
+                                      ),
+                                      const SizedBox(height: kSpacing8),
+                                      FadeInLeft(
+                                        delay: const Duration(milliseconds: 200),
+                                        duration: const Duration(milliseconds: 700),
+                                        child: Text(
+                                          company.address ?? 'Sin ubicación',
+                                          style: const TextStyle(
+                                            fontSize: 15.0,
+                                            color: Color(0xFF6C757D),
+                                          ),
                                         ),
-                                        shape: RoundedRectangleBorder(
+                                      ),
+                                      const SizedBox(height: kSpacing12),
+                                      FadeInLeft(
+                                        delay: const Duration(milliseconds: 300),
+                                        duration: const Duration(milliseconds: 700),
+                                        child: SingleChildScrollView(
+                                          scrollDirection: Axis.horizontal,
+                                          child: Row(
+                                            children: [
+                                              InfoChip(
+                                                label:
+                                                    company.industry ??
+                                                    'Tecnología',
+                                                backgroundColor: const Color(
+                                                  0xFF3366FF,
+                                                ),
+                                                textColor: Colors.white,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: kSpacing20),
+                                FadeInRight(
+                                  duration: const Duration(milliseconds: 700),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: <Widget>[
+                                      Container(
+                                        width: kRadius40 + kSpacing4,
+                                        height: kRadius40 + kSpacing4,
+                                        decoration: BoxDecoration(
+                                          color: Colors.lightBlue[100],
                                           borderRadius: BorderRadius.circular(
                                             kRadius8,
                                           ),
                                         ),
-                                        tapTargetSize:
-                                            MaterialTapTargetSize.shrinkWrap,
-                                        minimumSize: Size.zero,
+                                        child: IconButton(
+                                          icon: const Icon(
+                                            Icons.bookmark_border,
+                                            color: Colors.blue,
+                                            size: kIconSize24 + kSpacing4,
+                                          ),
+                                          onPressed: () {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              const SnackBar(
+                                                content: Text('Empresa guardada'),
+                                              ),
+                                            );
+                                          },
+                                          tooltip: 'Guardar',
+                                          iconSize: kIconSize24 + kSpacing4,
+                                        ),
                                       ),
-                                    ),
+                                      const SizedBox(
+                                        width: kSpacing12 + kSpacing4 / 2,
+                                      ),
+                                      SizedBox(
+                                        height: kRadius40 + kSpacing4,
+                                        child: Material(
+                                          color: Colors.transparent,
+                                          child: ElevatedButton.icon(
+                                            icon: const Icon(
+                                              Icons.arrow_forward,
+                                              size: kIconSize20,
+                                            ),
+                                            label: const Text(
+                                              'Dashboard',
+                                              style: TextStyle(fontSize: 15),
+                                            ),
+                                            onPressed: () {
+                                              Navigator.of(context).push(
+                                                FadeThroughPageRoute(
+                                                  page:
+                                                      const EmployerDashboardScreen(),
+                                                ),
+                                              );
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: const Color(
+                                                0xFF3366FF,
+                                              ),
+                                              foregroundColor: Colors.white,
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: kPadding20 + kSpacing4,
+                                                vertical: 0,
+                                              ),
+                                              textStyle: const TextStyle(
+                                                fontSize: 15.0,
+                                              ),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(
+                                                  kRadius8,
+                                                ),
+                                              ),
+                                              tapTargetSize:
+                                                  MaterialTapTargetSize.shrinkWrap,
+                                              minimumSize: Size.zero,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      FadeInUp(
-                        duration: const Duration(milliseconds: 700),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              flex: 2,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: const [
-                                  SectionTitle(text: 'About JobMatch'),
-                                  JustifiedText(
-                                    text:
-                                        'JobMatch Recruiting is a premier talent acquisition firm dedicated to connecting exceptional candidates with leading companies across various industries. Our mission is to streamline the hiring process, ensuring a perfect match for both employers and job seekers. We leverage cutting-edge technology and a personalized approach to deliver outstanding results.',
-                                  ),
-                                  SectionTitle(text: 'Our Services'),
-                                  BulletPointItem(
-                                    text: 'Executive Search and Headhunting.',
-                                  ),
-                                  BulletPointItem(
-                                    text:
-                                        'Permanent and Contract Staffing Solutions.',
-                                  ),
-                                  BulletPointItem(
-                                    text:
-                                        'Talent Mapping and Market Intelligence.',
-                                  ),
-                                  BulletPointItem(
-                                    text:
-                                        'Recruitment Process Outsourcing (RPO).',
-                                  ),
-                                  BulletPointItem(
-                                    text:
-                                        'Consultancy on HR and Talent Strategy.',
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: kSpacing30 + kSpacing4 / 2),
-                            Expanded(
-                              flex: 1,
-                              child: Column(
-                                children: [
-                                  FadeInRight(
-                                    duration: const Duration(milliseconds: 700),
-                                    child: Container(
-                                      padding: kPaddingAll20,
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFF7F8FA),
-                                        border: Border.all(
-                                          color: Colors.grey.shade200,
-                                          width: kStroke1,
-                                        ),
-                                        borderRadius: BorderRadius.circular(
-                                          kRadius12 + kRadius4 / 2,
-                                        ),
+                          ),
+                          const SizedBox(height: 12),
+                          FadeInUp(
+                            duration: const Duration(milliseconds: 700),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  flex: 2,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const SectionTitle(
+                                        text: 'Acerca de la Empresa',
                                       ),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: const [
-                                          Text(
-                                            'Company Overview',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                              color: Color(0xFF222B45),
-                                            ),
+                                      JustifiedText(
+                                        text:
+                                            company.description ??
+                                            'Sin descripción disponible',
+                                      ),
+                                      // Website link if available
+                                      if (company.website != null &&
+                                          company.website!.isNotEmpty)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            top: 12,
+                                            bottom: 8,
                                           ),
-                                          SizedBox(
-                                            height:
-                                                kSpacing12 +
-                                                kSpacing8 / 2 +
-                                                kSpacing4 / 2,
-                                          ),
-                                          Wrap(
-                                            runSpacing:
-                                                kSpacing12 +
-                                                kSpacing8 / 2 +
-                                                kSpacing4 / 2,
-                                            spacing: kSpacing30 + kSpacing4 / 2,
+                                          child: Row(
                                             children: [
-                                              ProfileOverviewItem(
-                                                icon: Icons.business_center,
-                                                label: 'Industry',
-                                                value:
-                                                    'Human Resources / Recruiting',
+                                              const Icon(
+                                                Icons.language,
+                                                color: Colors.blue,
+                                                size: 22,
                                               ),
-                                              ProfileOverviewItem(
-                                                icon: Icons.groups,
-                                                label: 'Company Size',
-                                                value: '50-100 employees',
-                                              ),
-                                              ProfileOverviewItem(
-                                                icon: Icons.calendar_today,
-                                                label: 'Founded',
-                                                value: '2015',
-                                              ),
-                                              ProfileOverviewItem(
-                                                icon: Icons.location_city,
-                                                label: 'Headquarters',
-                                                value: 'Lima, Perú',
-                                              ),
-                                              ProfileOverviewItem(
-                                                icon: Icons.public,
-                                                label: 'Focus Areas',
-                                                value:
-                                                    'Tech, Finance, Marketing',
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                    height: kSpacing20 + kSpacing4,
-                                  ),
-                                  FadeInRight(
-                                    delay: const Duration(milliseconds: 200),
-                                    duration: const Duration(milliseconds: 700),
-                                    child: Container(
-                                      // Contact Person / Key Contact
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFF7F8FA),
-                                        border: Border.all(
-                                          color: Colors.grey.shade200,
-                                          width: kStroke1,
-                                        ),
-                                        borderRadius: BorderRadius.circular(
-                                          kRadius12 + kRadius4 / 2,
-                                        ),
-                                      ),
-                                      padding: kPaddingAll20,
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              const CircleAvatar(
-                                                radius:
-                                                    kRadius20 + kRadius4 / 2,
-                                                backgroundImage: AssetImage(
-                                                  'assets/images/users/user4.webp',
+                                              const SizedBox(width: 8),
+                                              const Text(
+                                                'Sitio web:',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w500,
+                                                  fontSize: 15,
                                                 ),
                                               ),
-                                              const SizedBox(width: kSpacing12),
-                                              Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: const [
-                                                  Text(
-                                                    'Ana Torres',
-                                                    style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 16,
-                                                      color: Color(0xFF222B45),
+                                              const SizedBox(width: 8),
+                                              Flexible(
+                                                child: InkWell(
+                                                  onTap: () async {
+                                                    final url = Uri.parse(
+                                                      company.website!,
+                                                    );
+                                                    if (await canLaunchUrl(url)) {
+                                                      await launchUrl(url);
+                                                    }
+                                                  },
+                                                  child: Text(
+                                                    company.website!,
+                                                    style: const TextStyle(
+                                                      color: Colors.blue,
+                                                      decoration:
+                                                          TextDecoration.underline,
+                                                      fontSize: 14,
                                                     ),
+                                                    overflow: TextOverflow.ellipsis,
                                                   ),
-                                                  SizedBox(
-                                                    height: kSpacing4 / 2,
-                                                  ),
-                                                  Text(
-                                                    'Lead Recruitment Consultant',
-                                                    style: TextStyle(
-                                                      color: Color(0xFFB1B5C3),
-                                                      fontSize: 13,
-                                                    ),
-                                                  ),
-                                                ],
+                                                ),
                                               ),
                                             ],
                                           ),
-                                          const SizedBox(
-                                            height: kSpacing12 + kSpacing4,
-                                          ),
-                                          const IconTextRow(
-                                            icon: Icons.email_outlined,
-                                            text: 'atorres@jobmatch.com',
-                                            iconColor: Color(0xFF6C757D),
-                                          ),
-                                          SizedBox(height: kSpacing8),
-                                          const IconTextRow(
-                                            icon: Icons.phone_outlined,
-                                            text: '+51 1 555 0102',
-                                            iconColor: Color(0xFF6C757D),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
+                                        ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                ),
+                                const SizedBox(width: kSpacing30 + kSpacing4 / 2),
+                                Expanded(
+                                  flex: 1,
+                                  child: Column(
+                                    children: [
+                                      FadeInRight(
+                                        duration: const Duration(milliseconds: 700),
+                                        child: Container(
+                                          padding: kPaddingAll20,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFF7F8FA),
+                                            border: Border.all(
+                                              color: Colors.grey.shade200,
+                                              width: kStroke1,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              kRadius12 + kRadius4 / 2,
+                                            ),
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                'Información de Contacto',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 16,
+                                                  color: Color(0xFF222B45),
+                                                ),
+                                              ),
+                                              const SizedBox(height: kSpacing12),
+                                              ProfileOverviewItem(
+                                                icon: Icons.business,
+                                                label: 'Nombre',
+                                                value:
+                                                    company.companyName ??
+                                                    'Company',
+                                              ),
+                                              ProfileOverviewItem(
+                                                icon: Icons.location_on,
+                                                label: 'Ubicación',
+                                                value:
+                                                    company.address ??
+                                                    'No disponible',
+                                              ),
+                                              ProfileOverviewItem(
+                                                icon: Icons.phone,
+                                                label: 'Teléfono',
+                                                value:
+                                                    company.phone ??
+                                                    'No disponible',
+                                              ),
+                                              if (company.website != null)
+                                                ProfileOverviewItem(
+                                                  icon: Icons.language,
+                                                  label: 'Sitio Web',
+                                                  value:
+                                                      company.website ??
+                                                      'No disponible',
+                                                ),
+                                              ProfileOverviewItem(
+                                                icon: Icons.category,
+                                                label: 'Industria',
+                                                value:
+                                                    company.industry ??
+                                                    'No disponible',
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
           ),
+          // Spacing after the card
+          // This SizedBox provides space *below* the visual bottom of the card.
+          // The Stack's height will accommodate the banner and the overlapping card.
+          // The original spacing logic should still be relevant to the card's visual end.
           SizedBox(
-            height:
-                (kPadding20 + kSpacing4) - cardOverlap > 0
-                    ? (kPadding20 + kSpacing4) - cardOverlap + kPadding12
-                    : kPadding12,
+            height: (kPadding20 + kSpacing4), // Adjusted to be simpler, space after the entire header block
           ),
+          // "Compartir este perfil" section
           FadeInLeft(
             duration: const Duration(milliseconds: 700),
             child: Padding(
@@ -485,7 +452,7 @@ class CompanyProfileHeader extends ConsumerWidget {
               child: Row(
                 children: [
                   const Text(
-                    'Share this company:',
+                    'Compartir este perfil:',
                     style: TextStyle(
                       fontWeight: FontWeight.w500,
                       fontSize: 15.0,
@@ -506,15 +473,16 @@ class CompanyProfileHeader extends ConsumerWidget {
                     onPressed: () {},
                   ),
                   ProfileSocialShareButton(
-                    color: const Color(0xFF0A66C2),
-                    icon: Icons.workspaces_outline,
-                    label: 'LinkedIn',
+                    color: const Color(0xFFE60023),
+                    icon: Icons.push_pin,
+                    label: 'Pinterest',
                     onPressed: () {},
                   ),
                 ],
               ),
             ),
           ),
+          // "Trabajos Publicados" title
           FadeInUp(
             duration: const Duration(milliseconds: 700),
             child: Padding(
@@ -528,7 +496,7 @@ class CompanyProfileHeader extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    "Jobs We're Hiring For",
+                    'Trabajos Publicados',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 20.0,
@@ -539,6 +507,7 @@ class CompanyProfileHeader extends ConsumerWidget {
               ),
             ),
           ),
+          // "Trabajos Publicados" grid with real data
           FadeInUp(
             delay: const Duration(milliseconds: 200),
             duration: const Duration(milliseconds: 700),
@@ -548,6 +517,18 @@ class CompanyProfileHeader extends ConsumerWidget {
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (error, stack) => Center(child: Text('Error: $error')),
                 data: (jobs) {
+                  if (jobs.isEmpty) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(30.0),
+                        child: Text(
+                          'No hay trabajos publicados por esta empresa',
+                          style: TextStyle(fontSize: 16, color: Colors.grey),
+                        ),
+                      ),
+                    );
+                  }
+
                   int crossAxisCount = 3;
                   return LayoutBuilder(
                     builder: (context, constraints) {
@@ -578,15 +559,24 @@ class CompanyProfileHeader extends ConsumerWidget {
                             delay: Duration(milliseconds: 100 * index),
                             child: RelatedJobCard(
                               job: Job(
-                                logoAsset: 'assets/images/job_match.jpg',
-                                companyName: 'Empresa',
-                                location: job['location'] ?? 'Lima, Perú',
-                                title: job['title'] ?? '',
-                                type: 'Tiempo Completo',
-                                salary: 'S/5000',
-                                isFeatured: false,
+                                logoAsset:
+                                    company.logo ??
+                                    'assets/images/job_match.jpg',
+                                companyName: company.companyName ?? 'Company',
+                                location:
+                                    job['location'] ??
+                                    company.address ??
+                                    'No disponible',
+                                title: job['title'] ?? 'Puesto sin título',
+                                type: job['job_type'] ?? 'Tiempo Completo',
+                                salary:
+                                    job['salary_min'] != null &&
+                                            job['salary_max'] != null
+                                        ? 'S/${job['salary_min']} - S/${job['salary_max']}'
+                                        : 'Salario no especificado',
+                                isFeatured: job['is_featured'] ?? false,
                                 logoBackgroundColor: Colors.blue.shade100,
-                                matchPercentage: 80,
+                                matchPercentage: 85, // Default match percentage
                               ),
                             ),
                           );
@@ -604,19 +594,3 @@ class CompanyProfileHeader extends ConsumerWidget {
     );
   }
 }
-
-// Demo data for jobs (remove in production)
-final List<Job> demoJobs = List.generate(
-  6,
-  (index) => Job(
-    title: 'Software Engineer ${index + 1}',
-    location: 'Lima, Perú',
-    salary: '\$40,000 - \$60,000',
-
-    logoAsset: 'assets/images/job_match.jpg',
-    companyName: 'JobMatch Recruiting',
-    type: 'Full-time',
-    logoBackgroundColor: Colors.blue.shade100,
-    matchPercentage: 75,
-  ),
-);
