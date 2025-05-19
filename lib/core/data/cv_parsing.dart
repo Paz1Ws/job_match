@@ -68,7 +68,7 @@ class CvParser {
 
     // Process the name properly
     String formattedName = _formatName(data['name']);
-    
+
     // Get appropriate values ensuring correct types
     final experience =
         (data['employment'] != null)
@@ -143,21 +143,23 @@ class CvParser {
   // Format name correctly from raw name data
   String _formatName(dynamic rawName) {
     if (rawName == null) return 'User_${Random().nextInt(999)}';
-    
+
     String nameStr;
-    
+
     // Handle when name comes as an object with components
     if (rawName is Map<String, dynamic>) {
       final first = rawName['first']?.toString() ?? '';
       final middle = rawName['middle']?.toString() ?? '';
       final last = rawName['last']?.toString() ?? '';
-      
+
       // Concatenate name parts properly
-      nameStr = [first, middle, last]
-          .where((part) => part.isNotEmpty)
-          .join(' ')
-          .trim();
-          
+      nameStr =
+          [
+            first,
+            middle,
+            last,
+          ].where((part) => part.isNotEmpty).join(' ').trim();
+
       if (nameStr.isEmpty) {
         // If structured name is empty, try using raw value
         nameStr = rawName['raw']?.toString() ?? 'User_${Random().nextInt(999)}';
@@ -166,12 +168,16 @@ class CvParser {
       // When name is just a string
       nameStr = rawName.toString();
     }
-    
+
     // Apply proper capitalization to each name part
-    return nameStr.split(' ')
-        .map((part) => part.isNotEmpty 
-            ? '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}'
-            : '')
+    return nameStr
+        .split(' ')
+        .map(
+          (part) =>
+              part.isNotEmpty
+                  ? '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}'
+                  : '',
+        )
         .join(' ');
   }
 
@@ -183,14 +189,14 @@ class CvParser {
         .replaceAll(RegExp(r'[^\w\s]'), '') // Remove special characters
         .trim()
         .replaceAll(' ', '.');
-    
+
     // Add random number to ensure uniqueness
     final random = Random();
     final randomNum = random.nextInt(9999);
-    
+
     return '$sanitizedName$randomNum@gmail.com';
   }
-  
+
   // Generate random password
   String _generateRandomPassword() {
     const chars =

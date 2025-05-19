@@ -1,4 +1,5 @@
 import 'package:animate_do/animate_do.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -805,16 +806,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           children: [
                             const SizedBox(height: 16),
 
-                            const Text(
-                              'Más de 175,324 candidatos\nesperando buenas empresas.',
-                              textAlign: TextAlign.start,
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 48.0,
-                                fontWeight: FontWeight.bold,
+                            // Reemplaza el Text estático por AnimatedTextKit para animar solo la palabra clave
+                            // Animated text for "Más de ..."
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8.0,
+                              ),
+                              child: Text(
+                                '+56,986 empresas &\n175,324 candidatos esperando el match perfecto.',
+                                textAlign: TextAlign.start,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 48.0,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                             const SizedBox(height: 20),
+
                             Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Row(

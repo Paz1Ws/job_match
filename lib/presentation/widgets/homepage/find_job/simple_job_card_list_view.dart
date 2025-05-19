@@ -17,31 +17,36 @@ class SimpleJobCardListView extends ConsumerWidget {
       error: (error, __) {
         // print(error.toString());
         return Center(
-        child: Text('Ha ocurrido un error al cargar los trabajos ${error.toString()}')
-      );
+          child: Text(
+            'Ha ocurrido un error al cargar los trabajos ${error.toString()}',
+          ),
+        );
       },
-      loading: () => Center(
-        child: const CircularProgressIndicator()
-      ),
+      loading: () => Center(child: const CircularProgressIndicator()),
       data: (data) {
         //* Small filter
         final jobs = data.map((e) => Job.fromMap(e)).where((j) {
-          final titleFounded = jobFilter.jobTitleLike == null || j.title.toLowerCase().contains(jobFilter.jobTitleLike!.toLowerCase());
-          final companyNameFounded = jobFilter.jobTitleLike == null || j.companyName.toLowerCase().contains(jobFilter.jobTitleLike!.toLowerCase());
+          final titleFounded =
+              jobFilter.jobTitleLike == null ||
+              j.title.toLowerCase().contains(
+                jobFilter.jobTitleLike!.toLowerCase(),
+              );
+          final companyNameFounded =
+              jobFilter.jobTitleLike == null ||
+              j.companyName.toLowerCase().contains(
+                jobFilter.jobTitleLike!.toLowerCase(),
+              );
           return titleFounded || companyNameFounded;
         });
 
-        return jobs.isNotEmpty ? ListView(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          children: jobs.map(
-            (e) => SimpleJobCard(job: e),
-          ).toList(),
-        ) :
-        const Center(
-          child: Text('Sin trabajos a mostrar'),
-        );
-      }
+        return jobs.isNotEmpty
+            ? ListView(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              children: jobs.map((e) => SimpleJobCard(job: e)).toList(),
+            )
+            : const Center(child: Text('Sin trabajos a mostrar'));
+      },
     );
   }
 }

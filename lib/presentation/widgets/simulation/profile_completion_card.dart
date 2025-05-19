@@ -45,16 +45,15 @@ class ProfileCompletionCard extends StatelessWidget {
           children: [
             const Text(
               'Completa tu Perfil',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             LinearProgressIndicator(
               value: completionPercentage / 100,
               backgroundColor: Colors.grey.shade200,
-              valueColor: AlwaysStoppedAnimation<Color>(_getColorForPercentage()),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                _getColorForPercentage(),
+              ),
               minHeight: 8,
               borderRadius: BorderRadius.circular(4),
             ),
@@ -71,10 +70,7 @@ class ProfileCompletionCard extends StatelessWidget {
               const SizedBox(height: 16),
               const Text(
                 'Acciones sugeridas:',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 8),
               ...suggestedActions.map((action) {
@@ -100,7 +96,7 @@ class ProfileCompletionCard extends StatelessWidget {
                   contentPadding: EdgeInsets.zero,
                   dense: true,
                 );
-              }).toList(),
+              }),
             ] else
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16.0),

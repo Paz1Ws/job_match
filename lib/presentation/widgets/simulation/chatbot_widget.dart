@@ -4,7 +4,7 @@ import 'package:job_match/config/constants/layer_constants.dart';
 
 class ChatbotWidget extends StatefulWidget {
   final String initialMessage;
-  
+
   const ChatbotWidget({super.key, required this.initialMessage});
 
   @override
@@ -15,7 +15,7 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
   bool _isExpanded = false;
   final TextEditingController _textController = TextEditingController();
   final List<Map<String, dynamic>> _messages = [];
-  
+
   @override
   void initState() {
     super.initState();
@@ -32,22 +32,22 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
       }
     });
   }
-  
+
   @override
   void dispose() {
     _textController.dispose();
     super.dispose();
   }
-  
+
   void _toggleExpand() {
     setState(() {
       _isExpanded = !_isExpanded;
     });
   }
-  
+
   void _sendMessage() {
     if (_textController.text.trim().isEmpty) return;
-    
+
     setState(() {
       _messages.add({
         'sender': 'user',
@@ -55,18 +55,21 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
         'time': DateTime.now(),
       });
     });
-    
-    String botResponse = '¡Gracias por tu mensaje! Nuestro equipo revisará tu postulación pronto.';
-    
+
+    String botResponse =
+        '¡Gracias por tu mensaje! Nuestro equipo revisará tu postulación pronto.';
+
     // Simulate bot response
     if (_textController.text.toLowerCase().contains('mejora')) {
-      botResponse = 'Para mejorar tu perfil, considera añadir métricas específicas a tus logros y experiencias pasadas.';
+      botResponse =
+          'Para mejorar tu perfil, considera añadir métricas específicas a tus logros y experiencias pasadas.';
     } else if (_textController.text.toLowerCase().contains('cuando')) {
-      botResponse = 'El proceso de selección generalmente toma entre 1-2 semanas. ¡Te mantendremos informado!';
+      botResponse =
+          'El proceso de selección generalmente toma entre 1-2 semanas. ¡Te mantendremos informado!';
     }
-    
+
     _textController.clear();
-    
+
     // Delay bot response to simulate thinking
     Future.delayed(const Duration(milliseconds: 1000), () {
       if (mounted) {
@@ -89,7 +92,7 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          if (_isExpanded) 
+          if (_isExpanded)
             FadeInUp(
               duration: const Duration(milliseconds: 300),
               child: Container(
@@ -110,7 +113,10 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
                   children: [
                     // Header
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.blue.shade700,
                         borderRadius: const BorderRadius.only(
@@ -123,7 +129,11 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
                           CircleAvatar(
                             backgroundColor: Colors.white,
                             radius: 16,
-                            child: Icon(Icons.support_agent, size: 20, color: Colors.blue.shade700),
+                            child: Icon(
+                              Icons.support_agent,
+                              size: 20,
+                              color: Colors.blue.shade700,
+                            ),
                           ),
                           const SizedBox(width: 8),
                           const Text(
@@ -135,7 +145,11 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
                           ),
                           const Spacer(),
                           IconButton(
-                            icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                            icon: const Icon(
+                              Icons.close,
+                              color: Colors.white,
+                              size: 20,
+                            ),
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
                             onPressed: _toggleExpand,
@@ -143,7 +157,7 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
                         ],
                       ),
                     ),
-                    
+
                     // Messages area
                     Expanded(
                       child: ListView.builder(
@@ -152,14 +166,23 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
                         itemBuilder: (context, index) {
                           final message = _messages[index];
                           final isBot = message['sender'] == 'bot';
-                          
+
                           return Align(
-                            alignment: isBot ? Alignment.centerLeft : Alignment.centerRight,
+                            alignment:
+                                isBot
+                                    ? Alignment.centerLeft
+                                    : Alignment.centerRight,
                             child: Container(
                               margin: const EdgeInsets.only(bottom: 8),
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
                               decoration: BoxDecoration(
-                                color: isBot ? Colors.grey.shade100 : Colors.blue.shade700,
+                                color:
+                                    isBot
+                                        ? Colors.grey.shade100
+                                        : Colors.blue.shade700,
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               constraints: const BoxConstraints(maxWidth: 250),
@@ -174,7 +197,7 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
                         },
                       ),
                     ),
-                    
+
                     // Input area
                     Padding(
                       padding: const EdgeInsets.all(8.0),
@@ -203,7 +226,11 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
                           CircleAvatar(
                             backgroundColor: Colors.blue.shade700,
                             child: IconButton(
-                              icon: const Icon(Icons.send, color: Colors.white, size: 18),
+                              icon: const Icon(
+                                Icons.send,
+                                color: Colors.white,
+                                size: 18,
+                              ),
                               onPressed: _sendMessage,
                             ),
                           ),
@@ -214,7 +241,7 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
                 ),
               ),
             ),
-          
+
           // Chatbot button
           const SizedBox(height: 16),
           InkWell(

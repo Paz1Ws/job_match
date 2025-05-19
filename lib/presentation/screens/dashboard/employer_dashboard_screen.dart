@@ -46,9 +46,13 @@ class _EmployerDashboardScreenState
                         const SizedBox(height: 20),
                         CircleAvatar(
                           radius: 40,
-                          backgroundImage: company?.logo != null
-                              ? NetworkImage(company!.logo!)
-                              : const AssetImage('assets/images/job_match.jpg') as ImageProvider,
+                          backgroundImage:
+                              company?.logo != null
+                                  ? NetworkImage(company!.logo!)
+                                  : const AssetImage(
+                                        'assets/images/job_match.jpg',
+                                      )
+                                      as ImageProvider,
                         ),
                         const SizedBox(height: 10),
                         Text(
@@ -71,31 +75,44 @@ class _EmployerDashboardScreenState
                             icon: Icons.dashboard_outlined,
                             title: 'Dashboard',
                             isSelected: _selectedMenu == 'Overview',
-                            onTap: () => setState(() => _selectedMenu = 'Overview'),
+                            onTap:
+                                () =>
+                                    setState(() => _selectedMenu = 'Overview'),
                           ),
                           _buildMenuItem(
                             icon: Icons.work_outline,
                             title: 'Publicar Empleo',
                             isSelected: _selectedMenu == 'Post a Job',
-                            onTap: () => setState(() => _selectedMenu = 'Post a Job'),
+                            onTap:
+                                () => setState(
+                                  () => _selectedMenu = 'Post a Job',
+                                ),
                           ),
                           _buildMenuItem(
                             icon: Icons.people_outline,
                             title: 'Aplicaciones',
                             isSelected: _selectedMenu == 'Applications',
-                            onTap: () => setState(() => _selectedMenu = 'Applications'),
+                            onTap:
+                                () => setState(
+                                  () => _selectedMenu = 'Applications',
+                                ),
                           ),
                           _buildMenuItem(
                             icon: Icons.groups_outlined,
                             title: 'Todas las Empresas',
                             isSelected: _selectedMenu == 'All Companies',
-                            onTap: () => setState(() => _selectedMenu = 'All Companies'),
+                            onTap:
+                                () => setState(
+                                  () => _selectedMenu = 'All Companies',
+                                ),
                           ),
                           _buildMenuItem(
                             icon: Icons.settings_outlined,
                             title: 'Configuración',
                             isSelected: _selectedMenu == 'Settings',
-                            onTap: () => setState(() => _selectedMenu = 'Settings'),
+                            onTap:
+                                () =>
+                                    setState(() => _selectedMenu = 'Settings'),
                           ),
                         ].asMap().entries.map((entry) {
                           return FadeInLeft(
@@ -103,7 +120,7 @@ class _EmployerDashboardScreenState
                             duration: const Duration(milliseconds: 400),
                             child: entry.value,
                           );
-                        }).toList(),
+                        }),
                       ],
                     ),
                   ),
@@ -112,25 +129,37 @@ class _EmployerDashboardScreenState
                 Expanded(
                   child: FadeInUp(
                     duration: const Duration(milliseconds: 700),
-                    child: _selectedMenu == 'Overview'
-                        ? jobsAsync.when(
-                            loading: () => const Center(child: CircularProgressIndicator()),
-                            error: (error, _) => Center(child: Text('Error: $error')),
-                            data: (jobs) => _buildPostedJobsContent(jobs, company?.companyName ?? 'Mi Empresa'),
-                          )
-                        : _selectedMenu == 'Post a Job'
+                    child:
+                        _selectedMenu == 'Overview'
+                            ? jobsAsync.when(
+                              loading:
+                                  () => const Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                              error:
+                                  (error, _) =>
+                                      Center(child: Text('Error: $error')),
+                              data:
+                                  (jobs) => _buildPostedJobsContent(
+                                    jobs,
+                                    company?.companyName ?? 'Mi Empresa',
+                                  ),
+                            )
+                            : _selectedMenu == 'Post a Job'
                             ? PostJobForm(companyId: company?.userId ?? '')
                             : _selectedMenu == 'Applications'
-                                ? _buildJobApplicationsContent(applicationsAsync.value ?? [])
-                                : Center(
-                                    child: Text(
-                                      'Contenido para $_selectedMenu',
-                                      style: const TextStyle(
-                                        fontSize: 24,
-                                        color: Colors.black54,
-                                      ),
-                                    ),
-                                  ),
+                            ? _buildJobApplicationsContent(
+                              applicationsAsync.value ?? [],
+                            )
+                            : Center(
+                              child: Text(
+                                'Contenido para $_selectedMenu',
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  color: Colors.black54,
+                                ),
+                              ),
+                            ),
                   ),
                 ),
               ],
@@ -158,7 +187,8 @@ class _EmployerDashboardScreenState
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
-          color: isSelected ? selectedColor.withOpacity(0.1) : Colors.transparent,
+          color:
+              isSelected ? selectedColor.withOpacity(0.1) : Colors.transparent,
         ),
         child: Row(
           children: [
@@ -177,7 +207,10 @@ class _EmployerDashboardScreenState
     );
   }
 
-  Widget _buildPostedJobsContent(List<Map<String, dynamic>> jobs, String companyName) {
+  Widget _buildPostedJobsContent(
+    List<Map<String, dynamic>> jobs,
+    String companyName,
+  ) {
     // Solo muestra la cantidad de empleos, no uses providers que no existen
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -189,7 +222,7 @@ class _EmployerDashboardScreenState
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 20),
-          
+
           // Summary cards
           Row(
             children: [
@@ -206,7 +239,8 @@ class _EmployerDashboardScreenState
               const SizedBox(width: 16),
               Expanded(
                 child: _buildSummaryCard(
-                  count: '${jobs.where((job) => job['status'] == 'open').length}',
+                  count:
+                      '${jobs.where((job) => job['status'] == 'open').length}',
                   label: 'Empleos Activos',
                   icon: Icons.check_circle_outline,
                   iconColor: Colors.white,
@@ -227,18 +261,20 @@ class _EmployerDashboardScreenState
               ),
             ],
           ),
-          
+
           const SizedBox(height: 32),
           const Text(
             'Empleos Publicados',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          
+
           // Jobs list
           Card(
             elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -249,7 +285,10 @@ class _EmployerDashboardScreenState
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 32),
                       child: Center(
-                        child: Text('Aún no has publicado empleos', style: TextStyle(color: Colors.grey)),
+                        child: Text(
+                          'Aún no has publicado empleos',
+                          style: TextStyle(color: Colors.grey),
+                        ),
                       ),
                     )
                   else
@@ -309,10 +348,7 @@ class _EmployerDashboardScreenState
               ),
               Text(
                 label,
-                style: TextStyle(
-                  color: Colors.grey.shade700,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
               ),
             ],
           ),
@@ -331,26 +367,11 @@ class _EmployerDashboardScreenState
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: Row(
         children: [
-          Expanded(
-            flex: 3,
-            child: Text('Título', style: headerStyle),
-          ),
-          Expanded(
-            flex: 2,
-            child: Text('Ubicación', style: headerStyle),
-          ),
-          Expanded(
-            flex: 1,
-            child: Text('Tipo', style: headerStyle),
-          ),
-          Expanded(
-            flex: 1,
-            child: Text('Estado', style: headerStyle),
-          ),
-          Expanded(
-            flex: 1,
-            child: Text('Vistas', style: headerStyle),
-          ),
+          Expanded(flex: 3, child: Text('Título', style: headerStyle)),
+          Expanded(flex: 2, child: Text('Ubicación', style: headerStyle)),
+          Expanded(flex: 1, child: Text('Tipo', style: headerStyle)),
+          Expanded(flex: 1, child: Text('Estado', style: headerStyle)),
+          Expanded(flex: 1, child: Text('Vistas', style: headerStyle)),
           SizedBox(width: 100, child: Text('Acciones', style: headerStyle)),
         ],
       ),
@@ -366,9 +387,19 @@ class _EmployerDashboardScreenState
       fontSize: 13,
       color: Colors.grey.shade700,
     );
-    Color statusColor = job['status'] == 'open' ? Colors.green : job['status'] == 'paused' ? Colors.orange : Colors.red;
-    IconData statusIcon = job['status'] == 'open' ? Icons.play_circle_outline : job['status'] == 'paused' ? Icons.pause_circle_outline : Icons.stop_circle_outlined;
-    
+    Color statusColor =
+        job['status'] == 'open'
+            ? Colors.green
+            : job['status'] == 'paused'
+            ? Colors.orange
+            : Colors.red;
+    IconData statusIcon =
+        job['status'] == 'open'
+            ? Icons.play_circle_outline
+            : job['status'] == 'paused'
+            ? Icons.pause_circle_outline
+            : Icons.stop_circle_outlined;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       child: Row(
@@ -386,11 +417,17 @@ class _EmployerDashboardScreenState
           ),
           Expanded(
             flex: 2,
-            child: Text(job['location'] ?? 'No especificada', style: detailStyle),
+            child: Text(
+              job['location'] ?? 'No especificada',
+              style: detailStyle,
+            ),
           ),
           Expanded(
             flex: 1,
-            child: Text(job['job_type'] ?? 'No especificado', style: detailStyle),
+            child: Text(
+              job['job_type'] ?? 'No especificado',
+              style: detailStyle,
+            ),
           ),
           Expanded(
             flex: 1,
@@ -399,11 +436,11 @@ class _EmployerDashboardScreenState
                 Icon(statusIcon, color: statusColor, size: 16),
                 const SizedBox(width: 4),
                 Text(
-                  job['status'] == 'open' 
-                      ? 'Activo' 
-                      : job['status'] == 'paused' 
-                          ? 'Pausado' 
-                          : 'Cerrado',
+                  job['status'] == 'open'
+                      ? 'Activo'
+                      : job['status'] == 'paused'
+                      ? 'Pausado'
+                      : 'Cerrado',
                   style: TextStyle(color: statusColor, fontSize: 13),
                 ),
               ],
@@ -466,7 +503,9 @@ class _EmployerDashboardScreenState
               ),
             )
           else
-            const Text('Lista de aplicaciones aquí'), // Placeholder for actual applications list
+            const Text(
+              'Lista de aplicaciones aquí',
+            ), // Placeholder for actual applications list
         ],
       ),
     );

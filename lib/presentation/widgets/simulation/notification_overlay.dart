@@ -38,7 +38,10 @@ class NotificationOverlay extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.notifications_active, color: Colors.blue.shade700),
+                    Icon(
+                      Icons.notifications_active,
+                      color: Colors.blue.shade700,
+                    ),
                     const SizedBox(width: 8),
                     const Text(
                       'Notificación',
@@ -89,8 +92,8 @@ class NotificationOverlay extends StatelessWidget {
                                 fitPercentage! > 90
                                     ? Colors.green.shade600
                                     : fitPercentage! > 70
-                                        ? Colors.blue.shade600
-                                        : Colors.orange.shade600,
+                                    ? Colors.blue.shade600
+                                    : Colors.orange.shade600,
                               ),
                               minHeight: 8,
                             ),

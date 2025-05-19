@@ -79,7 +79,10 @@ class JobCardWithFit extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: _getFitColor().withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
@@ -110,21 +113,26 @@ class JobCardWithFit extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 4),
-                  Text(
-                    company,
-                    style: const TextStyle(fontSize: 15),
-                  ),
+                  Text(company, style: const TextStyle(fontSize: 15)),
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(Icons.location_on_outlined, size: 14, color: Colors.grey.shade700),
+                      Icon(
+                        Icons.location_on_outlined,
+                        size: 14,
+                        color: Colors.grey.shade700,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         location,
                         style: TextStyle(color: Colors.grey.shade700),
                       ),
                       const SizedBox(width: 12),
-                      Icon(Icons.access_time, size: 14, color: Colors.grey.shade700),
+                      Icon(
+                        Icons.access_time,
+                        size: 14,
+                        color: Colors.grey.shade700,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         timeAgo,
@@ -144,28 +152,29 @@ class JobCardWithFit extends StatelessWidget {
                     );
                   }
                 },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'apply',
-                    child: Row(
-                      children: [
-                        Icon(Icons.check_circle_outline, size: 18),
-                        SizedBox(width: 8),
-                        Text('Aplicar'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'save',
-                    child: Row(
-                      children: [
-                        Icon(Icons.bookmark_border, size: 18),
-                        SizedBox(width: 8),
-                        Text('Guardar'),
-                      ],
-                    ),
-                  ),
-                ],
+                itemBuilder:
+                    (context) => [
+                      const PopupMenuItem(
+                        value: 'apply',
+                        child: Row(
+                          children: [
+                            Icon(Icons.check_circle_outline, size: 18),
+                            SizedBox(width: 8),
+                            Text('Aplicar'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'save',
+                        child: Row(
+                          children: [
+                            Icon(Icons.bookmark_border, size: 18),
+                            SizedBox(width: 8),
+                            Text('Guardar'),
+                          ],
+                        ),
+                      ),
+                    ],
               ),
             ),
             // Fit Reasons
@@ -175,36 +184,49 @@ class JobCardWithFit extends StatelessWidget {
                 onTap: () {
                   showDialog(
                     context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('¿Por qué es un buen match?'),
-                      content: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ...fitReasons.map((reason) => Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: Row(
-                              children: [
-                                Icon(Icons.check_circle, color: Colors.green.shade600, size: 18),
-                                const SizedBox(width: 8),
-                                Expanded(child: Text(reason)),
-                              ],
+                    builder:
+                        (context) => AlertDialog(
+                          title: const Text('¿Por qué es un buen match?'),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ...fitReasons.map(
+                                (reason) => Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 4,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.check_circle,
+                                        color: Colors.green.shade600,
+                                        size: 18,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(child: Text(reason)),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Cerrar'),
                             ),
-                          )),
-                        ],
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('Cerrar'),
+                          ],
                         ),
-                      ],
-                    ),
                   );
                 },
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline, size: 16, color: Colors.blue.shade700),
+                    Icon(
+                      Icons.info_outline,
+                      size: 16,
+                      color: Colors.blue.shade700,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Ver razones de compatibilidad',

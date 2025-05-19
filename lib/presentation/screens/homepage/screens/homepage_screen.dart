@@ -6,6 +6,7 @@ import 'package:job_match/presentation/screens/homepage/find_jobs_screen.dart';
 import 'package:job_match/presentation/widgets/homepage/partner_icon.dart';
 import 'package:job_match/presentation/widgets/homepage/stat_item.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
 
 class HomepageScreen extends StatefulWidget {
   const HomepageScreen({super.key});
@@ -190,14 +191,54 @@ class _HomepageScreenState extends State<HomepageScreen> {
       children: [
         FadeInDownBig(
           duration: const Duration(milliseconds: 900),
-          child: const Text(
-            '¡Encuentra tu trabajo soñado hoy!',
-            style: TextStyle(
-              fontSize: 60,
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                '¡Encuentra tu ',
+                style: TextStyle(
+                  fontSize: 60,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              AnimatedTextKit(
+                animatedTexts: [
+                  TypewriterAnimatedText(
+                    'trabajo',
+                    speed: const Duration(milliseconds: 100),
+                    textStyle: const TextStyle(
+                      fontSize: 60,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  TypewriterAnimatedText(
+                    'compañero de trabajo',
+                    speed: const Duration(milliseconds: 100),
+                    textStyle: const TextStyle(
+                      fontSize: 60,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+                repeatForever: true,
+                pause: const Duration(seconds: 2),
+                displayFullTextOnTap: true,
+                isRepeatingAnimation: true,
+              ),
+              const Text(
+                'soñado hoy!',
+                style: TextStyle(
+                  fontSize: 60,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 12),

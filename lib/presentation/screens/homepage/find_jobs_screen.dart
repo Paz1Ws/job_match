@@ -6,6 +6,7 @@ import 'package:job_match/presentation/widgets/homepage/find_job/job_filter_side
 import 'package:job_match/presentation/widgets/homepage/find_job/simple_job_card_list_view.dart';
 import 'package:job_match/presentation/widgets/homepage/find_job/top_companies.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
 
 class FindJobsScreen extends StatelessWidget {
   const FindJobsScreen({super.key});
@@ -40,15 +41,55 @@ class FindJobsScreen extends StatelessWidget {
                     child: FadeInDown(
                       delay: const Duration(milliseconds: 200),
                       duration: const Duration(milliseconds: 500),
-                      child: const Text(
-                        'Un match ideal, para una persona especial',
-                        style: TextStyle(
-                          fontSize: 44,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
-                        ),
-                        textAlign: TextAlign.center,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            'Un match ideal, para una ',
+                            style: TextStyle(
+                              fontSize: 44,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                          AnimatedTextKit(
+                            animatedTexts: [
+                              TypewriterAnimatedText(
+                                'persona',
+                                speed: const Duration(milliseconds: 100),
+                                textStyle: const TextStyle(
+                                  fontSize: 44,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                              TypewriterAnimatedText(
+                                'empresa',
+                                speed: const Duration(milliseconds: 100),
+                                textStyle: const TextStyle(
+                                  fontSize: 44,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                            ],
+                            totalRepeatCount: 100,
+                            pause: const Duration(seconds: 2),
+                            displayFullTextOnTap: true,
+                          ),
+                          const Text(
+                            'especial',
+                            style: TextStyle(
+                              fontSize: 44,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

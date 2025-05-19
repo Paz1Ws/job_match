@@ -82,7 +82,10 @@ class ApplicantCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: kSpacing4 / 2),
       child: Row(
         children: [
-          const Text('• ', style: TextStyle(fontSize: 14, color: Color(0xFF6B7280))),
+          const Text(
+            '• ',
+            style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+          ),
           Expanded(
             child: Text(
               text,
@@ -128,15 +131,22 @@ class ApplicantCard extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: kRadius20 + kRadius4, // 24
-                  backgroundColor: Colors.grey.shade200, 
-                  backgroundImage: applicant.avatarUrl.isNotEmpty && applicant.avatarUrl.startsWith('assets/')
-                      ? AssetImage(applicant.avatarUrl)
-                      : applicant.avatarUrl.isNotEmpty
+                  backgroundColor: Colors.grey.shade200,
+                  backgroundImage:
+                      applicant.avatarUrl.isNotEmpty &&
+                              applicant.avatarUrl.startsWith('assets/')
+                          ? AssetImage(applicant.avatarUrl)
+                          : applicant.avatarUrl.isNotEmpty
                           ? NetworkImage(applicant.avatarUrl) as ImageProvider
                           : null,
-                  child: applicant.avatarUrl.isEmpty
-                      ? Icon(Icons.person, size: kIconSize24 + kSpacing4, color: Colors.grey.shade500)
-                      : null,
+                  child:
+                      applicant.avatarUrl.isEmpty
+                          ? Icon(
+                            Icons.person,
+                            size: kIconSize24 + kSpacing4,
+                            color: Colors.grey.shade500,
+                          )
+                          : null,
                 ),
                 const SizedBox(width: kSpacing12),
                 Expanded(
@@ -163,7 +173,11 @@ class ApplicantCard extends StatelessWidget {
                 ),
               ],
             ),
-            const Divider(height: kSpacing20, thickness: 1, color: Color(0xFFE5E7EB)),
+            const Divider(
+              height: kSpacing20,
+              thickness: 1,
+              color: Color(0xFFE5E7EB),
+            ),
             _buildInfoRow(applicant.experience),
             _buildInfoRow('Education: ${applicant.education}'),
             _buildInfoRow('Applied: ${applicant.appliedDate}'),
@@ -173,7 +187,11 @@ class ApplicantCard extends StatelessWidget {
                 // Handle CV download
                 print('Download CV: ${applicant.cvUrl}');
               },
-              icon: Icon(Icons.download_outlined, color: Colors.blue.shade700, size: kIconSize20),
+              icon: Icon(
+                Icons.download_outlined,
+                color: Colors.blue.shade700,
+                size: kIconSize20,
+              ),
               label: Text(
                 'Download Cv',
                 style: TextStyle(
@@ -183,7 +201,10 @@ class ApplicantCard extends StatelessWidget {
                 ),
               ),
               style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: kPadding8), // Minimal padding
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 0,
+                  vertical: kPadding8,
+                ), // Minimal padding
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
             ),

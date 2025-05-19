@@ -31,10 +31,7 @@ class TransparencyMeter extends StatelessWidget {
           children: [
             const Text(
               'Transparencia del Perfil',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
             SizedBox(
@@ -75,10 +72,7 @@ class TransparencyMeter extends StatelessWidget {
                   ? '¡Excelente! Tu perfil está completamente transparente.'
                   : 'Añade más detalles para mejorar tu transparencia.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             ),
           ],
         ),
@@ -100,11 +94,12 @@ class TransparencyArcPainter extends CustomPainter {
     final arcAngle = (score / 100) * 2 * math.pi * 0.8;
 
     // Draw background arc
-    final backgroundPaint = Paint()
-      ..color = Colors.grey.shade200
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 12
-      ..strokeCap = StrokeCap.round;
+    final backgroundPaint =
+        Paint()
+          ..color = Colors.grey.shade200
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 12
+          ..strokeCap = StrokeCap.round;
 
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
@@ -115,11 +110,12 @@ class TransparencyArcPainter extends CustomPainter {
     );
 
     // Draw progress arc
-    final progressPaint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 12
-      ..strokeCap = StrokeCap.round;
+    final progressPaint =
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 12
+          ..strokeCap = StrokeCap.round;
 
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
@@ -130,10 +126,11 @@ class TransparencyArcPainter extends CustomPainter {
     );
 
     // Draw ticks
-    final tickPaint = Paint()
-      ..color = Colors.grey.shade400
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
+    final tickPaint =
+        Paint()
+          ..color = Colors.grey.shade400
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1;
 
     for (int i = 0; i <= 10; i++) {
       final angle = math.pi * 0.2 + (i / 10) * math.pi * 1.6;
@@ -146,17 +143,14 @@ class TransparencyArcPainter extends CustomPainter {
         center.dx + (radius - tickLength) * math.cos(angle),
         center.dy + (radius - tickLength) * math.sin(angle),
       );
-      
+
       canvas.drawLine(innerPoint, outerPoint, tickPaint);
-      
+
       if (i % 5 == 0) {
         final textPainter = TextPainter(
           text: TextSpan(
             text: '${i * 10}',
-            style: TextStyle(
-              color: Colors.grey.shade600,
-              fontSize: 10,
-            ),
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 10),
           ),
           textDirection: TextDirection.ltr,
         );
@@ -165,7 +159,7 @@ class TransparencyArcPainter extends CustomPainter {
           center.dx + (radius - 25) * math.cos(angle) - textPainter.width / 2,
           center.dy + (radius - 25) * math.sin(angle) - textPainter.height / 2,
         );
-        
+
         textPainter.paint(canvas, textOffset);
       }
     }

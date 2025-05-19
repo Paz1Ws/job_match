@@ -92,7 +92,9 @@ class CompanyProfileHeader extends ConsumerWidget {
                       padding: const EdgeInsets.all(kPadding28),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(kRadius12 + kRadius4),
+                        borderRadius: BorderRadius.circular(
+                          kRadius12 + kRadius4,
+                        ),
                         border: Border.all(
                           color: Colors.grey.shade200,
                           width: kStroke1 * 1.2,
@@ -119,7 +121,8 @@ class CompanyProfileHeader extends ConsumerWidget {
                                     Icons.arrow_back,
                                     color: Colors.blue,
                                   ),
-                                  onPressed: () => Navigator.of(context).maybePop(),
+                                  onPressed:
+                                      () => Navigator.of(context).maybePop(),
                                   tooltip: 'Atrás',
                                 ),
                                 BounceInDown(
@@ -138,10 +141,13 @@ class CompanyProfileHeader extends ConsumerWidget {
                                 const SizedBox(width: kSpacing20),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: <Widget>[
                                       FadeInLeft(
-                                        duration: const Duration(milliseconds: 700),
+                                        duration: const Duration(
+                                          milliseconds: 700,
+                                        ),
                                         child: Text(
                                           company.companyName ?? 'Company',
                                           style: const TextStyle(
@@ -154,8 +160,12 @@ class CompanyProfileHeader extends ConsumerWidget {
                                       ),
                                       const SizedBox(height: kSpacing8),
                                       FadeInLeft(
-                                        delay: const Duration(milliseconds: 200),
-                                        duration: const Duration(milliseconds: 700),
+                                        delay: const Duration(
+                                          milliseconds: 200,
+                                        ),
+                                        duration: const Duration(
+                                          milliseconds: 700,
+                                        ),
                                         child: Text(
                                           company.address ?? 'Sin ubicación',
                                           style: const TextStyle(
@@ -166,8 +176,12 @@ class CompanyProfileHeader extends ConsumerWidget {
                                       ),
                                       const SizedBox(height: kSpacing12),
                                       FadeInLeft(
-                                        delay: const Duration(milliseconds: 300),
-                                        duration: const Duration(milliseconds: 700),
+                                        delay: const Duration(
+                                          milliseconds: 300,
+                                        ),
+                                        duration: const Duration(
+                                          milliseconds: 700,
+                                        ),
                                         child: SingleChildScrollView(
                                           scrollDirection: Axis.horizontal,
                                           child: Row(
@@ -214,7 +228,9 @@ class CompanyProfileHeader extends ConsumerWidget {
                                               context,
                                             ).showSnackBar(
                                               const SnackBar(
-                                                content: Text('Empresa guardada'),
+                                                content: Text(
+                                                  'Empresa guardada',
+                                                ),
                                               ),
                                             );
                                           },
@@ -251,20 +267,24 @@ class CompanyProfileHeader extends ConsumerWidget {
                                                 0xFF3366FF,
                                               ),
                                               foregroundColor: Colors.white,
-                                              padding: const EdgeInsets.symmetric(
-                                                horizontal: kPadding20 + kSpacing4,
-                                                vertical: 0,
-                                              ),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal:
+                                                        kPadding20 + kSpacing4,
+                                                    vertical: 0,
+                                                  ),
                                               textStyle: const TextStyle(
                                                 fontSize: 15.0,
                                               ),
                                               shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(
-                                                  kRadius8,
-                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                      kRadius8,
+                                                    ),
                                               ),
                                               tapTargetSize:
-                                                  MaterialTapTargetSize.shrinkWrap,
+                                                  MaterialTapTargetSize
+                                                      .shrinkWrap,
                                               minimumSize: Size.zero,
                                             ),
                                           ),
@@ -285,7 +305,8 @@ class CompanyProfileHeader extends ConsumerWidget {
                                 Expanded(
                                   flex: 2,
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       const SectionTitle(
                                         text: 'Acerca de la Empresa',
@@ -325,7 +346,9 @@ class CompanyProfileHeader extends ConsumerWidget {
                                                     final url = Uri.parse(
                                                       company.website!,
                                                     );
-                                                    if (await canLaunchUrl(url)) {
+                                                    if (await canLaunchUrl(
+                                                      url,
+                                                    )) {
                                                       await launchUrl(url);
                                                     }
                                                   },
@@ -334,10 +357,12 @@ class CompanyProfileHeader extends ConsumerWidget {
                                                     style: const TextStyle(
                                                       color: Colors.blue,
                                                       decoration:
-                                                          TextDecoration.underline,
+                                                          TextDecoration
+                                                              .underline,
                                                       fontSize: 14,
                                                     ),
-                                                    overflow: TextOverflow.ellipsis,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
                                                   ),
                                                 ),
                                               ),
@@ -347,13 +372,17 @@ class CompanyProfileHeader extends ConsumerWidget {
                                     ],
                                   ),
                                 ),
-                                const SizedBox(width: kSpacing30 + kSpacing4 / 2),
+                                const SizedBox(
+                                  width: kSpacing30 + kSpacing4 / 2,
+                                ),
                                 Expanded(
                                   flex: 1,
                                   child: Column(
                                     children: [
                                       FadeInRight(
-                                        duration: const Duration(milliseconds: 700),
+                                        duration: const Duration(
+                                          milliseconds: 700,
+                                        ),
                                         child: Container(
                                           padding: kPaddingAll20,
                                           decoration: BoxDecoration(
@@ -378,7 +407,9 @@ class CompanyProfileHeader extends ConsumerWidget {
                                                   color: Color(0xFF222B45),
                                                 ),
                                               ),
-                                              const SizedBox(height: kSpacing12),
+                                              const SizedBox(
+                                                height: kSpacing12,
+                                              ),
                                               ProfileOverviewItem(
                                                 icon: Icons.business,
                                                 label: 'Nombre',
@@ -438,7 +469,9 @@ class CompanyProfileHeader extends ConsumerWidget {
           // The Stack's height will accommodate the banner and the overlapping card.
           // The original spacing logic should still be relevant to the card's visual end.
           SizedBox(
-            height: (kPadding20 + kSpacing4), // Adjusted to be simpler, space after the entire header block
+            height:
+                (kPadding20 +
+                    kSpacing4), // Adjusted to be simpler, space after the entire header block
           ),
           // "Compartir este perfil" section
           FadeInLeft(

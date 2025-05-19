@@ -545,7 +545,7 @@ class _CandidateProfileScreenState extends State<CandidateProfileScreen> {
                   },
                 ),
               );
-            }).toList(),
+            }),
           ],
         ),
       ),
@@ -596,7 +596,7 @@ class _CandidateProfileScreenState extends State<CandidateProfileScreen> {
                   },
                 ),
               );
-            }).toList(),
+            }),
           ],
         ),
       ),

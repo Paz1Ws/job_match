@@ -44,42 +44,35 @@ class MockJobs {
       'type': 'Full-time',
       'postedDate': DateTime.now().subtract(const Duration(hours: 2)),
       'fit': 92, // Match percentage for Julio
-      'fitReasons': [
-        '+50% por experiencia en PR',
-        '+42% por Storytelling'
-      ],
+      'fitReasons': ['+50% por experiencia en PR', '+42% por Storytelling'],
     },
     {
       'id': '2',
       'title': 'Content Manager',
       'company': 'Digital Solutions',
-      'description': 'Gestión de contenidos y estrategia digital para marcas importantes.',
+      'description':
+          'Gestión de contenidos y estrategia digital para marcas importantes.',
       'requirements': ['Copywriting', 'Social Media', 'SEO'],
       'location': 'Lima, Perú',
       'salary': 'S/ 3,500 - S/ 5,000',
       'type': 'Full-time',
       'postedDate': DateTime.now().subtract(const Duration(days: 2)),
       'fit': 78,
-      'fitReasons': [
-        '+50% por comunicación', 
-        '+28% por estrategia'
-      ],
+      'fitReasons': ['+50% por comunicación', '+28% por estrategia'],
     },
     {
       'id': '3',
       'title': 'Marketing Specialist',
       'company': 'Global Tech',
-      'description': 'Desarrollo de estrategias de marketing y campañas publicitarias.',
+      'description':
+          'Desarrollo de estrategias de marketing y campañas publicitarias.',
       'requirements': ['Marketing Digital', 'Análisis de Datos', 'Publicidad'],
       'location': 'Remoto',
       'salary': 'S/ 4,500 - S/ 6,500',
       'type': 'Full-time',
       'postedDate': DateTime.now().subtract(const Duration(days: 5)),
       'fit': 65,
-      'fitReasons': [
-        '+45% por comunicación', 
-        '+20% por estrategia'
-      ],
+      'fitReasons': ['+45% por comunicación', '+20% por estrategia'],
     },
   ];
 }
@@ -90,7 +83,8 @@ class MockCourses {
     {
       'id': '1',
       'title': 'Storytelling Avanzado',
-      'description': 'Mejora tus habilidades narrativas para impactar a tu audiencia',
+      'description':
+          'Mejora tus habilidades narrativas para impactar a tu audiencia',
       'instructor': 'María Rodríguez',
       'duration': '2 horas',
       'level': 'Intermedio',
@@ -98,16 +92,27 @@ class MockCourses {
       'fitBoost': 3, // Percentage to add to fit score
       'quiz': [
         {
-          'question': '¿Cuál es el elemento más importante en una historia convincente?',
-          'options': ['Personajes memorables', 'Conflicto', 'Descripción detallada', 'Vocabulario complejo'],
-          'correctAnswer': 'Conflicto'
+          'question':
+              '¿Cuál es el elemento más importante en una historia convincente?',
+          'options': [
+            'Personajes memorables',
+            'Conflicto',
+            'Descripción detallada',
+            'Vocabulario complejo',
+          ],
+          'correctAnswer': 'Conflicto',
         },
         {
           'question': '¿Qué técnica narrativa genera mayor conexión emocional?',
-          'options': ['Estadísticas', 'Testimonios personales', 'Datos técnicos', 'Referencias históricas'],
-          'correctAnswer': 'Testimonios personales'
-        }
-      ]
+          'options': [
+            'Estadísticas',
+            'Testimonios personales',
+            'Datos técnicos',
+            'Referencias históricas',
+          ],
+          'correctAnswer': 'Testimonios personales',
+        },
+      ],
     },
   ];
 }
@@ -175,4 +180,3 @@ class MockApplicants {
     applicant['status'] = newStatus;
   }
 }
-
