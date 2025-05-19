@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:animate_do/animate_do.dart';
+import 'package:job_match/core/data/auth_request.dart';
+import 'package:job_match/core/domain/models/candidate_model.dart';
 import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:job_match/core/domain/models/applied_job_model.dart';
@@ -145,6 +147,14 @@ class _CandidateDashboardScreenState
     // Solo usa providers existentes de supabase_http_requests.dart
     final applicationsAsync = ref.watch(applicationsProvider);
 
+    // Cargar el perfil si aún no está cargado
+    final candidate = ref.watch(candidateProfileProvider);
+    if (candidate == null) {
+      // Intentar cargar el perfil si no está en memoria
+      Future.microtask(() => fetchUserProfile(ref));
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FA),
       body: Stack(
@@ -260,7 +270,7 @@ class _CandidateDashboardScreenState
                         duration: const Duration(milliseconds: 700),
                         child:
                             _selectedMenu == 'Overview'
-                                ? _buildOverviewContent()
+                                ? _buildOverviewContent(candidate)
                                 : _selectedMenu == 'Applied Jobs'
                                 ? applicationsAsync.when(
                                   loading:
@@ -312,7 +322,7 @@ class _CandidateDashboardScreenState
     );
   }
 
-  Widget _buildOverviewContent() {
+  Widget _buildOverviewContent(Candidate candidate) {
     // Use simulated component for course recommendation
     final course = MockCourses.courses.first;
 
@@ -323,8 +333,8 @@ class _CandidateDashboardScreenState
         children: <Widget>[
           FadeInDown(
             duration: const Duration(milliseconds: 600),
-            child: const Text(
-              'Hola, Julio César Nima',
+            child: Text(
+              candidate.name ?? '',
               style: TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.bold,
