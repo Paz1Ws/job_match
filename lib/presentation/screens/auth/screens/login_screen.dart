@@ -790,7 +790,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const SizedBox(height: 120),
+                            const SizedBox(height: 20),
                             Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Row(
