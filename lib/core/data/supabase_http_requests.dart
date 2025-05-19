@@ -1,5 +1,8 @@
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:job_match/core/domain/models/posted_job_model.dart';
 
 // Cliente global
 final supabase = Supabase.instance.client;
@@ -29,14 +32,15 @@ final jobsProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((
   return res;
 });
 
-final jobsProviderWithCompanyName = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
-  final res = await supabase
-      .from('jobs')
-      .select('*, users!company_id(companies(company_name))')
-      .order('created_at', ascending: false);
+final jobsProviderWithCompanyName =
+    FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
+      final res = await supabase
+          .from('jobs')
+          .select('*, users!company_id(companies(company_name))')
+          .order('created_at', ascending: false);
 
-  return res;
-});
+      return res;
+    });
 
 // 2.4. Applications
 final applicationsProvider =
@@ -90,15 +94,49 @@ final updateCompanyProvider = Provider((ref) {
 /// 3. Crear una vacante (POST /jobs)
 /// Permite a una empresa publicar una nueva vacante.
 final createJobProvider = Provider((ref) {
-  return (int companyId, String title, String description) async {
-    final response =
-        await Supabase.instance.client.from('jobs').insert({
-          'company_id': companyId,
-          'title': title,
-          'description': description,
-        }).select();
+  return (
+    int companyId,
+    String title,
+    String description,
+    String location,
+    String jobType,
+    num? salaryMin,
+    num? salaryMax,
+    DateTime? applicationDeadline,
+    String status, // e.g., 'open', 'paused'
+    List<String>? requiredSkills,
+    int? maxApplications,
+  ) async {
+    final Map<String, dynamic> jobData = {
+      'company_id': companyId,
+      'title': title,
+      'description': description,
+      'location': location,
+      'job_type': jobType,
+      'status': status,
+      'views_count': 0, // Default views_count to 0 on creation
+    };
 
-    return response;
+    if (salaryMin != null) jobData['salary_min'] = salaryMin;
+    if (salaryMax != null) jobData['salary_max'] = salaryMax;
+    if (applicationDeadline != null) {
+      jobData['application_deadline'] = applicationDeadline.toIso8601String();
+    }
+    if (requiredSkills != null && requiredSkills.isNotEmpty) {
+      jobData['required_skills'] = requiredSkills;
+    }
+    if (maxApplications != null) {
+      jobData['max_applications'] = maxApplications;
+    }
+
+    final response =
+        await Supabase.instance.client
+            .from('jobs')
+            .insert(jobData)
+            .select()
+            .single(); // Assuming insert returns the created row
+
+    return PostedJob.fromJson(response);
   };
 });
 
@@ -149,5 +187,31 @@ final updateProfileProvider = Provider((ref) {
             .select();
 
     return response;
+  };
+});
+
+final uploadCvProvider = Provider((ref) {
+  return (Uint8List fileBytes, String fileName) async {
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) throw Exception('Usuario no autenticado');
+
+    try {
+      // Upload the CV file to storage
+      final storagePath = '$userId/$fileName';
+      await supabase.storage.from('cvs').uploadBinary(storagePath, fileBytes);
+
+      // Get the public URL for the uploaded file
+      final fileUrl = supabase.storage.from('cvs').getPublicUrl(storagePath);
+
+      // Update the candidate's resume URL in the database
+      await supabase
+          .from('candidates')
+          .update({'resume_url': fileUrl})
+          .eq('user_id', userId);
+
+      return fileUrl;
+    } catch (e) {
+      throw Exception('Error procesando el CV: $e');
+    }
   };
 });

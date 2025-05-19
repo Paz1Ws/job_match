@@ -314,6 +314,46 @@ class ProfileDetailHeader extends ConsumerWidget {
                                         JustifiedText(
                                           text: candidate.bio ?? '',
                                         ),
+                                        // --- CV LINK SECTION ---
+                                        if (candidate.resumeUrl != null &&
+                                            candidate.resumeUrl!.isNotEmpty)
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              top: 12,
+                                              bottom: 8,
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                const Icon(
+                                                  Icons.picture_as_pdf,
+                                                  color: Colors.red,
+                                                  size: 22,
+                                                ),
+                                                const SizedBox(width: 8),
+                                                const Text(
+                                                  'Link al CV:',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w500,
+                                                    fontSize: 15,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Flexible(
+                                                  child: SelectableText(
+                                                    candidate.resumeUrl!,
+                                                    style: const TextStyle(
+                                                      color: Colors.blue,
+                                                      decoration:
+                                                          TextDecoration
+                                                              .underline,
+                                                      fontSize: 14,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        // --- END CV LINK SECTION ---
                                         const SectionTitle(text: 'Educación'),
                                         Text(candidate.education ?? ''),
                                         const SectionTitle(text: 'Experiencia'),

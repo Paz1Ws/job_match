@@ -1,350 +1,280 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:job_match/core/data/supabase_http_requests.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
+import 'package:intl/intl.dart';
 
-class PostJobForm extends StatefulWidget {
-  const PostJobForm({super.key});
+class PostJobForm extends ConsumerStatefulWidget {
+  final int companyId; // Assuming companyId is passed to the form
+
+  const PostJobForm({super.key, required this.companyId});
 
   @override
-  State<PostJobForm> createState() => _PostJobFormState();
+  ConsumerState<PostJobForm> createState() => _PostJobFormState();
 }
 
-class _PostJobFormState extends State<PostJobForm> {
-  final _jobTitleController = TextEditingController();
-  final _tagsController = TextEditingController();
-  String? _selectedJobRole;
-  final _minSalaryController = TextEditingController();
-  final _maxSalaryController = TextEditingController();
-  String? _selectedSalaryType;
-  String? _selectedEducation;
-  String? _selectedExperience;
-  String? _selectedJobType;
-  String? _selectedVacancies;
-  final _expirationDateController = TextEditingController();
-  String? _selectedJobLevel;
-  final _applyEmailController = TextEditingController();
-  final _applyLinkController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _responsibilitiesController = TextEditingController();
+class _PostJobFormState extends ConsumerState<PostJobForm> {
+  final _formKey = GlobalKey<FormState>();
+  final _titleController = TextEditingController(
+    text: 'Desarrollador Flutter Senior',
+  );
+  final _descriptionController = TextEditingController(
+    text:
+        'Buscamos un desarrollador Flutter con experiencia para unirse a nuestro equipo innovador. Responsable de crear aplicaciones móviles de alta calidad y rendimiento.',
+  );
+  final _locationController = TextEditingController(
+    text: 'Lima, Perú (Remoto Opcional)',
+  );
+  final _jobTypeController = TextEditingController(
+    text: 'Tiempo Completo',
+  ); // Could be a Dropdown
+  final _salaryMinController = TextEditingController(text: '7000');
+  final _salaryMaxController = TextEditingController(text: '10000');
+  final _applicationDeadlineController = TextEditingController(
+    text: DateFormat(
+      'yyyy-MM-dd',
+    ).format(DateTime.now().add(const Duration(days: 30))),
+  );
+  String _statusValue = 'open'; // Default status
+  final _requiredSkillsController = TextEditingController(
+    text: 'Flutter, Dart, Firebase, Git, API REST',
+  );
+  final _maxApplicationsController = TextEditingController(text: '100');
 
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: kSpacing8, top: kSpacing20),
-      child: Text(
-        title,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFF222B45)),
-      ),
+  bool _isLoading = false;
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate:
+          DateTime.tryParse(_applicationDeadlineController.text) ??
+          DateTime.now().add(const Duration(days: 30)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
     );
+    if (picked != null) {
+      setState(() {
+        _applicationDeadlineController.text = DateFormat(
+          'yyyy-MM-dd',
+        ).format(picked);
+      });
+    }
   }
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String labelText,
-    String? hintText,
-    Widget? suffix,
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    _locationController.dispose();
+    _jobTypeController.dispose();
+    _salaryMinController.dispose();
+    _salaryMaxController.dispose();
+    _applicationDeadlineController.dispose();
+    _requiredSkillsController.dispose();
+    _maxApplicationsController.dispose();
+    super.dispose();
+  }
+
+  void _submitForm() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() => _isLoading = true);
+      try {
+        final title = _titleController.text;
+        final description = _descriptionController.text;
+        final location = _locationController.text;
+        final jobType =
+            _jobTypeController
+                .text; // Consider using a dropdown for fixed values
+        final salaryMin = num.tryParse(_salaryMinController.text);
+        final salaryMax = num.tryParse(_salaryMaxController.text);
+        final applicationDeadline = DateTime.tryParse(
+          _applicationDeadlineController.text,
+        );
+        final status = _statusValue;
+        final requiredSkills =
+            _requiredSkillsController.text
+                .split(',')
+                .map((s) => s.trim())
+                .where((s) => s.isNotEmpty)
+                .toList();
+        final maxApplications = int.tryParse(_maxApplicationsController.text);
+
+        final postedJob = await ref.read(createJobProvider)(
+          widget.companyId,
+          title,
+          description,
+          location,
+          jobType,
+          salaryMin,
+          salaryMax,
+          applicationDeadline,
+          status,
+          requiredSkills,
+          maxApplications,
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Empleo "${postedJob.title}" publicado con éxito! ID: ${postedJob.id}',
+            ),
+          ),
+        );
+        _formKey.currentState?.reset();
+        // Optionally clear controllers or navigate
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error al publicar empleo: $e')));
+      } finally {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label, {
+    TextInputType? keyboardType,
+    bool isNumeric = false,
     int maxLines = 1,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(labelText, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xFF4A4A4A))),
-        const SizedBox(height: kSpacing4),
-        TextFormField(
-          controller: controller,
-          maxLines: maxLines,
-          decoration: InputDecoration(
-            hintText: hintText ?? 'Ingrese $labelText',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(kRadius8)),
-            contentPadding: const EdgeInsets.symmetric(horizontal: kPadding12, vertical: kPadding12),
-            suffixIcon: suffix,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDropdownField({
-    required String labelText,
-    required String? currentValue,
-    required List<String> items,
-    required ValueChanged<String?> onChanged,
-    String? hintText,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(labelText, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xFF4A4A4A))),
-        const SizedBox(height: kSpacing4),
-        DropdownButtonFormField<String>(
-          decoration: InputDecoration(
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(kRadius8)),
-            contentPadding: const EdgeInsets.symmetric(horizontal: kPadding12, vertical: kPadding12),
-          ),
-          value: currentValue,
-          hint: Text(hintText ?? 'Seleccione...'),
-          items: items.map((String value) {
-            return DropdownMenuItem<String>(
-              value: value,
-              child: Text(value),
-            );
-          }).toList(),
-          onChanged: onChanged,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCurrencySuffix() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: kPadding12),
-      child: Text(
-        'USD',
-        style: TextStyle(color: Colors.grey.shade600, fontSize: 14, fontWeight: FontWeight.w500),
+      padding: const EdgeInsets.symmetric(vertical: kSpacing8),
+      child: TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+        ),
+        keyboardType: keyboardType,
+        maxLines: maxLines,
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Por favor, ingrese $label';
+          }
+          if (isNumeric && num.tryParse(value) == null) {
+            return 'Por favor, ingrese un número válido';
+          }
+          return null;
+        },
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(kPadding20 + kSpacing4),
-      child: Container(
-        padding: const EdgeInsets.all(kPadding20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(kRadius12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.08),
-              spreadRadius: 1,
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Título principal
-            Row(
-              children: [
-                Icon(Icons.add_circle_outline, color: Colors.blue.shade700, size: 32),
-                const SizedBox(width: kSpacing12),
-                const Text(
-                  'Publicar un Empleo',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF222B45)),
-                ),
-              ],
+    return Padding(
+      padding: const EdgeInsets.all(kPadding20),
+      child: Form(
+        key: _formKey,
+        child: ListView(
+          children: <Widget>[
+            const Text(
+              'Publicar Nueva Vacante',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: kSpacing20),
-
-            // Primera fila: Título, Etiquetas, Rol
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: _buildTextField(
-                    controller: _jobTitleController,
-                    labelText: 'Título del Empleo',
-                    hintText: 'Ej: Diseñador UI/UX Senior',
-                  ),
-                ),
-                const SizedBox(width: kSpacing20),
-                Expanded(
-                  flex: 2,
-                  child: _buildTextField(
-                    controller: _tagsController,
-                    labelText: 'Etiquetas',
-                    hintText: 'Palabras clave, etiquetas...',
-                  ),
-                ),
-                const SizedBox(width: kSpacing20),
-                Expanded(
-                  flex: 2,
-                  child: _buildDropdownField(
-                    labelText: 'Rol del Empleo',
-                    currentValue: _selectedJobRole,
-                    items: ['Desarrollador', 'Diseñador', 'Gerente', 'Analista'],
-                    onChanged: (value) => setState(() => _selectedJobRole = value),
-                  ),
-                ),
-              ],
-            ),
-
-            // Salario
-            _buildSectionTitle('Salario'),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: _buildTextField(
-                    controller: _minSalaryController,
-                    labelText: 'Salario Mínimo',
-                    hintText: 'Ej: 2000',
-                    suffix: _buildCurrencySuffix(),
-                  ),
-                ),
-                const SizedBox(width: kSpacing20),
-                Expanded(
-                  flex: 2,
-                  child: _buildTextField(
-                    controller: _maxSalaryController,
-                    labelText: 'Salario Máximo',
-                    hintText: 'Ej: 4000',
-                    suffix: _buildCurrencySuffix(),
-                  ),
-                ),
-                const SizedBox(width: kSpacing20),
-                Expanded(
-                  flex: 2,
-                  child: _buildDropdownField(
-                    labelText: 'Tipo de Salario',
-                    currentValue: _selectedSalaryType,
-                    items: ['Mensual', 'Anual', 'Por Hora'],
-                    onChanged: (value) => setState(() => _selectedSalaryType = value),
-                  ),
-                ),
-              ],
-            ),
-
-            // Información avanzada
-            _buildSectionTitle('Información Avanzada'),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: _buildDropdownField(
-                    labelText: 'Educación',
-                    currentValue: _selectedEducation,
-                    items: ['Secundaria', 'Técnico', 'Universitario', 'Postgrado'],
-                    onChanged: (value) => setState(() => _selectedEducation = value),
-                  ),
-                ),
-                const SizedBox(width: kSpacing20),
-                Expanded(
-                  flex: 2,
-                  child: _buildDropdownField(
-                    labelText: 'Experiencia',
-                    currentValue: _selectedExperience,
-                    items: ['Sin experiencia', '1-2 años', '3-5 años', '5+ años'],
-                    onChanged: (value) => setState(() => _selectedExperience = value),
-                  ),
-                ),
-                const SizedBox(width: kSpacing20),
-                Expanded(
-                  flex: 2,
-                  child: _buildDropdownField(
-                    labelText: 'Tipo de Empleo',
-                    currentValue: _selectedJobType,
-                    items: ['Tiempo Completo', 'Medio Tiempo', 'Contrato', 'Temporal', 'Pasantía'],
-                    onChanged: (value) => setState(() => _selectedJobType = value),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: kSpacing20),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: _buildDropdownField(
-                    labelText: 'Vacantes',
-                    currentValue: _selectedVacancies,
-                    items: ['1', '2', '3', '4', '5+'],
-                    onChanged: (value) => setState(() => _selectedVacancies = value),
-                  ),
-                ),
-                const SizedBox(width: kSpacing20),
-                Expanded(
-                  flex: 2,
-                  child: _buildTextField(
-                    controller: _expirationDateController,
-                    labelText: 'Fecha de Expiración',
-                    hintText: 'DD/MM/YYYY',
-                    suffix: Icon(Icons.calendar_today, size: 18, color: Colors.grey.shade600),
-                  ),
-                ),
-                const SizedBox(width: kSpacing20),
-                Expanded(
-                  flex: 2,
-                  child: _buildDropdownField(
-                    labelText: 'Nivel del Empleo',
-                    currentValue: _selectedJobLevel,
-                    items: ['Junior', 'Semi-Senior', 'Senior', 'Lead'],
-                    onChanged: (value) => setState(() => _selectedJobLevel = value),
-                  ),
-                ),
-              ],
-            ),
-
-            // Sección: Aplicar trabajo en
-            _buildSectionTitle('Aplicar trabajo en'),
-            Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: _buildTextField(
-                    controller: _applyEmailController,
-                    labelText: 'Correo para Aplicaciones',
-                    hintText: 'ejemplo@empresa.com',
-                  ),
-                ),
-                const SizedBox(width: kSpacing20),
-                Expanded(
-                  flex: 2,
-                  child: _buildTextField(
-                    controller: _applyLinkController,
-                    labelText: 'Enlace para Aplicaciones',
-                    hintText: 'https://empresa.com/apply',
-                  ),
-                ),
-                const SizedBox(width: kSpacing20),
-                Expanded(flex: 2, child: Container()),
-              ],
-            ),
-
-            // Descripción del trabajo
-            _buildSectionTitle('Descripción del Empleo'),
+            _buildTextField(_titleController, 'Título del Puesto'),
             _buildTextField(
-              controller: _descriptionController,
-              labelText: '',
-              hintText: 'Describe el puesto, responsabilidades, requisitos, etc.',
+              _descriptionController,
+              'Descripción del Puesto',
               maxLines: 5,
             ),
-
-            // Responsabilidades
-            _buildSectionTitle('Responsabilidades'),
+            _buildTextField(_locationController, 'Ubicación (ej: Lima, Perú)'),
             _buildTextField(
-              controller: _responsibilitiesController,
-              labelText: '',
-              hintText: 'Lista de responsabilidades principales...',
-              maxLines: 3,
+              _jobTypeController,
+              'Tipo de Empleo (ej: Tiempo Completo, Medio Tiempo, Contrato)',
             ),
-
-            // Botón publicar
-            const SizedBox(height: kSpacing30),
             Row(
-              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                ElevatedButton.icon(
-                  onPressed: () {
-                    // Acción de publicar empleo
-                  },
-                  icon: const Icon(Icons.send),
-                  label: const Text('Publicar Empleo'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade700,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 18),
-                    textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(kRadius8)),
+                Expanded(
+                  child: _buildTextField(
+                    _salaryMinController,
+                    'Salario Mínimo (S/)',
+                    keyboardType: TextInputType.number,
+                    isNumeric: true,
+                  ),
+                ),
+                const SizedBox(width: kSpacing12),
+                Expanded(
+                  child: _buildTextField(
+                    _salaryMaxController,
+                    'Salario Máximo (S/)',
+                    keyboardType: TextInputType.number,
+                    isNumeric: true,
                   ),
                 ),
               ],
             ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: kSpacing8),
+              child: TextFormField(
+                controller: _applicationDeadlineController,
+                decoration: InputDecoration(
+                  labelText: 'Fecha Límite de Postulación',
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.calendar_today),
+                    onPressed: () => _selectDate(context),
+                  ),
+                ),
+                readOnly: true,
+                onTap: () => _selectDate(context),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor, ingrese la fecha límite';
+                  }
+                  return null;
+                },
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: kSpacing8),
+              child: DropdownButtonFormField<String>(
+                value: _statusValue,
+                decoration: const InputDecoration(
+                  labelText: 'Estado de la Publicación',
+                  border: OutlineInputBorder(),
+                ),
+                items:
+                    ['open', 'paused', 'closed'].map((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(
+                          value[0].toUpperCase() + value.substring(1),
+                        ), // Capitalize
+                      );
+                    }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _statusValue = newValue!;
+                  });
+                },
+              ),
+            ),
+            _buildTextField(
+              _requiredSkillsController,
+              'Habilidades Requeridas (separadas por coma)',
+            ),
+            _buildTextField(
+              _maxApplicationsController,
+              'Máximo de Postulaciones (opcional)',
+              keyboardType: TextInputType.number,
+              isNumeric: true,
+            ),
+            const SizedBox(height: kSpacing20),
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : ElevatedButton.icon(
+                  onPressed: _submitForm,
+                  icon: const Icon(Icons.publish),
+                  label: const Text('Publicar Empleo'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: kPadding12),
+                    textStyle: const TextStyle(fontSize: 16),
+                  ),
+                ),
           ],
         ),
       ),

@@ -407,8 +407,8 @@ class CompanyProfileHeader extends ConsumerWidget {
                                                 radius:
                                                     kRadius20 + kRadius4 / 2,
                                                 backgroundImage: AssetImage(
-                                                  'assets/images/users/user4.png',
-                                                ), // Example contact person
+                                                  'assets/images/users/user4.webp',
+                                                ),
                                               ),
                                               const SizedBox(width: kSpacing12),
                                               Column(

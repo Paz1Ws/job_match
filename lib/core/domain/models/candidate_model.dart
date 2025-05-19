@@ -53,4 +53,31 @@ class Candidate {
     if (phone != null) 'phone': phone,
     if (experienceLevel != null) 'experience_level': experienceLevel,
   };
+  Candidate copyWith({
+    String? userId,
+    String? name,
+    String? experience,
+    String? education,
+    List<String>? skills,
+    DateTime? parsedAt,
+    String? bio,
+    String? location,
+    String? resumeUrl,
+    String? phone,
+    String? experienceLevel,
+  }) {
+    return Candidate(
+      userId: userId ?? this.userId,
+      name: name ?? this.name,
+      experience: experience ?? this.experience,
+      education: education ?? this.education,
+      skills: skills ?? this.skills,
+      parsedAt: parsedAt ?? this.parsedAt,
+      bio: bio ?? this.bio,
+      location: location ?? this.location,
+      resumeUrl: resumeUrl ?? this.resumeUrl,
+      phone: phone ?? this.phone,
+      experienceLevel: experienceLevel ?? this.experienceLevel,
+    );
+  }
 }

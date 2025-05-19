@@ -37,7 +37,9 @@ Future<User> signUpWithEmailAndPassword({
   required String role,
 }) async {
   try {
-    await signOut(); // Cierra sesión antes de intentar sign up
+    if ( supabaseClient.auth.currentSession!= null || supabaseClient.auth.currentUser!=null ) {
+         await signOut();
+    }
     final response = await supabaseClient.auth.signUp(
       email: email,
       password: password,

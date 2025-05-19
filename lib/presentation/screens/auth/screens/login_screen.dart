@@ -1,9 +1,11 @@
 import 'package:animate_do/animate_do.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:job_match/config/util/animations.dart';
 import 'package:job_match/core/data/auth_request.dart';
+import 'package:job_match/core/data/cv_parsing.dart';
 import 'package:job_match/core/data/supabase_http_requests.dart';
 import 'package:job_match/presentation/screens/auth/widgets/info_card.dart';
 import 'package:job_match/presentation/screens/auth/widgets/left_cut_trapezoid_clipper.dart';
@@ -12,6 +14,7 @@ import 'package:job_match/presentation/screens/profiles/company_profile_screen.d
 import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
 import 'package:lottie/lottie.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -595,20 +598,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   );
                                   // Verifica perfil
                                   await fetchUserProfile(ref);
-                                  final candidate = ref.read(candidateProfileProvider);
-                                  final company = ref.read(companyProfileProvider);
-                                  if (_selectedUserType == 'Candidato' && candidate != null) {
+                                  final candidate = ref.read(
+                                    candidateProfileProvider,
+                                  );
+                                  final company = ref.read(
+                                    companyProfileProvider,
+                                  );
+                                  if (_selectedUserType == 'Candidato' &&
+                                      candidate != null) {
                                     Navigator.of(context).push(
-                                      FadeThroughPageRoute(page: const UserProfile()),
+                                      FadeThroughPageRoute(
+                                        page: const UserProfile(),
+                                      ),
                                     );
-                                  } else if (_selectedUserType == 'Empresa' && company != null) {
+                                  } else if (_selectedUserType == 'Empresa' &&
+                                      company != null) {
                                     Navigator.of(context).push(
-                                      FadeThroughPageRoute(page: const CompanyProfileScreen()),
+                                      FadeThroughPageRoute(
+                                        page: const CompanyProfileScreen(),
+                                      ),
                                     );
                                   } else {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
-                                        content: Text('No se encontró perfil asociado a este usuario.'),
+                                        content: Text(
+                                          'No se encontró perfil asociado a este usuario.',
+                                        ),
                                       ),
                                     );
                                   }
@@ -628,38 +643,53 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       name: _fullNameController.text,
                                       phone: _phoneController.text,
                                       location: _locationController.text,
-                                      experienceLevel: _experienceController.text,
+                                      experienceLevel:
+                                          _experienceController.text,
                                       experience: _experienceResume.text,
-                                      skills: _skillsController.text
-                                          .split(',')
-                                          .map((e) => e.trim())
-                                          .where((e) => e.isNotEmpty)
-                                          .toList(),
+                                      skills:
+                                          _skillsController.text
+                                              .split(',')
+                                              .map((e) => e.trim())
+                                              .where((e) => e.isNotEmpty)
+                                              .toList(),
                                       bio: _bioController.text,
-                                      resumeUrl: _resumeUrlController.text.isNotEmpty
-                                          ? _resumeUrlController.text
-                                          : null,
+                                      resumeUrl:
+                                          _resumeUrlController.text.isNotEmpty
+                                              ? _resumeUrlController.text
+                                              : null,
                                       education: _educationController.text,
                                     );
                                     if (success) {
                                       await fetchUserProfile(ref);
-                                      final candidate = ref.read(candidateProfileProvider);
+                                      final candidate = ref.read(
+                                        candidateProfileProvider,
+                                      );
                                       if (candidate != null) {
                                         // Navega solo si el perfil existe
                                         Navigator.of(context).push(
-                                          FadeThroughPageRoute(page: const UserProfile()),
+                                          FadeThroughPageRoute(
+                                            page: const UserProfile(),
+                                          ),
                                         );
                                       } else {
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
                                           const SnackBar(
-                                            content: Text('No se encontró perfil de candidato tras el registro.'),
+                                            content: Text(
+                                              'No se encontró perfil de candidato tras el registro.',
+                                            ),
                                           ),
                                         );
                                       }
                                     } else {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
                                         const SnackBar(
-                                          content: Text('Error al registrar el candidato'),
+                                          content: Text(
+                                            'Error al registrar el candidato',
+                                          ),
                                         ),
                                       );
                                     }
@@ -679,20 +709,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       phone: _companyPhoneController.text,
                                       address: _companyLocationController.text,
                                       industry: _companyIndustry,
-                                      description: _companyDescriptionController.text,
+                                      description:
+                                          _companyDescriptionController.text,
                                       website: null,
                                       logo: null,
                                     );
                                     await fetchUserProfile(ref);
-                                    final company = ref.read(companyProfileProvider);
+                                    final company = ref.read(
+                                      companyProfileProvider,
+                                    );
                                     if (company != null) {
                                       Navigator.of(context).push(
-                                        FadeThroughPageRoute(page: const CompanyProfileScreen()),
+                                        FadeThroughPageRoute(
+                                          page: const CompanyProfileScreen(),
+                                        ),
                                       );
                                     } else {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
                                         const SnackBar(
-                                          content: Text('No se encontró perfil de empresa tras el registro.'),
+                                          content: Text(
+                                            'No se encontró perfil de empresa tras el registro.',
+                                          ),
                                         ),
                                       );
                                     }
@@ -752,25 +791,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     children: [
                       ClipPath(
                         clipper: LeftCutTrapezoidClipper(),
-                        child: ShaderMask(
-                          shaderCallback:
-                              (bounds) => LinearGradient(
-                                begin: Alignment.bottomCenter,
-                                end: Alignment.topCenter,
-                                colors: [
-                                  Colors.orange.withValues(alpha: 0.65),
-                                  Colors.orange.withValues(alpha: 0.55),
-                                  Colors.orange.withValues(alpha: 0.1),
-                                ],
-                                stops: const [0.3, 0.7, 1.0],
-                              ).createShader(bounds),
-                          blendMode: BlendMode.srcOver,
-                          child: SvgPicture.asset(
-                            'assets/images/login_background.svg',
+                        child: Image.asset(
+                          'assets/images/login_background.png',
 
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                          ),
+                          width: double.infinity,
+                          fit: BoxFit.cover,
                         ),
                       ),
                       Padding(
@@ -847,22 +872,58 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _showCVAnimationAndNavigate() async {
-    final userType = _selectedUserType;
-    await showDialog(
-      context: context,
-      barrierColor: Colors.black.withAlpha(220),
-      barrierDismissible: false,
-      builder: (_) => _CVLottieDialog(),
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf'],
+      withData: true,
     );
-    // After animation, navigate
-    if (userType == 'Candidato') {
-      Navigator.of(
-        context,
-      ).push(FadeThroughPageRoute(page: const UserProfile()));
-    } else if (userType == 'Empresa') {
-      Navigator.of(
-        context,
-      ).push(FadeThroughPageRoute(page: const CompanyProfileScreen()));
+
+    if (result != null && result.files.single.bytes != null) {
+      final bytes = result.files.single.bytes!;
+      final filename = result.files.single.name;
+
+      // Muestra el diálogo de animación y espera el parsing real
+      showDialog(
+        context: context,
+        barrierColor: Colors.black.withAlpha(220),
+        barrierDismissible: false,
+        builder: (_) => const _CVLottieDialog(),
+      );
+
+      try {
+        final tempUserId = const Uuid().v4();
+        final parser = ref.read(parseCandidateProvider);
+        // Parse CV and create new user (esto puede demorar)
+        final candidate = await parser.parseAndSaveCandidate(
+          bytes: bytes,
+          filename: filename,
+          userId: tempUserId,
+        );
+        final uploadCv = ref.read(uploadCvProvider);
+        final url = await uploadCv(bytes, filename);
+        if (mounted) Navigator.of(context, rootNavigator: true).pop();
+
+        // Set the candidate as current user in provider
+        ref.read(candidateProfileProvider.notifier).state = candidate.copyWith(
+          resumeUrl: url,
+        );
+        ref.read(isCandidateProvider.notifier).state = true;
+
+        // Navega al perfil
+        Navigator.of(
+          context,
+        ).push(FadeThroughPageRoute(page: const UserProfile()));
+      } catch (e) {
+        // Cierra el diálogo si ocurre error
+        if (mounted) Navigator.of(context, rootNavigator: true).pop();
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error al procesar el CV: $e')));
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se seleccionó ningún CV')),
+      );
     }
   }
 
@@ -923,27 +984,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 'Iniciar con CV',
                 style: TextStyle(color: Colors.black87),
               ),
-              // Solo muestra animación, NO navega
-              onPressed: _showCVAnimationOnly,
+              onPressed: _showCVAnimationAndNavigate,
             ),
           ],
         ),
       ],
     );
   }
-
-  void _showCVAnimationOnly() async {
-    await showDialog(
-      context: context,
-      barrierColor: Colors.black.withAlpha(220),
-      barrierDismissible: false,
-      builder: (_) => _CVLottieDialog(),
-    );
-    // No navegación automática aquí
-  }
 }
 
-// Lottie dialog widget
 class _CVLottieDialog extends StatefulWidget {
   const _CVLottieDialog();
 
@@ -953,15 +1002,6 @@ class _CVLottieDialog extends StatefulWidget {
 
 class _CVLottieDialogState extends State<_CVLottieDialog> {
   @override
-  void initState() {
-    super.initState();
-    // Close dialog after 5 seconds
-    Future.delayed(const Duration(seconds: 5), () {
-      if (mounted) Navigator.of(context).pop();
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     return FadeIn(
       child: Dialog(
@@ -969,18 +1009,19 @@ class _CVLottieDialogState extends State<_CVLottieDialog> {
         elevation: 0,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          spacing: 20,
           children: [
             Center(
               child: Lottie.asset(
                 'assets/animations/cv_lottie.json',
                 width: 250,
                 height: 250,
-                repeat: false,
+                repeat: true, // Keep repeating until dialog is closed
               ),
             ),
-
-            Text('Leyendo Datos...', style: TextStyle(color: Colors.white)),
+            const Text(
+              'Leyendo Datos...',
+              style: TextStyle(color: Colors.white),
+            ),
           ],
         ),
       ),
