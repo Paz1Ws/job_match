@@ -806,14 +806,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           children: [
                             const SizedBox(height: 16),
 
-                            // Reemplaza el Text estático por AnimatedTextKit para animar solo la palabra clave
-                            // Animated text for "Más de ..."
                             Padding(
                               padding: const EdgeInsets.symmetric(
                                 vertical: 8.0,
                               ),
                               child: Text(
-                                '+56,986 empresas &\n175,324 candidatos esperando el match perfecto.',
+                                '+56,986 empresas \n+175,324 candidatos\nEsperando el match perfecto.',
                                 textAlign: TextAlign.start,
                                 style: TextStyle(
                                   color: Colors.white,
