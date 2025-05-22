@@ -52,6 +52,34 @@ final applicationsProvider =
       return res;
     });
 
+final jobsCountProvider = FutureProvider.autoDispose<int>((ref) async {
+  final response = await Supabase.instance.client
+      .from('jobs')
+      .select('id');
+
+  final count = response.length;
+  return count;
+});
+
+final candidatesCountProvider = FutureProvider.autoDispose<int>((ref) async {
+  final response = await Supabase.instance.client
+      .from('candidates')
+      .select('user_id');
+
+  final count = response.length;
+  return count;
+});
+
+final companiesCountProvider = FutureProvider.autoDispose<int>((ref) async {
+  final response = await Supabase.instance.client
+      .from('companies')
+      .select('user_id');
+
+  final count = response.length;
+  return count;
+});
+
+
 // 📋 CRUD DEMO OPERATIONS
 
 /// 1. Crear una empresa (POST /companies)

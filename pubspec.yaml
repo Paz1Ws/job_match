@@ -31,6 +31,7 @@ flutter:
     - assets/images/
     - assets/custom_icons/
     - assets/images/job_match.jpg
+    - assets/images/mcatalan.png
     - assets/images/work.png
     - assets/images/users/
     - assets/images/jobmatch_background.jpg
