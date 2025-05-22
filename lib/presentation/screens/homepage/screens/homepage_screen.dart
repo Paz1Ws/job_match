@@ -255,33 +255,30 @@ class _HomepageScreenState extends State<HomepageScreen> {
           duration: const Duration(milliseconds: 1000),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
+              spacing: 10,
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildDropdownField(
-                  'Puesto o Empresa',
-                  showDivider: true,
-                  items: _jobOptions,
-                  value: _selectedJob,
-                  onChanged: (val) => setState(() => _selectedJob = val),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    fixedSize: const Size(250, 75),
+                    backgroundColor: Colors.green,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(10),
+                      bottomLeft: Radius.circular(10)
+                    )),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.publish, color: Colors.white),
+                      const Text("Soy Empresa", style: TextStyle(color: Colors.white)),
+                    ],
+                  ),
+                  onPressed: () => Navigator.of(context).push(SlideUpFadePageRoute(page: const LoginScreen(userType: 'Empresa'))),
                 ),
-                _buildDropdownField(
-                  'Selecciona Ubicación',
-                  showDivider: true,
-                  items: _locationOptions,
-                  value: _selectedLocation,
-                  onChanged: (val) => setState(() => _selectedLocation = val),
-                ),
-                _buildDropdownField(
-                  'Selecciona Categoría',
-                  showDivider: false,
-                  items: _categoryOptions,
-                  value: _selectedCategory,
-                  onChanged: (val) => setState(() => _selectedCategory = val),
-                ),
+
                 BounceInRight(
                   duration: const Duration(milliseconds: 900),
                   child: _buildFindJobButton(),

@@ -18,7 +18,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+
+  final String userType;
+
+  const LoginScreen({super.key, this.userType = 'Candidato'});
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -59,6 +62,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedUserType = widget.userType;
     _emailController = TextEditingController();
     _passwordController = TextEditingController();
   }
