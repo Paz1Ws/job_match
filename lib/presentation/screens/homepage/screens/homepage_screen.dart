@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:job_match/config/util/animations.dart';
+import 'package:job_match/core/data/supabase_http_requests.dart';
 import 'package:job_match/presentation/screens/auth/screens/login_screen.dart';
 import 'package:job_match/presentation/screens/homepage/find_jobs_screen.dart';
 import 'package:job_match/presentation/widgets/homepage/partner_icon.dart';
@@ -255,33 +257,30 @@ class _HomepageScreenState extends State<HomepageScreen> {
           duration: const Duration(milliseconds: 1000),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
+              spacing: 10,
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildDropdownField(
-                  'Puesto o Empresa',
-                  showDivider: true,
-                  items: _jobOptions,
-                  value: _selectedJob,
-                  onChanged: (val) => setState(() => _selectedJob = val),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    fixedSize: const Size(250, 75),
+                    backgroundColor: Colors.green,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(10),
+                      bottomLeft: Radius.circular(10)
+                    )),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.publish, color: Colors.white),
+                      const Text("Soy Empresa", style: TextStyle(color: Colors.white)),
+                    ],
+                  ),
+                  onPressed: () => Navigator.of(context).push(SlideUpFadePageRoute(page: const LoginScreen(userType: 'Empresa'))),
                 ),
-                _buildDropdownField(
-                  'Selecciona Ubicación',
-                  showDivider: true,
-                  items: _locationOptions,
-                  value: _selectedLocation,
-                  onChanged: (val) => setState(() => _selectedLocation = val),
-                ),
-                _buildDropdownField(
-                  'Selecciona Categoría',
-                  showDivider: false,
-                  items: _categoryOptions,
-                  value: _selectedCategory,
-                  onChanged: (val) => setState(() => _selectedCategory = val),
-                ),
+
                 BounceInRight(
                   duration: const Duration(milliseconds: 900),
                   child: _buildFindJobButton(),
@@ -299,7 +298,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
       onPressed: () {
         Navigator.of(
           context,
-        ).push(MaterialPageRoute(builder: (context) => const FindJobsScreen()));
+        ).push(MaterialPageRoute(builder: (context) => const LoginScreen()));
       },
       style: ElevatedButton.styleFrom(
         fixedSize: const Size(200, 75),
@@ -363,71 +362,129 @@ class _HomepageScreenState extends State<HomepageScreen> {
   }
 
   Widget _buildStatsSection() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        FadeInLeft(
-          duration: Duration(milliseconds: 900),
-          child: StatItem(
-            icon: Icons.work_outline,
-            count: '25,850',
-            label: 'Empleos',
-          ),
-        ),
-        SizedBox(width: 60),
-        FadeInUp(
-          duration: Duration(milliseconds: 900),
-          child: StatItem(
-            icon: Icons.people_outline,
-            count: '10,250',
-            label: 'Candidatos',
-          ),
-        ),
-        SizedBox(width: 60),
-        FadeInRight(
-          duration: Duration(milliseconds: 900),
-          child: StatItem(
-            icon: Icons.business,
-            count: '18,400',
-            label: 'Empresas',
-          ),
-        ),
-      ],
+    return Consumer(
+      builder: (__, ref, _) {
+        final jobsCount = ref.watch(jobsCountProvider);
+        final candidatesCount = ref.watch(candidatesCountProvider);
+        final companiesCount = ref.watch(companiesCountProvider);
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            jobsCount.when(
+              data: (data) => FadeInLeft(
+                duration: Duration(milliseconds: 900),
+                child: StatItem(
+                  icon: Icons.work_outline,
+                  count: data.toString(),
+                  label: 'Empleos',
+                ),
+              ),
+              loading: () => const SizedBox.shrink(),
+              error: (e, __) => FadeInLeft(
+                duration: Duration(milliseconds: 900),
+                child: StatItem(
+                  icon: Icons.work_outline,
+                  count: '0',
+                  label: 'Empleos',
+                ),
+              ),
+            ),
+
+            SizedBox(width: 60),
+
+            candidatesCount.when(
+                data: (data) => FadeInUp(
+                duration: Duration(milliseconds: 900),
+                child: StatItem(
+                  icon: Icons.people_outline,
+                  count:  data.toString(),
+                  label: 'Candidatos',
+                ),
+              ),
+              loading: () => const SizedBox.shrink(),
+              error: (error, stackTrace) => FadeInUp(
+                duration: Duration(milliseconds: 900),
+                child: StatItem(
+                  icon: Icons.people_outline,
+                  count:  '0',
+                  label: 'Candidatos',
+                ),
+              ),
+            ),
+
+            SizedBox(width: 60),
+
+            companiesCount.when(
+                data: (data) => FadeInRight(
+                duration: Duration(milliseconds: 900),
+                child: StatItem(
+                  icon: Icons.business,
+                  count: data.toString(),
+                  label: 'Empresas',
+                ),
+              ),
+              loading: () => const SizedBox.shrink(),
+              error: (error, stackTrace) => FadeInRight(
+                duration: Duration(milliseconds: 900),
+                child: StatItem(
+                  icon: Icons.business,
+                  count: '0',
+                  label: 'Empresas',
+                ),
+              ),
+            ),
+          ],
+        );
+      }
     );
   }
 
   Widget _buildPartnersSection() {
-    final logos = {
-      PartnerIcon(partnerType: PartnerType.spotify): 'Spotify',
-      PartnerIcon(partnerType: PartnerType.slack): 'Slack',
-      PartnerIcon(partnerType: PartnerType.adobe): 'Adobe',
-      PartnerIcon(partnerType: PartnerType.asana): 'Asana',
-      PartnerIcon(partnerType: PartnerType.linear): 'Linear',
-    };
+    // final logos = {
+    //   PartnerIcon(partnerType: PartnerType.spotify): 'Spotify',
+    //   PartnerIcon(partnerType: PartnerType.slack): 'Slack',
+    //   PartnerIcon(partnerType: PartnerType.adobe): 'Adobe',
+    //   PartnerIcon(partnerType: PartnerType.asana): 'Asana',
+    //   PartnerIcon(partnerType: PartnerType.linear): 'Linear',
+    // };
     return Container(
       color: Colors.black,
       height: 100,
       padding: const EdgeInsets.symmetric(vertical: 15),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children:
-            logos.entries
-                .map(
-                  (e) => FadeInUp(
-                    duration: const Duration(milliseconds: 900),
-                    child: Row(
-                      children: [
-                        e.key,
-                        const SizedBox(width: 20),
-                        Text(
-                          e.value,
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-                .toList(),
+      child: ColorFiltered(
+      colorFilter: const ColorFilter.matrix([
+        -1, 0, 0, 0, 255,
+        0, -1, 0, 0, 255,
+        0, 0, -1, 0, 255,
+        0, 0, 0, 1, 0,
+      ]),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            Image.asset('/images/mcatalan.png'),
+            Image.asset('/images/fresnos.png'),
+            Image.asset('/images/carze.png'),
+            Image.asset('/images/efecto_eureka.png'),
+            Image.asset('/images/dicesa.png', height: 40),
+          ]
+              // logos.entries
+              //     .map(
+              //       (e) => FadeInUp(
+              //         duration: const Duration(milliseconds: 900),
+              //         child: Row(
+              //           children: [
+              //             e.key,
+              //             const SizedBox(width: 20),
+              //             Text(
+              //               e.value,
+              //               style: const TextStyle(color: Colors.white),
+              //             ),
+              //           ],
+              //         ),
+              //       ),
+              //     )
+              //     .toList(),
+        ),
       ),
     );
   }
