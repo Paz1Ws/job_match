@@ -142,43 +142,28 @@ class CvParser {
 
   // Format name correctly from raw name data
   String _formatName(dynamic rawName) {
-    if (rawName == null) return 'User_${Random().nextInt(999)}';
+    if (rawName == null) return 'Usuario';
 
-    String nameStr;
-
-    // Handle when name comes as an object with components
+    // If it's a map, try to join first, middle, last in a readable way
     if (rawName is Map<String, dynamic>) {
-      final first = rawName['first']?.toString() ?? '';
-      final middle = rawName['middle']?.toString() ?? '';
-      final last = rawName['last']?.toString() ?? '';
+      final first = (rawName['first'] ?? '').toString().trim();
+      final middle = (rawName['middle'] ?? '').toString().trim();
+      final last = (rawName['last'] ?? '').toString().trim();
 
-      // Concatenate name parts properly
-      nameStr =
-          [
-            first,
-            middle,
-            last,
-          ].where((part) => part.isNotEmpty).join(' ').trim();
-
-      if (nameStr.isEmpty) {
-        // If structured name is empty, try using raw value
-        nameStr = rawName['raw']?.toString() ?? 'User_${Random().nextInt(999)}';
+      // Only include non-empty parts, join with space
+      final parts = [first, middle, last].where((p) => p.isNotEmpty).toList();
+      if (parts.isNotEmpty) {
+        return parts.join(' ');
       }
-    } else {
-      // When name is just a string
-      nameStr = rawName.toString();
+      // If all are empty, fallback to raw string if available
+      if (rawName['raw'] != null &&
+          rawName['raw'].toString().trim().isNotEmpty) {
+        return rawName['raw'].toString().trim();
+      }
+      return 'Usuario';
     }
-
-    // Apply proper capitalization to each name part
-    return nameStr
-        .split(' ')
-        .map(
-          (part) =>
-              part.isNotEmpty
-                  ? '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}'
-                  : '',
-        )
-        .join(' ');
+    // If it's just a string, return it trimmed
+    return rawName.toString().trim();
   }
 
   // Generate email based on name

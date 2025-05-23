@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:job_match/config/util/animations.dart';
+import 'package:job_match/core/data/auth_request.dart';
 import 'package:job_match/presentation/screens/auth/screens/login_screen.dart';
 import 'package:job_match/presentation/widgets/homepage/find_job/footer_find_jobs.dart';
 import 'package:job_match/presentation/widgets/homepage/find_job/job_filter_sidebar.dart';

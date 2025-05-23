@@ -6,8 +6,9 @@ import 'package:intl/intl.dart';
 
 class PostJobForm extends ConsumerStatefulWidget {
   final String companyId; // Company ID from auth user
+  final VoidCallback? onJobPosted;
 
-  const PostJobForm({super.key, required this.companyId});
+  const PostJobForm({super.key, required this.companyId, this.onJobPosted});
 
   @override
   ConsumerState<PostJobForm> createState() => _PostJobFormState();
@@ -108,43 +109,34 @@ class _PostJobFormState extends ConsumerState<PostJobForm> {
 
         await ref.read(createJobProvider)(jobData);
 
-        // Show success message
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '¡Empleo "${_titleController.text}" publicado con éxito!',
-              ),
-              backgroundColor: Colors.green,
-            ),
-          );
+        // Clear the form first
+        if (mounted) {
+          _formKey.currentState?.reset();
+          _titleController.clear();
+          _descriptionController.clear();
+          _locationController.clear();
+          _jobTypeValue = 'full-time';
+          _salaryMinController.clear();
+          _salaryMaxController.clear();
+          _applicationDeadlineController.text = DateFormat(
+            'yyyy-MM-dd',
+          ).format(DateTime.now().add(const Duration(days: 30)));
+          _statusValue = 'open';
+          _requiredSkillsController.clear();
+          _maxApplicationsController.clear();
+
+          setState(() => _isLoading = false);
         }
 
-        // Reset form or navigate as needed
-        _formKey.currentState?.reset();
-
-        // Clear the form or set to default values
-        _titleController.clear();
-        _descriptionController.clear();
-        _locationController.clear();
-        _jobTypeValue = 'full-time';
-        _salaryMinController.clear();
-        _salaryMaxController.clear();
-        _applicationDeadlineController.text = DateFormat(
-          'yyyy-MM-dd',
-        ).format(DateTime.now().add(const Duration(days: 30)));
-        _statusValue = 'open';
-        _requiredSkillsController.clear();
-        _maxApplicationsController.clear();
+        if (widget.onJobPosted != null) {
+          Future.microtask(() => widget.onJobPosted!());
+        }
       } catch (e) {
-        if (context.mounted) {
+        if (mounted) {
+          setState(() => _isLoading = false);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Error al publicar empleo: $e')),
           );
-        }
-      } finally {
-        if (mounted) {
-          setState(() => _isLoading = false);
         }
       }
     }

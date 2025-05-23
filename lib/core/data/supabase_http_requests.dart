@@ -1,18 +1,20 @@
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:job_match/core/domain/models/candidate_model.dart';
+import 'package:job_match/core/domain/models/job_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:job_match/core/domain/models/posted_job_model.dart';
 
 // Cliente global
 final supabase = Supabase.instance.client;
 
 // 2.1. Candidates
-final candidatesProvider =
-    FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
-      final res = await supabase.from('candidates').select('*').order('name');
-      return res;
-    });
+final candidatesProvider = FutureProvider.autoDispose<List<Candidate>>((
+  ref,
+) async {
+  final res = await supabase.from('candidates').select('*').order('name');
+  return res.map((e) => Candidate.fromJson(e)).toList();
+});
 
 // 2.2. Companies
 final companiesProvider =
@@ -53,9 +55,7 @@ final applicationsProvider =
     });
 
 final jobsCountProvider = FutureProvider.autoDispose<int>((ref) async {
-  final response = await Supabase.instance.client
-      .from('jobs')
-      .select('id');
+  final response = await Supabase.instance.client.from('jobs').select('id');
 
   final count = response.length;
   return count;
@@ -78,7 +78,6 @@ final companiesCountProvider = FutureProvider.autoDispose<int>((ref) async {
   final count = response.length;
   return count;
 });
-
 
 // 📋 CRUD DEMO OPERATIONS
 
@@ -126,29 +125,17 @@ final createJobProvider = Provider<
 >((ref) {
   return (Map<String, dynamic> jobData) async {
     try {
-      // Attempt to insert the job data into the 'jobs' table and select the inserted row.
       final List<Map<String, dynamic>> insertedData =
-          await supabase // Ensure 'supabase' is your initialized Supabase client
-              .from('jobs')
-              .insert(jobData)
-              .select();
+          await supabase.from('jobs').insert(jobData).select();
 
       if (insertedData.isEmpty) {
-        // This case is unexpected if the insert was successful and RLS allows reading the row.
-        // It might indicate an issue with RLS policies preventing the read-back of the inserted data.
         throw Exception(
           'Job creation seemingly succeeded, but no data was returned. Review RLS policies on the "jobs" table.',
         );
       }
 
-      // Return the data of the newly created job.
       return insertedData.first;
     } on PostgrestException catch (e) {
-      // Specifically handle PostgrestExceptions.
-      // The error "relation 'profiles' does not exist" (code: 42P01) strongly suggests
-      // a database-side issue. It's likely that a trigger on the 'jobs' table
-      // (such as 'trg_new_job' which executes the 'notify_new_job()' function)
-      // or an RLS policy is attempting to query a table named "profiles" which is not defined.
       print(
         'PostgrestException during job creation: ${e.message} (Code: ${e.code}, Details: ${e.details})',
       );
@@ -242,23 +229,58 @@ final uploadCvProvider = Provider((ref) {
 });
 
 /// Provider to fetch jobs posted by a specific company
-final jobsByCompanyIdProvider =
-    FutureProvider.family<List<Map<String, dynamic>>, String>((
-      ref,
-      companyId,
-    ) async {
-      if (companyId.isEmpty) return [];
+final jobsByCompanyIdProvider = FutureProvider.family<List<Job>, String>((
+  ref,
+  companyId,
+) async {
+  if (companyId.isEmpty) return [];
 
-      try {
-        final response = await supabase
-            .from('jobs')
-            .select('*')
-            .eq('company_id', companyId)
-            .order('created_at', ascending: false);
+  try {
+    final response = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('company_id', companyId)
+        .order('created_at', ascending: false);
 
-        return response;
-      } catch (e) {
-        print('Error fetching company jobs: $e');
-        return [];
-      }
-    });
+    return response.map((job) => Job.fromMap(job)).toList();
+  } catch (e) {
+    print('Error fetching company jobs: $e');
+    return [];
+  }
+});
+
+/// Provider que expone la función de subida de logo de empresa
+final uploadCompanyLogoProvider = Provider((ref) {
+  Future<String> uploadLogo(Uint8List bytes, String filename) async {
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) {
+      throw Exception('Empresa no autenticada');
+    }
+
+    try {
+      final storagePath = '$userId/$filename';
+      await supabase.storage
+          .from('companylogos')
+          .uploadBinary(
+            storagePath,
+            bytes,
+            fileOptions: const FileOptions(upsert: true),
+          );
+
+      final publicUrl = supabase.storage
+          .from('companylogos')
+          .getPublicUrl(storagePath);
+
+      await supabase
+          .from('companies')
+          .update({'logo': publicUrl})
+          .eq('user_id', userId);
+
+      return publicUrl;
+    } catch (e) {
+      throw Exception('Error procesando el logo: $e');
+    }
+  }
+
+  return uploadLogo;
+});

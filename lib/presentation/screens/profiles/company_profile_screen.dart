@@ -597,17 +597,13 @@ class CompanyProfileHeader extends ConsumerWidget {
                                     'assets/images/job_match.jpg',
                                 companyName: company.companyName ?? 'Company',
                                 location:
-                                    job['location'] ??
+                                    job.location ??
                                     company.address ??
                                     'No disponible',
-                                title: job['title'] ?? 'Puesto sin título',
-                                type: job['job_type'] ?? 'Tiempo Completo',
-                                salary:
-                                    job['salary_min'] != null &&
-                                            job['salary_max'] != null
-                                        ? 'S/${job['salary_min']} - S/${job['salary_max']}'
-                                        : 'Salario no especificado',
-                                isFeatured: job['is_featured'] ?? false,
+                                title: job.title ?? 'Puesto sin título',
+                                type: job.type ?? 'Tiempo Completo',
+                                salary: job.salary,
+                                isFeatured: job.isFeatured ?? false,
                                 logoBackgroundColor: Colors.blue.shade100,
                                 matchPercentage: 85, // Default match percentage
                               ),

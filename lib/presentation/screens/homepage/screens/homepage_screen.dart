@@ -18,54 +18,46 @@ class HomepageScreen extends StatefulWidget {
 }
 
 class _HomepageScreenState extends State<HomepageScreen> {
-  String? _selectedJob;
-  String? _selectedLocation;
-  String? _selectedCategory;
-
-  final List<String> _jobOptions = [
-    'Diseñador UI/UX',
-    'Desarrollador Flutter',
-    'Analista de Datos',
-    'JobMatch',
-    'MercadoTech',
-    'Desarrollador Backend',
-    'Project Manager',
-    'QA Tester',
-    'Community Manager',
-    'Soporte Técnico',
-    'Ingeniero DevOps',
-    'Especialista SEO',
+  final List<String> _partnerImages = [
+    'assets/images/mcatalan.png',
+    'assets/images/fresnos.png',
+    'assets/images/carze.png',
+    'assets/images/efecto_eureka.png',
+    'assets/images/dicesa.png',
   ];
 
-  final List<String> _locationOptions = [
-    'Lima',
-    'Arequipa',
-    'Cusco',
-    'Remoto',
-    'Trujillo',
-    'Piura',
-    'Tacna',
-    'Huancayo',
-    'Chiclayo',
-    'Iquitos',
-    'Puno',
-    'Callao',
-  ];
+  final PageController _carouselController = PageController(
+    viewportFraction: 0.3,
+    initialPage: 1000,
+  );
+  int _currentPage = 1000;
 
-  final List<String> _categoryOptions = [
-    'Tecnología',
-    'Diseño',
-    'Marketing',
-    'Administración',
-    'Soporte Técnico',
-    'Ventas',
-    'Recursos Humanos',
-    'Finanzas',
-    'Legal',
-    'Logística',
-    'Educación',
-    'Salud',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startAutoScroll();
+    });
+  }
+
+  void _startAutoScroll() async {
+    while (mounted) {
+      await Future.delayed(const Duration(seconds: 2));
+      if (!mounted) break;
+      _currentPage++;
+      _carouselController.animateToPage(
+        _currentPage,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _carouselController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -136,42 +128,6 @@ class _HomepageScreenState extends State<HomepageScreen> {
                 _buildTopBarButton('Contáctanos'),
               ],
             ),
-            Row(
-              children: [
-                FadeInRight(
-                  duration: const Duration(milliseconds: 700),
-                  child: TextButton(
-                    onPressed:
-                        () => Navigator.of(
-                          context,
-                        ).push(SlideUpFadePageRoute(page: const LoginScreen())),
-                    child: const Text(
-                      'Iniciar Sesión',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ),
-                FadeInRight(
-                  duration: const Duration(milliseconds: 900),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 0,
-                      ),
-                    ),
-                    onPressed:
-                        () => Navigator.of(
-                          context,
-                        ).push(SlideUpFadePageRoute(page: const LoginScreen())),
-                    child: const Text('Registrarse'),
-                  ),
-                ),
-              ],
-            ),
           ],
         ),
       ),
@@ -196,19 +152,11 @@ class _HomepageScreenState extends State<HomepageScreen> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                '¡Encuentra tu ',
-                style: TextStyle(
-                  fontSize: 60,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
               AnimatedTextKit(
+                repeatForever: true,
                 animatedTexts: [
                   TypewriterAnimatedText(
-                    'trabajo',
+                    'Haz match con tu trabajo ideal!',
                     speed: const Duration(milliseconds: 100),
                     textStyle: const TextStyle(
                       fontSize: 60,
@@ -217,7 +165,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                     ),
                   ),
                   TypewriterAnimatedText(
-                    'compañero de trabajo',
+                    'Haz match con tu colaborador ideal!',
                     speed: const Duration(milliseconds: 100),
                     textStyle: const TextStyle(
                       fontSize: 60,
@@ -226,19 +174,9 @@ class _HomepageScreenState extends State<HomepageScreen> {
                     ),
                   ),
                 ],
-                repeatForever: true,
                 pause: const Duration(seconds: 2),
                 displayFullTextOnTap: true,
                 isRepeatingAnimation: true,
-              ),
-              const Text(
-                'soñado hoy!',
-                style: TextStyle(
-                  fontSize: 60,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
               ),
             ],
           ),
@@ -256,9 +194,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
         FadeInUp(
           duration: const Duration(milliseconds: 1000),
           child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-            ),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(10)),
             child: Row(
               spacing: 10,
               mainAxisSize: MainAxisSize.min,
@@ -267,18 +203,28 @@ class _HomepageScreenState extends State<HomepageScreen> {
                   style: ElevatedButton.styleFrom(
                     fixedSize: const Size(250, 75),
                     backgroundColor: Colors.green,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(10),
-                      bottomLeft: Radius.circular(10)
-                    )),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(10),
+                        bottomLeft: Radius.circular(10),
+                      ),
+                    ),
                   ),
                   child: Row(
                     children: [
                       const Icon(Icons.publish, color: Colors.white),
-                      const Text("Soy Empresa", style: TextStyle(color: Colors.white)),
+                      const Text(
+                        "Soy Empresa",
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ],
                   ),
-                  onPressed: () => Navigator.of(context).push(SlideUpFadePageRoute(page: const LoginScreen(userType: 'Empresa'))),
+                  onPressed:
+                      () => Navigator.of(context).push(
+                        SlideUpFadePageRoute(
+                          page: const LoginScreen(userType: 'Empresa'),
+                        ),
+                      ),
                 ),
 
                 BounceInRight(
@@ -320,47 +266,6 @@ class _HomepageScreenState extends State<HomepageScreen> {
     );
   }
 
-  Widget _buildDropdownField(
-    String hint, {
-    bool showDivider = false,
-    List<String> items = const [],
-    String? value,
-    ValueChanged<String?>? onChanged,
-  }) {
-    return Container(
-      width: 200,
-      decoration: BoxDecoration(
-        border:
-            showDivider
-                ? const Border(
-                  right: BorderSide(color: Colors.black12, width: 1),
-                )
-                : null,
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          isExpanded: true,
-          value: value,
-          hint: Text(
-            value ?? hint,
-            style: const TextStyle(color: Colors.black54),
-          ),
-          items:
-              items
-                  .map(
-                    (item) => DropdownMenuItem<String>(
-                      value: item,
-                      child: Text(item),
-                    ),
-                  )
-                  .toList(),
-          onChanged: onChanged,
-        ),
-      ),
-    );
-  }
-
   Widget _buildStatsSection() {
     return Consumer(
       builder: (__, ref, _) {
@@ -371,119 +276,123 @@ class _HomepageScreenState extends State<HomepageScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             jobsCount.when(
-              data: (data) => FadeInLeft(
-                duration: Duration(milliseconds: 900),
-                child: StatItem(
-                  icon: Icons.work_outline,
-                  count: data.toString(),
-                  label: 'Empleos',
-                ),
-              ),
+              data:
+                  (data) => FadeInLeft(
+                    duration: Duration(milliseconds: 900),
+                    child: StatItem(
+                      icon: Icons.work_outline,
+                      count: data.toString(),
+                      label: 'Empleos',
+                    ),
+                  ),
               loading: () => const SizedBox.shrink(),
-              error: (e, __) => FadeInLeft(
-                duration: Duration(milliseconds: 900),
-                child: StatItem(
-                  icon: Icons.work_outline,
-                  count: '0',
-                  label: 'Empleos',
-                ),
-              ),
+              error:
+                  (e, __) => FadeInLeft(
+                    duration: Duration(milliseconds: 900),
+                    child: StatItem(
+                      icon: Icons.work_outline,
+                      count: '0',
+                      label: 'Empleos',
+                    ),
+                  ),
             ),
 
             SizedBox(width: 60),
 
             candidatesCount.when(
-                data: (data) => FadeInUp(
-                duration: Duration(milliseconds: 900),
-                child: StatItem(
-                  icon: Icons.people_outline,
-                  count:  data.toString(),
-                  label: 'Candidatos',
-                ),
-              ),
+              data:
+                  (data) => FadeInUp(
+                    duration: Duration(milliseconds: 900),
+                    child: StatItem(
+                      icon: Icons.people_outline,
+                      count: data.toString(),
+                      label: 'Candidatos',
+                    ),
+                  ),
               loading: () => const SizedBox.shrink(),
-              error: (error, stackTrace) => FadeInUp(
-                duration: Duration(milliseconds: 900),
-                child: StatItem(
-                  icon: Icons.people_outline,
-                  count:  '0',
-                  label: 'Candidatos',
-                ),
-              ),
+              error:
+                  (error, stackTrace) => FadeInUp(
+                    duration: Duration(milliseconds: 900),
+                    child: StatItem(
+                      icon: Icons.people_outline,
+                      count: '0',
+                      label: 'Candidatos',
+                    ),
+                  ),
             ),
 
             SizedBox(width: 60),
 
             companiesCount.when(
-                data: (data) => FadeInRight(
-                duration: Duration(milliseconds: 900),
-                child: StatItem(
-                  icon: Icons.business,
-                  count: data.toString(),
-                  label: 'Empresas',
-                ),
-              ),
+              data:
+                  (data) => FadeInRight(
+                    duration: Duration(milliseconds: 900),
+                    child: StatItem(
+                      icon: Icons.business,
+                      count: data.toString(),
+                      label: 'Empresas',
+                    ),
+                  ),
               loading: () => const SizedBox.shrink(),
-              error: (error, stackTrace) => FadeInRight(
-                duration: Duration(milliseconds: 900),
-                child: StatItem(
-                  icon: Icons.business,
-                  count: '0',
-                  label: 'Empresas',
-                ),
-              ),
+              error:
+                  (error, stackTrace) => FadeInRight(
+                    duration: Duration(milliseconds: 900),
+                    child: StatItem(
+                      icon: Icons.business,
+                      count: '0',
+                      label: 'Empresas',
+                    ),
+                  ),
             ),
           ],
         );
-      }
+      },
     );
   }
 
   Widget _buildPartnersSection() {
-    // final logos = {
-    //   PartnerIcon(partnerType: PartnerType.spotify): 'Spotify',
-    //   PartnerIcon(partnerType: PartnerType.slack): 'Slack',
-    //   PartnerIcon(partnerType: PartnerType.adobe): 'Adobe',
-    //   PartnerIcon(partnerType: PartnerType.asana): 'Asana',
-    //   PartnerIcon(partnerType: PartnerType.linear): 'Linear',
-    // };
     return Container(
       color: Colors.black,
       height: 100,
       padding: const EdgeInsets.symmetric(vertical: 15),
       child: ColorFiltered(
-      colorFilter: const ColorFilter.matrix([
-        -1, 0, 0, 0, 255,
-        0, -1, 0, 0, 255,
-        0, 0, -1, 0, 255,
-        0, 0, 0, 1, 0,
-      ]),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Image.asset('/images/mcatalan.png'),
-            Image.asset('/images/fresnos.png'),
-            Image.asset('/images/carze.png'),
-            Image.asset('/images/efecto_eureka.png'),
-            Image.asset('/images/dicesa.png', height: 40),
-          ]
-              // logos.entries
-              //     .map(
-              //       (e) => FadeInUp(
-              //         duration: const Duration(milliseconds: 900),
-              //         child: Row(
-              //           children: [
-              //             e.key,
-              //             const SizedBox(width: 20),
-              //             Text(
-              //               e.value,
-              //               style: const TextStyle(color: Colors.white),
-              //             ),
-              //           ],
-              //         ),
-              //       ),
-              //     )
-              //     .toList(),
+        colorFilter: const ColorFilter.matrix([
+          -1,
+          0,
+          0,
+          0,
+          255,
+          0,
+          -1,
+          0,
+          0,
+          255,
+          0,
+          0,
+          -1,
+          0,
+          255,
+          0,
+          0,
+          0,
+          1,
+          0,
+        ]),
+        child: PageView.builder(
+          controller: _carouselController,
+          scrollDirection: Axis.horizontal,
+          itemBuilder: (context, index) {
+            final img = _partnerImages[index % _partnerImages.length];
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Image.asset(
+                  img,
+                  height: img.contains('dicesa') ? 40 : 70,
+                ),
+              ),
+            );
+          },
         ),
       ),
     );

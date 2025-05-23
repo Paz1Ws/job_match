@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:job_match/config/util/animations.dart';
+import 'package:job_match/core/data/auth_request.dart';
 import 'package:job_match/presentation/screens/homepage/find_jobs_screen.dart';
 import 'package:job_match/presentation/screens/profiles/user_profile.dart';
 import 'package:job_match/presentation/screens/profiles/company_profile_screen.dart';
@@ -27,6 +28,8 @@ class AppIdentityBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isCandidate = ref.watch(isCandidateProvider);
+    final candidate = ref.watch(candidateProfileProvider);
+    final company = ref.watch(companyProfileProvider);
 
     return Container(
       height: height,
@@ -111,23 +114,27 @@ class AppIdentityBar extends ConsumerWidget {
           ),
           const SizedBox(width: kSpacing12 + kSpacing4),
           InkWell(
-            onTap:
-                onProfileTap ??
+            onTap: onProfileTap ??
                 () {
                   if (isCandidate) {
-                    Navigator.of(
-                      context,
-                    ).push(SlideUpFadePageRoute(page: const UserProfile()));
+                    Navigator.of(context).push(
+                      SlideUpFadePageRoute(page: const UserProfile()),
+                    );
                   } else {
                     Navigator.of(context).push(
                       SlideUpFadePageRoute(page: const CompanyProfileScreen()),
                     );
                   }
                 },
-            child: const CircleAvatar(
+            child: CircleAvatar(
               backgroundColor: Colors.blueGrey,
               radius: kRadius20,
-              child: Icon(Icons.person, color: Colors.white),
+              backgroundImage: !isCandidate && company?.logo != null
+                  ? NetworkImage(company!.logo!)
+                  : null,
+              child: !isCandidate && company?.logo != null
+                  ? null
+                  : const Icon(Icons.person, color: Colors.white),
             ),
           ),
         ],

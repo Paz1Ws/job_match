@@ -12,15 +12,27 @@ import 'package:job_match/presentation/widgets/auth/related_job_card.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:job_match/core/domain/models/job_model.dart';
 
-class UserProfile extends ConsumerWidget {
-  const UserProfile({super.key});
+class UserProfile extends ConsumerStatefulWidget {
+  final Candidate? candidateData; // Optional external candidate data
+
+  const UserProfile({super.key, this.candidateData});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<UserProfile> createState() => _UserProfileState();
+}
+
+class _UserProfileState extends ConsumerState<UserProfile> {
+  @override
+  Widget build(BuildContext context) {
     const double appIdentityBarHeight = 70.0;
 
+    // Use external candidate data if provided, otherwise use current user's profile
+    final candidate =
+        widget.candidateData ?? ref.watch(candidateProfileProvider);
+
+    final isExternalProfile = widget.candidateData != null;
+
     // Cargar el perfil si aún no está cargado
-    final candidate = ref.watch(candidateProfileProvider);
     if (candidate == null) {
       // Intentar cargar el perfil si no está en memoria
       Future.microtask(() => fetchUserProfile(ref));
@@ -33,7 +45,10 @@ class UserProfile extends ConsumerWidget {
           AppIdentityBar(height: appIdentityBarHeight, onProfileTap: () {}),
           Expanded(
             child: SingleChildScrollView(
-              child: ProfileDetailHeader(candidate: candidate),
+              child: ProfileDetailHeader(
+                candidate: candidate,
+                isExternalProfile: isExternalProfile,
+              ),
             ),
           ),
         ],
@@ -44,7 +59,12 @@ class UserProfile extends ConsumerWidget {
 
 class ProfileDetailHeader extends ConsumerWidget {
   final Candidate candidate;
-  const ProfileDetailHeader({super.key, required this.candidate});
+  final bool isExternalProfile;
+  const ProfileDetailHeader({
+    super.key,
+    required this.candidate,
+    required this.isExternalProfile,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -141,14 +161,14 @@ class ProfileDetailHeader extends ConsumerWidget {
                                         duration: const Duration(
                                           milliseconds: 700,
                                         ),
-                                        child: Text(
+                                        child: SelectableText(
                                           candidate.name ?? '',
                                           style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 22.0,
                                             color: Color(0xFF222B45),
                                           ),
-                                          overflow: TextOverflow.ellipsis,
+                                          // overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
                                       const SizedBox(height: kSpacing8),

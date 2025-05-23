@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:job_match/config/util/animations.dart';
 import 'package:job_match/core/data/auth_request.dart';
 import 'package:job_match/core/data/cv_parsing.dart';
@@ -16,9 +17,10 @@ import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
 import 'package:lottie/lottie.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
+import 'package:job_match/presentation/screens/homepage/find_jobs_screen.dart';
+import 'package:job_match/presentation/screens/dashboard/employer_dashboard_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
-
   final String userType;
 
   const LoginScreen({super.key, this.userType = 'Candidato'});
@@ -58,6 +60,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   String _selectedUserType = 'Candidato';
   final _formKey = GlobalKey<FormState>();
+  String? _selectedLogoPath; // Add this to track selected logo
 
   @override
   void initState() {
@@ -106,10 +109,41 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _companyPhoneController.clear();
       _companyLocationController.clear();
       _companyDescriptionController.clear();
+      _selectedLogoPath = null; // Clear logo selection
       _termsAgreed = false;
       // Actualiza el provider global según selección
       _setUserType(_selectedUserType == 'Candidato');
     });
+  }
+
+  Future<void> _pickCompanyLogo() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+        withData: true,
+      );
+
+      if (result != null && result.files.single.bytes != null) {
+        setState(() {
+          _selectedLogoPath = result.files.single.name;
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Logo seleccionado: ${result.files.single.name}'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error seleccionando logo: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   final defaultTextStyle = TextStyle(color: Colors.grey.shade900);
@@ -485,11 +519,54 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           },
         ),
         const SizedBox(height: 16.0),
-        ElevatedButton(
-          onPressed: () {
-            // Image picker logic would go here
-          },
-          child: const Text('Subir logo o imagen representativa'),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.business, color: Colors.grey),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Logo de la empresa',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: _pickCompanyLogo,
+                icon: Icon(_selectedLogoPath != null ? Icons.check_circle : Icons.upload_file),
+                label: Text(_selectedLogoPath != null 
+                    ? 'Logo seleccionado: $_selectedLogoPath' 
+                    : 'Seleccionar logo de empresa'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _selectedLogoPath != null ? Colors.green[50] : null,
+                  foregroundColor: _selectedLogoPath != null ? Colors.green[700] : null,
+                ),
+              ),
+              if (_selectedLogoPath != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Archivo seleccionado: $_selectedLogoPath',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.green[600],
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       ],
     );
@@ -596,12 +673,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               if (_showLoginForm) {
                                 // LOGIN
                                 try {
-                                  await signOut(); // Cierra sesión antes de login
+                                  await signOut();
                                   final user = await login(
                                     _emailController.text,
                                     _passwordController.text,
                                   );
-                                  // Verifica perfil
                                   await fetchUserProfile(ref);
                                   final candidate = ref.read(
                                     candidateProfileProvider,
@@ -611,16 +687,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   );
                                   if (_selectedUserType == 'Candidato' &&
                                       candidate != null) {
-                                    Navigator.of(context).push(
+                                    Navigator.of(context).pushReplacement(
                                       FadeThroughPageRoute(
-                                        page: const UserProfile(),
+                                        page: const FindJobsScreen(),
                                       ),
                                     );
                                   } else if (_selectedUserType == 'Empresa' &&
                                       company != null) {
-                                    Navigator.of(context).push(
+                                    Navigator.of(context).pushReplacement(
                                       FadeThroughPageRoute(
-                                        page: const CompanyProfileScreen(),
+                                        page: const EmployerDashboardScreen(),
                                       ),
                                     );
                                   } else {
@@ -641,7 +717,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 if (_selectedUserType == 'Candidato') {
                                   // REGISTRO CANDIDATO
                                   try {
-                                    await signOut(); // Cierra sesión antes de sign up
+                                    await signOut();
                                     final success = await registerCandidate(
                                       email: _emailController.text,
                                       password: _passwordController.text,
@@ -670,10 +746,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         candidateProfileProvider,
                                       );
                                       if (candidate != null) {
-                                        // Navega solo si el perfil existe
-                                        Navigator.of(context).push(
+                                        Navigator.of(context).pushReplacement(
                                           FadeThroughPageRoute(
-                                            page: const UserProfile(),
+                                            page: const FindJobsScreen(),
                                           ),
                                         );
                                       } else {
@@ -706,6 +781,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 } else {
                                   // REGISTRO EMPRESA
                                   try {
+                                    String? logoUrl;
+                                    
+                                    // Upload logo first if selected
+                                    if (_selectedLogoPath != null) {
+                                      final result = await FilePicker.platform.pickFiles(
+                                        type: FileType.image,
+                                        allowMultiple: false,
+                                        withData: true,
+                                      );
+                                      
+                                      if (result != null && result.files.single.bytes != null) {
+                                        final uploadLogo = ref.read(uploadCompanyLogoProvider);
+                                        logoUrl = await uploadLogo(
+                                          result.files.single.bytes!,
+                                          result.files.single.name,
+                                        );
+                                      }
+                                    }
+
                                     await registerCompany(
                                       email: _emailController.text,
                                       password: _passwordController.text,
@@ -713,25 +807,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       phone: _companyPhoneController.text,
                                       address: _companyLocationController.text,
                                       industry: _companyIndustry,
-                                      description:
-                                          _companyDescriptionController.text,
+                                      description: _companyDescriptionController.text,
                                       website: null,
-                                      logo: null,
+                                      logo: logoUrl, // Pass the uploaded logo URL
                                     );
                                     await fetchUserProfile(ref);
                                     final company = ref.read(
                                       companyProfileProvider,
                                     );
                                     if (company != null) {
-                                      Navigator.of(context).push(
+                                      Navigator.of(context).pushReplacement(
                                         FadeThroughPageRoute(
-                                          page: const CompanyProfileScreen(),
+                                          page: const EmployerDashboardScreen(),
                                         ),
                                       );
                                     } else {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
+                                      ScaffoldMessenger.of(context).showSnackBar(
                                         const SnackBar(
                                           content: Text(
                                             'No se encontró perfil de empresa tras el registro.',
@@ -814,17 +905,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               padding: const EdgeInsets.symmetric(
                                 vertical: 8.0,
                               ),
-                              child: Text(
-                                '+56,986 empresas \n+175,324 candidatos\nEsperando el match perfecto.',
-                                textAlign: TextAlign.start,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 48.0,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '+56,986 empresas \n+175,324 candidatos\n',
+                                    textAlign: TextAlign.start,
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 48.0,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Esperando el match perfecto.',
+                                    textAlign: TextAlign.start,
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 48.0,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            const SizedBox(height: 20),
+
+                            const SizedBox(height: 60),
 
                             Padding(
                               padding: const EdgeInsets.all(8.0),
@@ -994,10 +1100,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 'Iniciar con CV',
                 style: TextStyle(color: Colors.black87),
               ),
-              onPressed: _showCVAnimationAndNavigate,
+              onPressed:
+                  _selectedUserType == 'Empresa'
+                      ? null
+                      : _showCVAnimationAndNavigate,
             ),
           ],
         ),
+        const SizedBox(height: 32.0),
+        _TestimonialCarousel(),
       ],
     );
   }
@@ -1031,6 +1142,245 @@ class _CVLottieDialogState extends State<_CVLottieDialog> {
             const Text(
               'Leyendo Datos...',
               style: TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Testimonial Carousel Widget (add at the end of the file)
+class _TestimonialCarousel extends StatefulWidget {
+  @override
+  State<_TestimonialCarousel> createState() => _TestimonialCarouselState();
+}
+
+class _TestimonialCarouselState extends State<_TestimonialCarousel> {
+  final PageController _controller = PageController(
+    viewportFraction: 0.55,
+    initialPage: 1000, // A large number to simulate infinite scrolling
+  );
+  double _currentPage = 1000;
+
+  final List<_TestimonialData> testimonials = [
+    _TestimonialData(
+      stars: 5,
+      text:
+          'La búsqueda de proveedores de nuestro sistema web fue clave después de obtener el fondo Mipymes Digitales, además hicieron un gran diagnóstico digital inicial.',
+      logo: 'assets/images/mcatalan.png',
+      name: 'MCatalan',
+    ),
+    _TestimonialData(
+      stars: 5,
+      text:
+          'Buscamos la asesoría de IncaValley para obtener el fondo de Startup Perú, entendieron rápidamente nuestros objetivos de crecimiento en Latam y fue una gran experiencia el postular con expertos en formulación.',
+      logo: 'assets/images/fresnos.png',
+      name: 'Fresnos',
+    ),
+    _TestimonialData(
+      stars: 5,
+      text:
+          'Gracias al equipo de consultores se pudo moldear la propuesta de innovación considerando variables que sumaron al proyecto y al Diagnóstico Empresarial.',
+      logo: 'assets/images/carze.png',
+      name: 'Carze',
+    ),
+    _TestimonialData(
+      stars: 5,
+      text:
+          'El acompañamiento y la experiencia del equipo fue fundamental para lograr nuestros objetivos de innovación.',
+      logo: 'assets/images/efecto_eureka.png',
+      name: 'Efecto Eureka',
+    ),
+    _TestimonialData(
+      stars: 5,
+      text:
+          'El soporte y la dedicación del equipo nos permitió crecer y mejorar nuestros procesos.',
+      logo: 'assets/images/dicesa.png',
+      name: 'Dicesa',
+    ),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _precacheTestimonialImages();
+      _startAutoScroll();
+    });
+  }
+
+  void _precacheTestimonialImages() {
+    for (var testimonial in testimonials) {
+      precacheImage(AssetImage(testimonial.logo), context);
+    }
+  }
+
+  void _startAutoScroll() async {
+    while (mounted) {
+      await Future.delayed(const Duration(milliseconds: 2500));
+      if (!mounted) break;
+      _currentPage += 1;
+      _controller.animateToPage(
+        _currentPage.toInt(),
+        duration: const Duration(milliseconds: 650),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    double cardWidth = 370;
+    double cardPadding = 24;
+    double fontSize = 17;
+    double logoSize = 24;
+    double nameFontSize = 17;
+
+    if (width < 600) {
+      cardWidth = width * 0.8;
+      cardPadding = 12;
+      fontSize = 14;
+      logoSize = 20;
+      nameFontSize = 15;
+    } else if (width < 900) {
+      cardWidth = 300;
+      cardPadding = 16;
+      fontSize = 15;
+      logoSize = 22;
+      nameFontSize = 16;
+    }
+
+    return SizedBox(
+      height: width < 600 ? 180 : 220,
+      child: PageView.builder(
+        controller: _controller,
+        itemBuilder: (context, index) {
+          final int realIndex = index % testimonials.length;
+          return AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              double selectedness = 0.0;
+              if (_controller.position.hasContentDimensions) {
+                selectedness =
+                    ((_controller.page ?? _controller.initialPage) - index)
+                        .toDouble();
+                selectedness = (1 - (selectedness.abs() * 0.5)).clamp(0.7, 1.0);
+              }
+              return Center(
+                child: Transform.scale(
+                  scale: selectedness,
+                  child: FadeIn(
+                    // Add FadeIn animation here
+                    duration: const Duration(milliseconds: 300),
+                    child: _TestimonialCard(
+                      data: testimonials[realIndex],
+                      width: cardWidth,
+                      padding: cardPadding,
+                      fontSize: fontSize,
+                      logoSize: logoSize,
+                      nameFontSize: nameFontSize,
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _TestimonialData {
+  final int stars;
+  final String text;
+  final String logo;
+  final String name;
+
+  const _TestimonialData({
+    required this.stars,
+    required this.text,
+    required this.logo,
+    required this.name,
+  });
+}
+
+class _TestimonialCard extends StatelessWidget {
+  final _TestimonialData data;
+  final double width;
+  final double padding;
+  final double fontSize;
+  final double logoSize;
+  final double nameFontSize;
+
+  const _TestimonialCard({
+    required this.data,
+    required this.width,
+    required this.padding,
+    required this.fontSize,
+    required this.logoSize,
+    required this.nameFontSize,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 3,
+      // margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Container(
+        width: width,
+        padding: EdgeInsets.all(padding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            FittedBox(
+              child: Row(
+                children: List.generate(
+                  data.stars,
+                  (index) =>
+                      Icon(Icons.star, color: Colors.amber, size: logoSize),
+                ),
+              ),
+            ),
+            // Spacer(),
+            Expanded(
+              // fit: BoxFit.fill,
+              // clipBehavior: Clip.none,
+              child: Text(
+                data.text,
+                overflow: TextOverflow.visible,
+                maxLines: 5,
+                style: TextStyle(color: const Color(0xFF5F6C7B)),
+              ),
+            ),
+            // Spacer(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                spacing: kSpacing20,
+                children: [
+                  Image.asset(data.logo, height: logoSize),
+                  Spacer(),
+                  Text(
+                    data.name,
+                    style: TextStyle(
+                      decoration: TextDecoration.underline,
+                      fontWeight: FontWeight.bold,
+                      fontSize: nameFontSize,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
