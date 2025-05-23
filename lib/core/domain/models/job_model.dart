@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 class Job {
+  final String id;
   final String logoAsset;
   final String companyName;
   final String location;
@@ -12,6 +13,7 @@ class Job {
   final int matchPercentage;
 
   Job({
+    this.id = '*',
     required this.logoAsset,
     required this.companyName,
     required this.location,
@@ -25,6 +27,7 @@ class Job {
 
   factory Job.fromMap(Map<String, dynamic> map) {
     return Job(
+      id: map['id'] ?? '*',
       logoAsset: 'assets/images/job_match.jpg', //* Default value
       companyName:
           map['users']?['companies']?['company_name'] ?? 'Empresa', //* ...

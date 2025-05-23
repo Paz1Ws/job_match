@@ -494,33 +494,34 @@ class _CandidateDashboardScreenState
             ),
           ),
           const SizedBox(height: kSpacing12),
-          FadeInUp(
-            delay: const Duration(milliseconds: 400),
-            duration: const Duration(milliseconds: 700),
-            child: JobCardWithFit(
-              title: 'Especialista en Comunicaciones',
-              company: 'JobMatch Recruiting',
-              location: 'Lima, Perú',
-              timeAgo: 'hace 2 horas',
-              fitPercentage: 92,
-              fitReasons: [
-                '+50% por experiencia en PR',
-                '+42% por Storytelling',
-              ],
-            ),
-          ),
-          FadeInUp(
-            delay: const Duration(milliseconds: 500),
-            duration: const Duration(milliseconds: 700),
-            child: JobCardWithFit(
-              title: 'Content Manager',
-              company: 'Digital Solutions',
-              location: 'Lima, Perú',
-              timeAgo: 'hace 1 día',
-              fitPercentage: 78,
-              fitReasons: ['+50% por comunicación', '+28% por estrategia'],
-            ),
-          ),
+          
+          // FadeInUp(
+          //   delay: const Duration(milliseconds: 400),
+          //   duration: const Duration(milliseconds: 700),
+          //   child: JobCardWithFit(
+          //     title: 'Especialista en Comunicaciones',
+          //     company: 'JobMatch Recruiting',
+          //     location: 'Lima, Perú',
+          //     timeAgo: 'hace 2 horas',
+          //     fitPercentage: 92,
+          //     fitReasons: [
+          //       '+50% por experiencia en PR',
+          //       '+42% por Storytelling',
+          //     ],
+          //   ),
+          // ),
+          // FadeInUp(
+          //   delay: const Duration(milliseconds: 500),
+          //   duration: const Duration(milliseconds: 700),
+          //   child: JobCardWithFit(
+          //     title: 'Content Manager',
+          //     company: 'Digital Solutions',
+          //     location: 'Lima, Perú',
+          //     timeAgo: 'hace 1 día',
+          //     fitPercentage: 78,
+          //     fitReasons: ['+50% por comunicación', '+28% por estrategia'],
+          //   ),
+          // ),
           const SizedBox(height: kSpacing30 + kSpacing4),
         ],
       ),

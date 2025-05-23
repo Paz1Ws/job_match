@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:job_match/core/data/supabase_http_requests.dart';
 
 class JobApplyDialog extends StatefulWidget {
   final String jobTitle;
+  final String jobId;
 
-  const JobApplyDialog({super.key, required this.jobTitle});
+  const JobApplyDialog({super.key, required this.jobTitle, required this.jobId});
 
   @override
   State<JobApplyDialog> createState() => _JobApplyDialogState();
@@ -101,21 +104,29 @@ class _JobApplyDialogState extends State<JobApplyDialog> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('¡Aplicación enviada!')),
+                  Consumer(
+                    builder: (_, ref, __) {
+                      return ElevatedButton.icon(
+                        onPressed: () async {
+                          final applyJob = ref.read(applyToJobProvider);
+                          await applyJob(widget.jobId);
+                          
+                          if(!context.mounted) return;
+                          Navigator.of(context).pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('¡Aplicación enviada!')),
+                          );
+                        },
+                        icon: const Icon(Icons.arrow_forward, color: Colors.white),
+                        label: const Text('Aplicar Ahora'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue.shade700,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                        ),
                       );
-                    },
-                    icon: const Icon(Icons.arrow_forward, color: Colors.white),
-                    label: const Text('Aplicar Ahora'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue.shade700,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                      textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                    ),
+                    }
                   ),
                 ],
               ),

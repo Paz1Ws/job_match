@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:job_match/core/data/supabase_http_requests.dart';
 
 class JobDetailScreen extends StatelessWidget {
   final Map<String, dynamic> job;
@@ -184,31 +186,40 @@ class JobDetailScreen extends StatelessWidget {
             // Apply Button (if needed)
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
-                onPressed:
-                    job['status'] == 'open'
-                        ? () {
-                          // Handle job application
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Funcionalidad de postulación próximamente',
-                              ),
-                            ),
-                          );
-                        }
-                        : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: Text(
-                  job['status'] == 'open'
-                      ? 'Postular a este empleo'
-                      : 'Empleo cerrado',
-                  style: const TextStyle(fontSize: 16),
-                ),
+              child: Consumer(
+                builder: (_, ref, __) {
+                  return ElevatedButton(
+                    onPressed:
+                        job['status'] == 'open'
+                            ? () async {
+                              //* Handle job application
+                              final applyJob = ref.read(applyToJobProvider);
+                              await applyJob(job['id']);
+
+                              if(!context.mounted) return;
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Se ha aplicado al trabajo',
+                                  ),
+                                ),
+                              );
+                            }
+                            : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: Text(
+                      job['status'] == 'open'
+                          ? 'Postular a este empleo'
+                          : 'Empleo cerrado',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  );
+                }
               ),
             ),
           ],

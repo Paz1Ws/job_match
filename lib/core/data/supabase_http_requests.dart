@@ -182,7 +182,7 @@ final updateJobProvider = Provider((ref) {
 /// 5. Postular a una vacante (POST /applications)
 /// Permite a un usuario autenticado postularse a una vacante.
 final applyToJobProvider = Provider((ref) {
-  return (int jobId) async {
+  return (String jobId) async {
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId == null) throw Exception('Usuario no autenticado');
 
@@ -190,6 +190,8 @@ final applyToJobProvider = Provider((ref) {
         await Supabase.instance.client.from('applications').insert({
           'user_id': userId,
           'job_id': jobId,
+          'status': 'pending',
+          'applied_at': DateTime.now().toIso8601String()
         }).select();
 
     return response;

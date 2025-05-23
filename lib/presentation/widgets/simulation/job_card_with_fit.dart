@@ -4,6 +4,7 @@ import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:job_match/presentation/screens/jobs/job_apply_dialog.dart';
 
 class JobCardWithFit extends StatelessWidget {
+  final String id;
   final String title;
   final String company;
   final String location;
@@ -13,6 +14,7 @@ class JobCardWithFit extends StatelessWidget {
 
   const JobCardWithFit({
     super.key,
+    required this.id,
     required this.title,
     required this.company,
     required this.location,
@@ -148,7 +150,7 @@ class JobCardWithFit extends StatelessWidget {
                   if (value == 'apply') {
                     showDialog(
                       context: context,
-                      builder: (context) => JobApplyDialog(jobTitle: title),
+                      builder: (context) => JobApplyDialog(jobTitle: title, jobId: id),
                     );
                   }
                 },
