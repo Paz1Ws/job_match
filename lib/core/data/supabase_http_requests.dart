@@ -61,6 +61,18 @@ final jobsCountProvider = FutureProvider.autoDispose<int>((ref) async {
   return count;
 });
 
+final recentJobsCountProvider = FutureProvider.autoDispose<int>((ref) async {
+  final response = await Supabase.instance.client
+    .from('jobs')
+    .select('id')
+    .gte('created_at', DateTime.now().subtract(const Duration(days: 4)).toIso8601String())
+    .lte('created_at', DateTime.now().toIso8601String())
+    ;
+
+  final count = response.length;
+  return count;
+});
+
 final candidatesCountProvider = FutureProvider.autoDispose<int>((ref) async {
   final response = await Supabase.instance.client
       .from('candidates')

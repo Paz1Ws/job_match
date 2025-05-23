@@ -275,74 +275,48 @@ class _HomepageScreenState extends State<HomepageScreen> {
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            jobsCount.when(
-              data:
-                  (data) => FadeInLeft(
-                    duration: Duration(milliseconds: 900),
-                    child: StatItem(
-                      icon: Icons.work_outline,
-                      count: data.toString(),
-                      label: 'Empleos',
-                    ),
-                  ),
-              loading: () => const SizedBox.shrink(),
-              error:
-                  (e, __) => FadeInLeft(
-                    duration: Duration(milliseconds: 900),
-                    child: StatItem(
-                      icon: Icons.work_outline,
-                      count: '0',
-                      label: 'Empleos',
-                    ),
-                  ),
+
+            FadeInUp(
+              duration: Duration(milliseconds: 900),
+              child: StatItem(
+                icon: Icons.work_outline,
+                count: jobsCount.when(
+                  data: (data) => data.toString(),
+                  error: (error, stackTrace) => '0',
+                  loading: () => '-',
+                ),
+                label: 'Empleos',
+              ),
             ),
 
             SizedBox(width: 60),
 
-            candidatesCount.when(
-              data:
-                  (data) => FadeInUp(
-                    duration: Duration(milliseconds: 900),
-                    child: StatItem(
-                      icon: Icons.people_outline,
-                      count: data.toString(),
-                      label: 'Candidatos',
-                    ),
-                  ),
-              loading: () => const SizedBox.shrink(),
-              error:
-                  (error, stackTrace) => FadeInUp(
-                    duration: Duration(milliseconds: 900),
-                    child: StatItem(
-                      icon: Icons.people_outline,
-                      count: '0',
-                      label: 'Candidatos',
-                    ),
-                  ),
+            FadeInUp(
+              duration: Duration(milliseconds: 900),
+              child: StatItem(
+                icon: Icons.people_outline,
+                count: candidatesCount.when(
+                  data: (data) => data.toString(),
+                  error: (error, stackTrace) => '0',
+                  loading: () => '-',
+                ),
+                label: 'Candidatos',
+              ),
             ),
 
             SizedBox(width: 60),
 
-            companiesCount.when(
-              data:
-                  (data) => FadeInRight(
-                    duration: Duration(milliseconds: 900),
-                    child: StatItem(
-                      icon: Icons.business,
-                      count: data.toString(),
-                      label: 'Empresas',
-                    ),
-                  ),
-              loading: () => const SizedBox.shrink(),
-              error:
-                  (error, stackTrace) => FadeInRight(
-                    duration: Duration(milliseconds: 900),
-                    child: StatItem(
-                      icon: Icons.business,
-                      count: '0',
-                      label: 'Empresas',
-                    ),
-                  ),
+            FadeInUp(
+              duration: Duration(milliseconds: 900),
+              child: StatItem(
+                icon: Icons.business,
+                count: companiesCount.when(
+                  data: (data) => data.toString(),
+                  error: (error, stackTrace) => '0',
+                  loading: () => '-',
+                ),
+                label: 'Empresas',
+              ),
             ),
           ],
         );
