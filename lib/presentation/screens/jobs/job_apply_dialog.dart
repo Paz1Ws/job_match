@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:job_match/core/data/auth_request.dart';
 import 'package:job_match/core/data/supabase_http_requests.dart';
 
 class JobApplyDialog extends StatefulWidget {
   final String jobTitle;
   final String jobId;
 
-  const JobApplyDialog({super.key, required this.jobTitle, required this.jobId});
+  const JobApplyDialog({
+    super.key,
+    required this.jobTitle,
+    required this.jobId,
+  });
 
   @override
   State<JobApplyDialog> createState() => _JobApplyDialogState();
@@ -62,15 +67,17 @@ class _JobApplyDialogState extends State<JobApplyDialog> {
               DropdownButtonFormField<String>(
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
                 ),
                 value: selectedResume,
                 hint: const Text('Selecciona...'),
-                items: [
-                  'CV_Julio_Nima.pdf',
-                  'CV_2024.pdf',
-                  'CV_Experiencia.pdf',
-                ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                items:
+                    ['CV_JobMatch.pdf', 'CV_2024.pdf', 'CV_Ejemplo.pdf']
+                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                        .toList(),
                 onChanged: (value) => setState(() => selectedResume = value),
               ),
               const SizedBox(height: 24),
@@ -83,7 +90,8 @@ class _JobApplyDialogState extends State<JobApplyDialog> {
                 controller: coverLetterController,
                 maxLines: 5,
                 decoration: const InputDecoration(
-                  hintText: 'Escribe aquí tu biografía. Hazle saber a los empleadores quién eres...',
+                  hintText:
+                      'Escribe aquí tu biografía. Hazle saber a los empleadores quién eres...',
                   border: OutlineInputBorder(),
                   contentPadding: EdgeInsets.all(12),
                 ),
@@ -92,12 +100,27 @@ class _JobApplyDialogState extends State<JobApplyDialog> {
               // Barra simple de iconos (sin funcionalidad real)
               Row(
                 children: [
-                  IconButton(icon: const Icon(Icons.format_bold), onPressed: () {}),
-                  IconButton(icon: const Icon(Icons.format_italic), onPressed: () {}),
-                  IconButton(icon: const Icon(Icons.format_underline), onPressed: () {}),
+                  IconButton(
+                    icon: const Icon(Icons.format_bold),
+                    onPressed: () {},
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.format_italic),
+                    onPressed: () {},
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.format_underline),
+                    onPressed: () {},
+                  ),
                   IconButton(icon: const Icon(Icons.link), onPressed: () {}),
-                  IconButton(icon: const Icon(Icons.format_list_bulleted), onPressed: () {}),
-                  IconButton(icon: const Icon(Icons.format_list_numbered), onPressed: () {}),
+                  IconButton(
+                    icon: const Icon(Icons.format_list_bulleted),
+                    onPressed: () {},
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.format_list_numbered),
+                    onPressed: () {},
+                  ),
                 ],
               ),
               const SizedBox(height: 24),
@@ -109,24 +132,53 @@ class _JobApplyDialogState extends State<JobApplyDialog> {
                       return ElevatedButton.icon(
                         onPressed: () async {
                           final applyJob = ref.read(applyToJobProvider);
-                          await applyJob(widget.jobId);
-                          
-                          if(!context.mounted) return;
+                          final candidate = ref.read(candidateProfileProvider);
+                          // Ensure candidate and candidate.name are not null
+                          if (candidate == null || candidate.name == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Error: Perfil de candidato no encontrado.',
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+
+                          await applyJob(
+                            widget.jobId,
+                            candidate.name!, // Now using candidate.name
+                            coverLetterController.text,
+                          );
+
+                          if (!context.mounted) return;
                           Navigator.of(context).pop();
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('¡Aplicación enviada!')),
+                            const SnackBar(
+                              content: Text('¡Aplicación enviada!'),
+                            ),
                           );
                         },
-                        icon: const Icon(Icons.arrow_forward, color: Colors.white),
+                        icon: const Icon(
+                          Icons.arrow_forward,
+                          color: Colors.white,
+                        ),
                         label: const Text('Aplicar Ahora'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue.shade700,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 16,
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       );
-                    }
+                    },
                   ),
                 ],
               ),

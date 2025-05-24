@@ -37,6 +37,9 @@ class TopCompanies extends StatelessWidget {
       ),
     ];
 
+    // Detectar si estamos en modo móvil basado en ancho de pantalla
+    final isMobile = MediaQuery.of(context).size.width < 700;
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 40.0, horizontal: 16.0),
       color: const Color(0xFFEBF5F4),
@@ -45,34 +48,70 @@ class TopCompanies extends StatelessWidget {
         children: [
           FadeInDown(
             duration: const Duration(milliseconds: 500),
-            child: const Text(
+            child: Text(
               'Empresas Destacadas',
-              style: TextStyle(fontSize: 40.0, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: isMobile ? 28.0 : 40.0,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           const SizedBox(height: 8.0),
           FadeInDown(
             delay: const Duration(milliseconds: 200),
             duration: const Duration(milliseconds: 500),
-            child: const Text(
-              'Descubre las mejores oportunidades laborales en las empresas líderes del mercado.',
-              style: TextStyle(fontSize: 14.0, color: Colors.black87),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: isMobile ? 16.0 : 60.0),
+              child: Text(
+                'Descubre las mejores oportunidades laborales en las empresas líderes del mercado.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: isMobile ? 12.0 : 14.0,
+                  color: Colors.black87,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 16.0),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(companyCards.length, (index) {
-              return FadeInUp(
-                delay: Duration(milliseconds: 150 * index + 300),
-                duration: const Duration(milliseconds: 500),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                  child: companyCards[index],
-                ),
-              );
-            }),
-          ),
+          
+          // En móvil: mostrar con scroll horizontal
+          if (isMobile)
+            SizedBox(
+              height: 280, // Altura fija para el contenedor en mobile
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                itemCount: companyCards.length,
+                itemBuilder: (context, index) {
+                  return FadeInUp(
+                    delay: Duration(milliseconds: 150 * index + 300),
+                    duration: const Duration(milliseconds: 500),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: SizedBox(
+                        width: 220, // Ancho fijo para las tarjetas en scroll
+                        child: companyCards[index],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            )
+          // En desktop: mostrar en fila
+          else
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(companyCards.length, (index) {
+                return FadeInUp(
+                  delay: Duration(milliseconds: 150 * index + 300),
+                  duration: const Duration(milliseconds: 500),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15.0),
+                    child: companyCards[index],
+                  ),
+                );
+              }),
+            ),
           const SizedBox(height: 30.0),
         ],
       ),

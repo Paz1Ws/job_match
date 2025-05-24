@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:job_match/core/data/auth_request.dart';
 import 'package:job_match/core/domain/models/candidate_model.dart';
 import 'package:job_match/core/domain/models/job_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -183,21 +184,42 @@ final updateJobProvider = Provider((ref) {
 
 /// 5. Postular a una vacante (POST /applications)
 /// Permite a un usuario autenticado postularse a una vacante.
-final applyToJobProvider = Provider((ref) {
-  return (String jobId) async {
-    final userId = Supabase.instance.client.auth.currentUser?.id;
-    if (userId == null) throw Exception('Usuario no autenticado');
+final applyToJobProvider = Provider<
+  Future<void> Function(String jobId, String candidateName, String coverLetter)
+>((ref) {
+  final supabase = Supabase.instance.client;
+  final candidate = ref.watch(candidateProfileProvider);
 
-    final response =
-        await Supabase.instance.client.from('applications').insert({
-          'user_id': userId,
-          'job_id': jobId,
-          'status': 'pending',
-          'applied_at': DateTime.now().toIso8601String(),
-        }).select();
+  // Get the current user
+  final userId = supabase.auth.currentUser?.id;
 
-    return response;
-  };
+  Future<void> applyToJob(
+    String jobId,
+    String candidateName, // candidateId is now candidateName for simplicity
+    String coverLetter,
+  ) async {
+    if (candidate == null) {
+      throw Exception('Candidate profile not found or user ID is null.');
+    }
+    try {
+      await supabase.from('applications').insert({
+        'job_id': jobId,
+        'user_id': userId,
+        'candidate': candidateName,
+        'cover_letter': coverLetter,
+        'applied_at': DateTime.now().toIso8601String(),
+        'status': 'pending',
+      });
+      print(
+        'Applied to job $jobId by candidate ${candidate.userId} ($candidateName)',
+      );
+    } catch (e) {
+      print('Error applying to job: $e');
+      rethrow;
+    }
+  }
+
+  return applyToJob;
 });
 
 /// 6. Actualizar el perfil de usuario (PUT /profiles/{id})

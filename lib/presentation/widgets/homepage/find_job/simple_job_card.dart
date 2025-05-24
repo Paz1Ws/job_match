@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:job_match/core/data/cv_parsing.dart';
 import 'package:job_match/core/domain/models/job_model.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:job_match/presentation/screens/jobs/job_detail_screen.dart';
 import 'package:job_match/config/util/animations.dart';
+import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
 import 'package:animate_do/animate_do.dart';
 
-class SimpleJobCard extends StatelessWidget {
+class SimpleJobCard extends ConsumerWidget {
   final Job job;
 
   const SimpleJobCard({super.key, required this.job});
@@ -54,9 +56,11 @@ class SimpleJobCard extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     Color fitColor = _getFitColor(job.matchPercentage);
     final fit = generateRandomMatchPercentage().toString();
+    final bool isCandidate = ref.watch(isCandidateProvider);
+
     return FadeInUp(
       duration: const Duration(milliseconds: 500),
       child: Stack(
@@ -74,11 +78,20 @@ class SimpleJobCard extends StatelessWidget {
             ),
             child: InkWell(
               onTap: () {
-                Navigator.of(context).push(
-                  ParallaxSlidePageRoute(
-                    page: JobDetailScreen(job: job, fit: fit),
-                  ),
-                );
+                if (isCandidate) {
+                  Navigator.of(context).push(
+                    ParallaxSlidePageRoute(
+                      page: JobDetailScreen(job: job, fit: fit),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Las empresas no pueden aplicar a trabajos.'),
+                      backgroundColor: Colors.orangeAccent,
+                    ),
+                  );
+                }
               },
               borderRadius: BorderRadius.circular(kRadius12),
               child: Padding(

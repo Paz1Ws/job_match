@@ -8,7 +8,8 @@ import 'package:job_match/core/data/auth_request.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase, User;
 
 int generateRandomMatchPercentage() {
-  return Random().nextInt(41) + 60; // Generates a number from 0-40, then adds 60
+  return Random().nextInt(41) +
+      60; // Generates a number from 0-40, then adds 60
 }
 
 class CvParser {

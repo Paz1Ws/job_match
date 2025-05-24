@@ -18,83 +18,31 @@ class AppIdentityBar extends ConsumerWidget {
 
   const AppIdentityBar({super.key, required this.height, this.onProfileTap});
 
-  Widget _buildNavButton(String text, {required VoidCallback onPressed}) {
-    return TextButton(
-      onPressed: onPressed,
-      child: Text(text, style: TextStyle(color: Colors.grey[700])),
-    );
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isCandidate = ref.watch(isCandidateProvider);
-    final candidate = ref.watch(candidateProfileProvider);
     final company = ref.watch(companyProfileProvider);
 
     return Container(
       height: height,
-      color: Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: kPadding16),
       child: Row(
         children: <Widget>[
-          Container(
-            padding: kPaddingAll8,
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(2),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Image.asset(
-                  'assets/images/job_match.jpg',
-                  width: kIconSize24,
-                  height: kIconSize24,
-                ),
-                const SizedBox(width: kSpacing8),
-                const Text(
-                  'JobMatch',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: kIconSize18,
-                  ),
-                ),
-              ],
+          GestureDetector(
+            onTap: () {
+              Navigator.of(context).pushAndRemoveUntil(
+                FadeThroughPageRoute(page: const HomepageScreen()),
+                (route) => false,
+              );
+            },
+            child: Image.asset(
+              'assets/images/job_match_black.png',
+              width: kIconSize48,
+              height: kIconSize48,
             ),
           ),
-          const SizedBox(width: kSpacing20 + kSpacing4),
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: <Widget>[
-                  _buildNavButton(
-                    'Home',
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        SlideUpFadePageRoute(page: const HomepageScreen()),
-                      );
-                    },
-                  ),
-                  _buildNavButton(
-                    'Buscar Empleo',
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const FindJobsScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildNavButton('Buscar Empleadores', onPressed: () {}),
-                  _buildNavButton('Panel', onPressed: () {}),
-                  _buildNavButton('Alertas de Empleo', onPressed: () {}),
-                  _buildNavButton('Soporte', onPressed: () {}),
-                ],
-              ),
-            ),
-          ),
+          Spacer(),
+
           IconButton(
             icon: Icon(
               Icons.search,

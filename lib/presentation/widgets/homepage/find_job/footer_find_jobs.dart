@@ -11,6 +11,7 @@ class FooterFindJobs extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: Colors.black,
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 40.0, horizontal: 20.0),
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
@@ -18,11 +19,15 @@ class FooterFindJobs extends StatelessWidget {
             return Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min, // Add this to fix the error
               children: _buildFooterColumns(context),
             );
           } else {
             return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+
+              mainAxisSize: MainAxisSize.min, // Add this to fix the error
               children: _buildFooterColumns(context),
             );
           }
@@ -42,7 +47,9 @@ class FooterFindJobs extends StatelessWidget {
     return columnContents.asMap().entries.map((entry) {
       int idx = entry.key;
       Widget columnContent = entry.value;
-      return Expanded(
+      // Replace Expanded with Flexible and set fit to loose
+      return Flexible(
+        fit: FlexFit.loose,
         child: FadeInUp(
           delay: Duration(milliseconds: 150 * idx),
           duration: const Duration(milliseconds: 500),
@@ -54,7 +61,9 @@ class FooterFindJobs extends StatelessWidget {
 
   Widget _buildLogoAndDescriptionColumn(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.center,
+
       children: [
         // JobMatchWidget(),
         const SizedBox(height: 16.0),
@@ -80,7 +89,9 @@ class FooterFindJobs extends StatelessWidget {
 
   Widget _buildCompanyLinksColumn() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.center,
+
       children: const [
         Text(
           'Compañía',
@@ -126,7 +137,9 @@ class FooterFindJobs extends StatelessWidget {
 
   Widget _buildJobCategoriesColumn() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.center,
+
       children: const [
         Text(
           'Categorías de empleo',
@@ -172,7 +185,8 @@ class FooterFindJobs extends StatelessWidget {
 
   Widget _buildNewsletterSubscriptionColumn() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         const Text(
           'Newsletter',

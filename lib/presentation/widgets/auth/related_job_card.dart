@@ -1,43 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:job_match/config/constants/layer_constants.dart';
+import 'package:job_match/config/util/animations.dart';
 import 'package:job_match/core/data/cv_parsing.dart';
 import 'package:job_match/core/domain/models/job_model.dart';
-import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:job_match/presentation/screens/jobs/job_detail_screen.dart';
-import 'package:job_match/config/util/animations.dart';
+import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
 import 'package:animate_do/animate_do.dart';
 
-class RelatedJobCard extends StatelessWidget {
+class RelatedJobCard extends ConsumerWidget {
   final Job job;
-  final bool showBackButton;
 
-  const RelatedJobCard({
-    super.key,
-    required this.job,
-    this.showBackButton = false,
-  });
-
-  Color _getFitColor(int percentage) {
-    if (percentage >= 90) return Colors.green.shade700;
-    if (percentage >= 75) return Colors.blue.shade700;
-    if (percentage >= 60) return Colors.orange.shade700;
-    return Colors.grey.shade700;
-  }
+  const RelatedJobCard({super.key, required this.job});
 
   @override
-  Widget build(BuildContext context) {
-    Color fitColor = _getFitColor(job.matchPercentage);
+  Widget build(BuildContext context, WidgetRef ref) {
     final fit = generateRandomMatchPercentage().toString();
+    final bool isCandidate = ref.watch(isCandidateProvider);
+
     return FadeInUp(
       duration: const Duration(milliseconds: 600),
       child: Stack(
         children: [
           GestureDetector(
             onTap: () {
-              Navigator.of(context).push(
-                ParallaxSlidePageRoute(
-                  page: JobDetailScreen(job: job, fit: fit),
-                ),
-              );
+              if (isCandidate) {
+                Navigator.of(context).push(
+                  ParallaxSlidePageRoute(
+                    page: JobDetailScreen(job: job, fit: fit),
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Las empresas no pueden aplicar a trabajos.'),
+                    backgroundColor: Colors.orangeAccent,
+                  ),
+                );
+              }
             },
             child: Container(
               padding: const EdgeInsets.all(kPadding20),
@@ -170,11 +170,7 @@ class RelatedJobCard extends StatelessWidget {
                               vertical: kSpacing4 / 2,
                             ),
                             decoration: BoxDecoration(
-                              color: fitColor.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(kRadius8),
-                              border: Border.all(
-                                color: fitColor.withOpacity(0.3),
-                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -182,7 +178,6 @@ class RelatedJobCard extends StatelessWidget {
                                 Icon(
                                   Icons.analytics_outlined,
                                   size: kIconSize14,
-                                  color: fitColor,
                                 ),
                                 const SizedBox(width: kSpacing4),
                                 Text(
@@ -190,7 +185,6 @@ class RelatedJobCard extends StatelessWidget {
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 11.0,
-                                    color: fitColor,
                                   ),
                                 ),
                               ],
@@ -231,22 +225,6 @@ class RelatedJobCard extends StatelessWidget {
               ),
             ),
           ),
-          if (showBackButton)
-            Positioned(
-              top: 8,
-              left: 8,
-              child: IconButton(
-                icon: const Icon(
-                  Icons.arrow_back,
-                  color: Colors.blue,
-                  size: 20,
-                ),
-                onPressed: () => Navigator.of(context).maybePop(),
-                tooltip: 'Atrás',
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-            ),
         ],
       ),
     );

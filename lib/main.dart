@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:job_match/config/secrets/supabase_secrets.dart';
 import 'package:job_match/presentation/screens/splash/splash_screen.dart';
@@ -8,7 +9,15 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Supabase.initialize(url: SUPABASE_URL, anonKey: SUPABASE_ANON_KEY);
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+  await SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.immersive,
 
+    overlays: [],
+  );
   runApp(ProviderScope(child: JobMatchApp()));
 }
 

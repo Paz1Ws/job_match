@@ -6,7 +6,6 @@ import 'package:job_match/core/domain/models/candidate_model.dart';
 import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:job_match/core/domain/models/applied_job_model.dart';
-import 'package:job_match/presentation/screens/jobs/job_detail_screen.dart';
 import 'package:job_match/core/domain/models/job_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:job_match/core/data/supabase_http_requests.dart';
@@ -144,161 +143,55 @@ class _CandidateDashboardScreenState
 
   @override
   Widget build(BuildContext context) {
-    // Solo usa providers existentes de supabase_http_requests.dart
     final applicationsAsync = ref.watch(applicationsProvider);
-
-    // Cargar el perfil si aún no está cargado
     final candidate = ref.watch(candidateProfileProvider);
+    final screenSize = MediaQuery.of(context).size;
+    final isMobile =
+        screenSize.width < 750; // Adjusted breakpoint for better layout
+
     if (candidate == null) {
-      // Intentar cargar el perfil si no está en memoria
       Future.microtask(() => fetchUserProfile(ref));
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FA),
+      appBar:
+          isMobile
+              ? AppBar(
+                title: AppIdentityBar(
+                  height: kToolbarHeight,
+                  onProfileTap: () {},
+                ),
+                automaticallyImplyLeading: false,
+                elevation: 1,
+                backgroundColor: Colors.white,
+              )
+              : null,
+      drawer: isMobile ? _buildMobileDrawer() : null,
       body: Stack(
         children: [
           Column(
             children: <Widget>[
-              // AppIdentityBar con botón de atrás
-              FadeInDown(
-                duration: const Duration(milliseconds: 600),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.blue),
-                      onPressed: () => Navigator.of(context).maybePop(),
-                      tooltip: 'Atrás',
-                    ),
-                    Expanded(child: AppIdentityBar(height: 80)),
-                  ],
+              if (!isMobile)
+                FadeInDown(
+                  duration: const Duration(milliseconds: 600),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back, color: Colors.blue),
+                        onPressed: () => Navigator.of(context).maybePop(),
+                        tooltip: 'Atrás',
+                      ),
+                      Expanded(child: AppIdentityBar(height: 80)),
+                    ],
+                  ),
                 ),
-              ),
               Expanded(
-                child: Row(
-                  children: <Widget>[
-                    // Left side: Selector Menu
-                    FadeInLeft(
-                      duration: const Duration(milliseconds: 700),
-                      child: Container(
-                        width: 260,
-                        color: Colors.white,
-                        padding: const EdgeInsets.only(top: kPadding20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: kPadding16,
-                                vertical: kPadding8,
-                              ),
-                              child: Text(
-                                'PANEL DEL CANDIDATO',
-                                style: TextStyle(
-                                  color: Colors.grey.shade500,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: kSpacing8),
-                            ...[
-                              _buildMenuItem(
-                                icon: Icons.layers_outlined,
-                                title: 'Resumen',
-                                isSelected: _selectedMenu == 'Overview',
-                                onTap:
-                                    () => setState(
-                                      () => _selectedMenu = 'Overview',
-                                    ),
-                              ),
-                              _buildMenuItem(
-                                icon: Icons.work_outline,
-                                title: 'Trabajos Aplicados',
-                                isSelected: _selectedMenu == 'Applied Jobs',
-                                onTap:
-                                    () => setState(
-                                      () => _selectedMenu = 'Applied Jobs',
-                                    ),
-                              ),
-                              _buildMenuItem(
-                                icon: Icons.bookmark_border,
-                                title: 'Trabajos Favoritos',
-                                isSelected: _selectedMenu == 'Favorite Jobs',
-                                onTap:
-                                    () => setState(
-                                      () => _selectedMenu = 'Favorite Jobs',
-                                    ),
-                              ),
-                              _buildMenuItem(
-                                icon: Icons.notifications_none_outlined,
-                                title: 'Alerta de Trabajo',
-                                badgeCount: '01',
-                                isSelected: _selectedMenu == 'Job Alert',
-                                onTap:
-                                    () => setState(
-                                      () => _selectedMenu = 'Job Alert',
-                                    ),
-                              ),
-                              _buildMenuItem(
-                                icon: Icons.settings_outlined,
-                                title: 'Configuración',
-                                isSelected: _selectedMenu == 'Settings',
-                                onTap:
-                                    () => setState(
-                                      () => _selectedMenu = 'Settings',
-                                    ),
-                              ),
-                            ].asMap().entries.map((entry) {
-                              // Animate each menu item with a slight delay
-                              return FadeInLeft(
-                                delay: Duration(milliseconds: 80 * entry.key),
-                                duration: const Duration(milliseconds: 400),
-                                child: entry.value,
-                              );
-                            }),
-                          ],
-                        ),
-                      ),
-                    ),
-                    // Right side: Main content area
-                    Expanded(
-                      flex: 3,
-                      child: FadeInUp(
-                        duration: const Duration(milliseconds: 700),
-                        child:
-                            _selectedMenu == 'Overview'
-                                ? _buildOverviewContent(candidate)
-                                : _selectedMenu == 'Applied Jobs'
-                                ? applicationsAsync.when(
-                                  loading:
-                                      () => const Center(
-                                        child: CircularProgressIndicator(),
-                                      ),
-                                  error:
-                                      (error, stack) =>
-                                          Center(child: Text('Error: $error')),
-                                  data:
-                                      (applications) =>
-                                          _buildAppliedJobsContent(
-                                            applications,
-                                          ),
-                                )
-                                : Center(
-                                  child: Text(
-                                    'Contenido para $_selectedMenu',
-                                    style: const TextStyle(
-                                      fontSize: 24,
-                                      color: Colors.black54,
-                                    ),
-                                  ),
-                                ),
-                      ),
-                    ),
-                  ],
-                ),
+                child:
+                    isMobile
+                        ? _buildMobileLayout(candidate, applicationsAsync)
+                        : _buildDesktopLayout(candidate, applicationsAsync),
               ),
             ],
           ),
@@ -322,24 +215,229 @@ class _CandidateDashboardScreenState
     );
   }
 
-  Widget _buildOverviewContent(Candidate candidate) {
+  Widget _buildMobileDrawer() {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: <Widget>[
+          DrawerHeader(
+            decoration: BoxDecoration(color: Colors.blue.shade700),
+            child: Text(
+              'Menú Candidato',
+              style: TextStyle(color: Colors.white, fontSize: 24),
+            ),
+          ),
+          ...[
+            _buildMenuItem(
+              icon: Icons.layers_outlined,
+              title: 'Resumen',
+              isSelected: _selectedMenu == 'Overview',
+              onTap: () {
+                setState(() => _selectedMenu = 'Overview');
+                Navigator.pop(context);
+              },
+            ),
+            _buildMenuItem(
+              icon: Icons.work_outline,
+              title: 'Trabajos Aplicados',
+              isSelected: _selectedMenu == 'Applied Jobs',
+              onTap: () {
+                setState(() => _selectedMenu = 'Applied Jobs');
+                Navigator.pop(context);
+              },
+            ),
+            _buildMenuItem(
+              icon: Icons.bookmark_border,
+              title: 'Trabajos Favoritos',
+              isSelected: _selectedMenu == 'Favorite Jobs',
+              onTap: () {
+                setState(() => _selectedMenu = 'Favorite Jobs');
+                Navigator.pop(context);
+              },
+            ),
+            _buildMenuItem(
+              icon: Icons.notifications_none_outlined,
+              title: 'Alerta de Trabajo',
+              badgeCount: '01',
+              isSelected: _selectedMenu == 'Job Alert',
+              onTap: () {
+                setState(() => _selectedMenu = 'Job Alert');
+                Navigator.pop(context);
+              },
+            ),
+            _buildMenuItem(
+              icon: Icons.settings_outlined,
+              title: 'Configuración',
+              isSelected: _selectedMenu == 'Settings',
+              onTap: () {
+                setState(() => _selectedMenu = 'Settings');
+                Navigator.pop(context);
+              },
+            ),
+          ].map(
+            (item) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              child: item,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopLayout(
+    Candidate candidate,
+    AsyncValue<List<Map<String, dynamic>>> applicationsAsync,
+  ) {
+    return Row(
+      children: <Widget>[
+        FadeInLeft(
+          duration: const Duration(milliseconds: 700),
+          child: Container(
+            width: 260,
+            color: Colors.white,
+            padding: const EdgeInsets.only(top: kPadding20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: kPadding16,
+                    vertical: kPadding8,
+                  ),
+                  child: Text(
+                    'PANEL DEL CANDIDATO',
+                    style: TextStyle(
+                      color: Colors.grey.shade500,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: kSpacing8),
+                ...[
+                  _buildMenuItem(
+                    icon: Icons.layers_outlined,
+                    title: 'Resumen',
+                    isSelected: _selectedMenu == 'Overview',
+                    onTap: () => setState(() => _selectedMenu = 'Overview'),
+                  ),
+                  _buildMenuItem(
+                    icon: Icons.work_outline,
+                    title: 'Trabajos Aplicados',
+                    isSelected: _selectedMenu == 'Applied Jobs',
+                    onTap: () => setState(() => _selectedMenu = 'Applied Jobs'),
+                  ),
+                  _buildMenuItem(
+                    icon: Icons.bookmark_border,
+                    title: 'Trabajos Favoritos',
+                    isSelected: _selectedMenu == 'Favorite Jobs',
+                    onTap:
+                        () => setState(() => _selectedMenu = 'Favorite Jobs'),
+                  ),
+                  _buildMenuItem(
+                    icon: Icons.notifications_none_outlined,
+                    title: 'Alerta de Trabajo',
+                    badgeCount: '01',
+                    isSelected: _selectedMenu == 'Job Alert',
+                    onTap: () => setState(() => _selectedMenu = 'Job Alert'),
+                  ),
+                  _buildMenuItem(
+                    icon: Icons.settings_outlined,
+                    title: 'Configuración',
+                    isSelected: _selectedMenu == 'Settings',
+                    onTap: () => setState(() => _selectedMenu = 'Settings'),
+                  ),
+                ].asMap().entries.map((entry) {
+                  return FadeInLeft(
+                    delay: Duration(milliseconds: 80 * entry.key),
+                    duration: const Duration(milliseconds: 400),
+                    child: entry.value,
+                  );
+                }),
+              ],
+            ),
+          ),
+        ),
+        Expanded(
+          flex: 3,
+          child: FadeInUp(
+            duration: const Duration(milliseconds: 700),
+            child: _buildSelectedContent(candidate, applicationsAsync, false),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout(
+    Candidate candidate,
+    AsyncValue<List<Map<String, dynamic>>> applicationsAsync,
+  ) {
+    return FadeInUp(
+      duration: const Duration(milliseconds: 700),
+      child: _buildSelectedContent(candidate, applicationsAsync, true),
+    );
+  }
+
+  Widget _buildSelectedContent(
+    Candidate candidate,
+    AsyncValue<List<Map<String, dynamic>>> applicationsAsync,
+    bool isMobile,
+  ) {
+    if (_selectedMenu == 'Overview') {
+      return _buildOverviewContent(candidate, isMobile: isMobile);
+    } else if (_selectedMenu == 'Applied Jobs') {
+      return applicationsAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stack) => Center(child: Text('Error: $error')),
+        data:
+            (applications) =>
+                _buildAppliedJobsContent(applications, isMobile: isMobile),
+      );
+    } else {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(kPadding16),
+          child: Text(
+            'Contenido para $_selectedMenu',
+            style: const TextStyle(fontSize: 24, color: Colors.black54),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+  }
+
+  Widget _buildOverviewContent(Candidate candidate, {required bool isMobile}) {
     // Use simulated component for course recommendation
     final course = MockCourses.courses.first;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(kPadding20 + kSpacing4),
+      padding: EdgeInsets.all(isMobile ? kPadding16 : kPadding20 + kSpacing4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           FadeInDown(
             duration: const Duration(milliseconds: 600),
-            child: Text(
-              candidate.name ?? '',
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF222B45),
-              ),
+            child: Row(
+              spacing: kSpacing12,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.blue),
+                  onPressed: () => Navigator.of(context).maybePop(),
+                  tooltip: 'Atrás',
+                ),
+                Text(
+                  candidate.name ?? '',
+                  style: TextStyle(
+                    fontSize: isMobile ? 22 : 26,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF222B45),
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: kSpacing8),
@@ -347,55 +445,80 @@ class _CandidateDashboardScreenState
             duration: const Duration(milliseconds: 700),
             child: Text(
               'Aquí están tus actividades diarias y alertas de trabajo.',
-              style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+              style: TextStyle(
+                fontSize: isMobile ? 14 : 16,
+                color: Colors.grey.shade600,
+              ),
             ),
           ),
           const SizedBox(height: kSpacing20 + kSpacing4),
-          Row(
-            children: <Widget>[
-              FadeInLeft(
-                duration: const Duration(milliseconds: 700),
-                child: Expanded(
-                  child: _buildSummaryCard(
+          isMobile
+              ? Column(
+                children: <Widget>[
+                  _buildSummaryCardItem(
                     count: '1',
                     label: 'Trabajos Aplicados',
                     icon: Icons.work_outline,
                     iconColor: Colors.blue.shade700,
                     backgroundColor: Colors.blue.shade50.withOpacity(0.5),
                     iconBackgroundColor: Colors.white,
+                    isMobile: isMobile,
                   ),
-                ),
-              ),
-              const SizedBox(width: kSpacing20),
-              FadeInUp(
-                duration: const Duration(milliseconds: 700),
-                child: Expanded(
-                  child: _buildSummaryCard(
+                  const SizedBox(height: kSpacing12),
+                  _buildSummaryCardItem(
                     count: '2',
                     label: 'Trabajos Favoritos',
                     icon: Icons.bookmark_border,
                     iconColor: Colors.orange.shade700,
                     backgroundColor: Colors.orange.shade50.withOpacity(0.5),
                     iconBackgroundColor: Colors.white,
+                    isMobile: isMobile,
                   ),
-                ),
-              ),
-              const SizedBox(width: kSpacing20),
-              FadeInRight(
-                duration: const Duration(milliseconds: 700),
-                child: Expanded(
-                  child: _buildSummaryCard(
+                  const SizedBox(height: kSpacing12),
+                  _buildSummaryCardItem(
                     count: '1',
                     label: 'Alertas de Trabajo',
                     icon: Icons.notifications_none_outlined,
                     iconColor: Colors.green.shade700,
                     backgroundColor: Colors.green.shade50.withOpacity(0.5),
                     iconBackgroundColor: Colors.white,
+                    isMobile: isMobile,
                   ),
-                ),
+                ],
+              )
+              : Row(
+                children: <Widget>[
+                  _buildSummaryCardItem(
+                    count: '1',
+                    label: 'Trabajos Aplicados',
+                    icon: Icons.work_outline,
+                    iconColor: Colors.blue.shade700,
+                    backgroundColor: Colors.blue.shade50.withOpacity(0.5),
+                    iconBackgroundColor: Colors.white,
+                    isMobile: isMobile,
+                  ),
+                  const SizedBox(width: kSpacing20),
+                  _buildSummaryCardItem(
+                    count: '2',
+                    label: 'Trabajos Favoritos',
+                    icon: Icons.bookmark_border,
+                    iconColor: Colors.orange.shade700,
+                    backgroundColor: Colors.orange.shade50.withOpacity(0.5),
+                    iconBackgroundColor: Colors.white,
+                    isMobile: isMobile,
+                  ),
+                  const SizedBox(width: kSpacing20),
+                  _buildSummaryCardItem(
+                    count: '1',
+                    label: 'Alertas de Trabajo',
+                    icon: Icons.notifications_none_outlined,
+                    iconColor: Colors.green.shade700,
+                    backgroundColor: Colors.green.shade50.withOpacity(0.5),
+                    iconBackgroundColor: Colors.white,
+                    isMobile: isMobile,
+                  ),
+                ],
               ),
-            ],
-          ),
           const SizedBox(height: kSpacing20 + kSpacing4),
           FadeInUp(
             delay: const Duration(milliseconds: 200),
@@ -484,17 +607,17 @@ class _CandidateDashboardScreenState
           FadeInUp(
             delay: const Duration(milliseconds: 300),
             duration: const Duration(milliseconds: 700),
-            child: const Text(
+            child: Text(
               'Trabajos Recomendados',
               style: TextStyle(
-                fontSize: 20,
+                fontSize: isMobile ? 18 : 20,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF222B45),
               ),
             ),
           ),
           const SizedBox(height: kSpacing12),
-          
+
           // FadeInUp(
           //   delay: const Duration(milliseconds: 400),
           //   duration: const Duration(milliseconds: 700),
@@ -528,21 +651,53 @@ class _CandidateDashboardScreenState
     );
   }
 
-  Widget _buildAppliedJobsContent(List<Map<String, dynamic>> applications) {
+  Widget _buildSummaryCardItem({
+    required String count,
+    required String label,
+    required IconData icon,
+    required Color iconColor,
+    required Color backgroundColor,
+    required Color iconBackgroundColor,
+    required bool isMobile,
+  }) {
+    Widget cardContent = _buildSummaryCard(
+      count: count,
+      label: label,
+      icon: icon,
+      iconColor: iconColor,
+      backgroundColor: backgroundColor,
+      iconBackgroundColor: iconBackgroundColor,
+      isMobile: isMobile,
+    );
+    return isMobile ? cardContent : Expanded(child: cardContent);
+  }
+
+  Widget _buildAppliedJobsContent(
+    List<Map<String, dynamic>> applications, {
+    required bool isMobile,
+  }) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(kPadding20 + kSpacing4),
+      padding: EdgeInsets.all(isMobile ? kPadding16 : kPadding20 + kSpacing4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           FadeInDown(
             duration: const Duration(milliseconds: 600),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Flex(
+              direction: isMobile ? Axis.vertical : Axis.horizontal,
+              mainAxisAlignment:
+                  isMobile
+                      ? MainAxisAlignment.start
+                      : MainAxisAlignment.spaceBetween,
+              crossAxisAlignment:
+                  isMobile
+                      ? CrossAxisAlignment.start
+                      : CrossAxisAlignment.center,
               children: [
-                const Text(
+                Text(
                   'Trabajos Aplicados',
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: isMobile ? 20 : 24,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF222B45),
                   ),
@@ -560,11 +715,17 @@ class _CandidateDashboardScreenState
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue.shade700,
                     foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(
+                      vertical: isMobile ? 8 : 12,
+                      horizontal: isMobile ? 12 : 16,
+                    ),
+                    textStyle: TextStyle(fontSize: isMobile ? 13 : 14),
                   ),
                 ),
               ],
             ),
           ),
+          if (isMobile) const SizedBox(height: kSpacing12),
           const SizedBox(height: kSpacing20),
           // "Especialista en Comunicaciones" job application with accepted status
           FadeInUp(
@@ -727,7 +888,7 @@ class _CandidateDashboardScreenState
           const SizedBox(height: kSpacing20 + kSpacing4),
           FadeInUp(
             duration: const Duration(milliseconds: 600),
-            child: _buildPaginationControls(),
+            child: _buildPaginationControls(isMobile: isMobile),
           ),
         ],
       ),
@@ -811,9 +972,10 @@ class _CandidateDashboardScreenState
     required Color iconColor,
     required Color backgroundColor,
     required Color iconBackgroundColor,
+    required bool isMobile,
   }) {
     return Container(
-      padding: const EdgeInsets.all(kPadding20),
+      padding: EdgeInsets.all(isMobile ? kPadding16 : kPadding20),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(kRadius12),
@@ -827,7 +989,7 @@ class _CandidateDashboardScreenState
               Text(
                 count,
                 style: TextStyle(
-                  fontSize: 28,
+                  fontSize: isMobile ? 24 : 28,
                   fontWeight: FontWeight.bold,
                   color: iconColor.withOpacity(0.9),
                 ),
@@ -835,17 +997,24 @@ class _CandidateDashboardScreenState
               const SizedBox(height: kSpacing4),
               Text(
                 label,
-                style: const TextStyle(fontSize: 15, color: Colors.black87),
+                style: TextStyle(
+                  fontSize: isMobile ? 14 : 15,
+                  color: Colors.black87,
+                ),
               ),
             ],
           ),
           Container(
-            padding: kPaddingAll12,
+            padding: EdgeInsets.all(isMobile ? kPadding8 : kPadding12),
             decoration: BoxDecoration(
               color: iconBackgroundColor,
               borderRadius: BorderRadius.circular(kRadius8),
             ),
-            child: Icon(icon, color: iconColor, size: kIconSize24),
+            child: Icon(
+              icon,
+              color: iconColor,
+              size: isMobile ? kIconSize20 : kIconSize24,
+            ),
           ),
         ],
       ),
@@ -853,7 +1022,10 @@ class _CandidateDashboardScreenState
   }
 
   // Pagination controls for applied jobs
-  Widget _buildPaginationControls() {
+  Widget _buildPaginationControls({required bool isMobile}) {
+    final double iconSize = isMobile ? kIconSize14 : kIconSize16;
+    final double buttonSize = isMobile ? 32 : 36;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
@@ -862,7 +1034,7 @@ class _CandidateDashboardScreenState
             Icons.arrow_back_ios_rounded,
             color:
                 _currentPage > 1 ? Colors.blue.shade700 : Colors.grey.shade400,
-            size: kIconSize16,
+            size: iconSize,
           ),
           onPressed:
               _currentPage > 1
@@ -883,7 +1055,7 @@ class _CandidateDashboardScreenState
                 foregroundColor:
                     i == _currentPage ? Colors.white : Colors.grey.shade700,
                 padding: EdgeInsets.zero,
-                minimumSize: const Size(36, 36),
+                minimumSize: Size(buttonSize, buttonSize),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(kRadius4),
                   side: BorderSide(
@@ -909,7 +1081,7 @@ class _CandidateDashboardScreenState
                 _currentPage < _totalPages
                     ? Colors.blue.shade700
                     : Colors.grey.shade400,
-            size: kIconSize16,
+            size: iconSize,
           ),
           onPressed:
               _currentPage < _totalPages

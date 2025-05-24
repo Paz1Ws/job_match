@@ -4,6 +4,7 @@ import 'package:job_match/config/constants/layer_constants.dart'; // Added
 import 'package:job_match/config/util/animations.dart';
 import 'package:job_match/core/data/auth_request.dart';
 import 'package:job_match/presentation/screens/auth/screens/login_screen.dart';
+import 'package:job_match/presentation/screens/homepage/screens/homepage_screen.dart';
 import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart'; // Added for isCandidateProvider
 import 'package:job_match/presentation/screens/profiles/user_profile.dart'; // Added
 import 'package:job_match/presentation/screens/profiles/company_profile_screen.dart'; // Added
@@ -14,145 +15,304 @@ import 'package:job_match/presentation/widgets/homepage/find_job/top_companies.d
 import 'package:animate_do/animate_do.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 
-class FindJobsScreen extends ConsumerWidget { // Changed to ConsumerWidget
+class FindJobsScreen extends ConsumerWidget {
   const FindJobsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) { // Added WidgetRef ref
-    return Scaffold(
-      body: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              height: 80,
-              width: double.infinity,
-              color: Colors.black,
-              child: _buildTopBar(context, ref), // Pass ref
-            ),
-            FadeInDown(
-              duration: const Duration(milliseconds: 500),
-              child: Container(
-                height: 220,
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/find_jobs_background.jpg'),
-                    fit: BoxFit.cover,
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Create a key to manage the scaffold state (needed for opening drawer)
+    final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final size = MediaQuery.sizeOf(context);
+        final isMobile = size.width < 700;
+
+        return Scaffold(
+          key: scaffoldKey,
+          // Add drawer for mobile view that contains the filter sidebar
+          drawer:
+              isMobile
+                  ? Drawer(
+                    width: size.width * 0.85,
+                    child: SafeArea(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'Filtros',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.close),
+                                    onPressed: () => Navigator.pop(context),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Divider(),
+                            Expanded(
+                              child: SingleChildScrollView(
+                                child: JobFilterSidebar(),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                  : null,
+          body: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  height: 80,
+                  width: double.infinity,
+                  color: Colors.black,
+                  child: _buildTopBar(context, ref),
+                ),
+                FadeInDown(
+                  duration: const Duration(milliseconds: 500),
+                  child: Container(
+                    height: isMobile ? 120 : 220,
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                      image: DecorationImage(
+                        image: AssetImage(
+                          'assets/images/find_jobs_background.jpg',
+                        ),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    child: Container(
+                      color: Colors.black.withOpacity(0.55),
+                      child: Center(
+                        child: FadeInDown(
+                          delay: const Duration(milliseconds: 200),
+                          duration: const Duration(milliseconds: 500),
+                          child:
+                              isMobile
+                                  ? Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Text(
+                                        'Un match ideal, para una ',
+                                        style: TextStyle(
+                                          fontSize: 24,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1.2,
+                                        ),
+                                      ),
+                                      AnimatedTextKit(
+                                        animatedTexts: [
+                                          TypewriterAnimatedText(
+                                            'persona',
+                                            speed: const Duration(
+                                              milliseconds: 100,
+                                            ),
+                                            textStyle: const TextStyle(
+                                              fontSize: 24,
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              letterSpacing: 1.2,
+                                            ),
+                                          ),
+                                          TypewriterAnimatedText(
+                                            'empresa',
+                                            speed: const Duration(
+                                              milliseconds: 100,
+                                            ),
+                                            textStyle: const TextStyle(
+                                              fontSize: 24,
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              letterSpacing: 1.2,
+                                            ),
+                                          ),
+                                        ],
+                                        totalRepeatCount: 100,
+                                        pause: const Duration(seconds: 2),
+                                        displayFullTextOnTap: true,
+                                      ),
+                                      const Text(
+                                        'especial',
+                                        style: TextStyle(
+                                          fontSize: 24,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1.2,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                  : Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Text(
+                                        'Un match ideal, para una ',
+                                        style: TextStyle(
+                                          fontSize: 44,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1.2,
+                                        ),
+                                      ),
+                                      AnimatedTextKit(
+                                        animatedTexts: [
+                                          TypewriterAnimatedText(
+                                            'persona',
+                                            speed: const Duration(
+                                              milliseconds: 100,
+                                            ),
+                                            textStyle: const TextStyle(
+                                              fontSize: 44,
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              letterSpacing: 1.2,
+                                            ),
+                                          ),
+                                          TypewriterAnimatedText(
+                                            'empresa',
+                                            speed: const Duration(
+                                              milliseconds: 100,
+                                            ),
+                                            textStyle: const TextStyle(
+                                              fontSize: 44,
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              letterSpacing: 1.2,
+                                            ),
+                                          ),
+                                        ],
+                                        totalRepeatCount: 100,
+                                        pause: const Duration(seconds: 2),
+                                        displayFullTextOnTap: true,
+                                      ),
+                                      const Text(
+                                        'especial',
+                                        style: TextStyle(
+                                          fontSize: 44,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1.2,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-                child: Container(
-                  color: Colors.black.withOpacity(0.55),
-                  child: Center(
-                    child: FadeInDown(
-                      delay: const Duration(milliseconds: 200),
-                      duration: const Duration(milliseconds: 500),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text(
-                            'Un match ideal, para una ',
-                            style: TextStyle(
-                              fontSize: 44,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.2,
+                const SizedBox(height: 20),
+
+                // Filtros y lista de trabajos
+                FadeInUp(
+                  duration: const Duration(milliseconds: 600),
+                  child:
+                      isMobile
+                          // En móvil, solo mostramos la lista de trabajos con botón de filtros arriba
+                          ? Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8.0,
                             ),
-                          ),
-                          AnimatedTextKit(
-                            animatedTexts: [
-                              TypewriterAnimatedText(
-                                'persona',
-                                speed: const Duration(milliseconds: 100),
-                                textStyle: const TextStyle(
-                                  fontSize: 44,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1.2,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Filtro arriba de la lista de trabajos en mobile
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4.0,
+                                    vertical: 8.0,
+                                  ),
+                                  child: ElevatedButton.icon(
+                                    onPressed:
+                                        () =>
+                                            scaffoldKey.currentState
+                                                ?.openDrawer(),
+                                    icon: const Icon(Icons.filter_list),
+                                    label: const Text('Filtrar resultados'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.blueAccent,
+                                      foregroundColor: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                FadeInRight(
+                                  duration: const Duration(milliseconds: 700),
+                                  child: SimpleJobCardListView(),
+                                ),
+                              ],
+                            ),
+                          )
+                          // En desktop, mantenemos el layout con filtro visible + lista
+                          : Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(
+                                flex: 2,
+                                fit: FlexFit.loose,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: FadeInLeft(
+                                    duration: const Duration(milliseconds: 700),
+                                    child: JobFilterSidebar(),
+                                  ),
                                 ),
                               ),
-                              TypewriterAnimatedText(
-                                'empresa',
-                                speed: const Duration(milliseconds: 100),
-                                textStyle: const TextStyle(
-                                  fontSize: 44,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1.2,
+                              Flexible(
+                                flex: 5,
+                                fit: FlexFit.loose,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: FadeInRight(
+                                    duration: const Duration(milliseconds: 700),
+                                    child: SimpleJobCardListView(),
+                                  ),
                                 ),
                               ),
                             ],
-                            totalRepeatCount: 100,
-                            pause: const Duration(seconds: 2),
-                            displayFullTextOnTap: true,
                           ),
-                          const Text(
-                            'especial',
-                            style: TextStyle(
-                              fontSize: 44,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
                 ),
-              ),
+                FadeInUp(
+                  duration: const Duration(milliseconds: 700),
+                  child: TopCompanies(),
+                ),
+                FadeInUpBig(
+                  duration: const Duration(milliseconds: 800),
+                  child: FooterFindJobs(),
+                ),
+              ],
             ),
-            const SizedBox(height: 20),
-            //* Find job list
-            FadeInUp(
-              duration: const Duration(milliseconds: 600),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: FadeInLeft(
-                        duration: const Duration(milliseconds: 700),
-                        child: JobFilterSidebar(),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 5,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: FadeInRight(
-                        duration: const Duration(milliseconds: 700),
-                        child: SimpleJobCardListView(),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            FadeInUp(
-              duration: const Duration(milliseconds: 700),
-              child: TopCompanies(),
-            ),
-            FadeInUpBig(
-              duration: const Duration(milliseconds: 800),
-              child: FooterFindJobs(),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
 
-Widget _buildTopBar(BuildContext context, WidgetRef ref) { // Added WidgetRef ref
+Widget _buildTopBar(BuildContext context, WidgetRef ref) {
   final candidate = ref.watch(candidateProfileProvider);
   final company = ref.watch(companyProfileProvider);
   final isCandidate = ref.watch(isCandidateProvider);
-
   final bool isLoggedIn = candidate != null || company != null;
+  final size = MediaQuery.sizeOf(context);
+  final isMobile = size.width < 700;
 
   return Align(
     alignment: Alignment.center,
@@ -162,29 +322,46 @@ Widget _buildTopBar(BuildContext context, WidgetRef ref) { // Added WidgetRef re
         children: [
           FadeInLeft(
             duration: const Duration(milliseconds: 600),
-            child: Image.asset(
-              'assets/images/job_match_transparent.png',
-              width: 80,
-              height: 80,
-              fit: BoxFit.cover,
-            ),
-          ),
-          const Spacer(),
-          const SizedBox(width: 100),
-          FadeInDown(
-            duration: const Duration(milliseconds: 600),
-            child: Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildTopBarButton('Inicio', selected: true),
-                  _buildTopBarButton('Empleos'),
-                  _buildTopBarButton('Sobre Nosotros'),
-                  _buildTopBarButton('Contáctanos'),
-                ],
+            child: GestureDetector(
+              onTap: () {
+                // Add safety check before navigation
+                if (!context.mounted) return;
+                
+                // Use a slight delay to ensure ink effects complete
+                Future.microtask(() {
+                  if (context.mounted) {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      FadeThroughPageRoute(page: const HomepageScreen()),
+                      (route) => false,
+                    );
+                  }
+                });
+              },
+              child: Image.asset(
+                'assets/images/job_match_transparent.png',
+                width: kIconSize48,
+                height: kIconSize48,
+                fit: BoxFit.cover,
               ),
             ),
           ),
+          const Spacer(),
+          if (!isMobile)
+            FadeInDown(
+              duration: const Duration(milliseconds: 600),
+              child: Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildTopBarButton('Inicio', selected: true),
+                    _buildTopBarButton('Empleos'),
+                    _buildTopBarButton('Sobre Nosotros'),
+                    _buildTopBarButton('Contáctanos'),
+                  ],
+                ),
+              ),
+            ),
+
           const Spacer(),
           FadeInRight(
             duration: const Duration(milliseconds: 600),
@@ -192,44 +369,74 @@ Widget _buildTopBar(BuildContext context, WidgetRef ref) { // Added WidgetRef re
               child: isLoggedIn
                   ? InkWell(
                       onTap: () {
-                        if (isCandidate && candidate != null) {
-                          Navigator.of(context).push(
-                            SlideUpFadePageRoute(page: const UserProfile()),
-                          );
-                        } else if (!isCandidate && company != null) {
-                          Navigator.of(context).push(
-                            SlideUpFadePageRoute(
-                                page: const CompanyProfileScreen()),
-                          );
-                        } else {
-                          // Fallback if profile is somehow null despite isLoggedIn being true
-                          Navigator.of(context).push(
-                              SlideUpFadePageRoute(page: const LoginScreen()));
-                        }
+                        // Add safety check before navigation
+                        if (!context.mounted) return;
+                        
+                        // Use Future.microtask to ensure ink animations complete first
+                        Future.microtask(() {
+                          if (!context.mounted) return;
+                          
+                          if (isCandidate && candidate != null) {
+                            Navigator.of(context).push(
+                              SlideUpFadePageRoute(page: const UserProfile()),
+                            );
+                          } else if (!isCandidate && company != null) {
+                            Navigator.of(context).push(
+                              SlideUpFadePageRoute(
+                                page: const CompanyProfileScreen(),
+                              ),
+                            );
+                          } else {
+                            Navigator.of(context).push(
+                              SlideUpFadePageRoute(page: const LoginScreen()),
+                            );
+                          }
+                        });
                       },
+                      // Add key to help with unique identification
+                      key: const ValueKey('profile-avatar-ink'),
                       child: CircleAvatar(
                         backgroundColor: Colors.blueGrey,
-                        radius: kRadius20 + kSpacing4 / 2, // Adjusted radius for visibility
-                        backgroundImage: !isCandidate && company?.logo != null
-                            ? NetworkImage(company!.logo!)
-                            : null,
-                        child: !isCandidate && company?.logo != null
-                            ? null
-                            : const Icon(Icons.person, color: Colors.white),
+                        radius:
+                            kRadius20 +
+                            kSpacing4 / 2, // Adjusted radius for visibility
+                        backgroundImage:
+                            !isCandidate && company?.logo != null
+                                ? NetworkImage(company!.logo!)
+                                : null,
+                        child:
+                            !isCandidate && company?.logo != null
+                                ? null
+                                : const Icon(
+                                  Icons.person,
+                                  color: Colors.white,
+                                ),
                       ),
                     )
-                  : Row(
+                  : Wrap(
+                      spacing: 8,
                       children: [
-                        TextButton(
-                          onPressed: () => Navigator.of(
-                            context,
-                          ).push(SlideUpFadePageRoute(
-                              page: const LoginScreen())),
-                          child: const Text(
-                            'Iniciar Sesión',
-                            style: TextStyle(color: Colors.white),
+                        if (!isMobile)
+                          TextButton(
+                            onPressed: () {
+                              // Add safety check before navigation
+                              if (!context.mounted) return;
+                              
+                              Future.microtask(() {
+                                if (context.mounted) {
+                                  Navigator.of(context).push(
+                                    SlideUpFadePageRoute(
+                                      page: const LoginScreen(),
+                                    ),
+                                  );
+                                }
+                              });
+                            },
+                            child: const Text(
+                              'Iniciar Sesión',
+                              style: TextStyle(color: Colors.white),
+                            ),
                           ),
-                        ),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             shape: RoundedRectangleBorder(
@@ -240,10 +447,20 @@ Widget _buildTopBar(BuildContext context, WidgetRef ref) { // Added WidgetRef re
                               vertical: 0,
                             ),
                           ),
-                          onPressed: () => Navigator.of(
-                            context,
-                          ).push(SlideUpFadePageRoute(
-                              page: const LoginScreen())),
+                          onPressed: () {
+                            // Add safety check before navigation
+                            if (!context.mounted) return;
+                            
+                            Future.microtask(() {
+                              if (context.mounted) {
+                                Navigator.of(context).push(
+                                  SlideUpFadePageRoute(
+                                    page: const LoginScreen(),
+                                  ),
+                                );
+                              }
+                            });
+                          },
                           child: const Text('Registrarse'),
                         ),
                       ],

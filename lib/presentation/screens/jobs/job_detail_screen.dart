@@ -427,7 +427,6 @@ class JobDetailScreen extends ConsumerWidget {
                                   matchPercentage:
                                       generateRandomMatchPercentage(), // Updated
                                 ),
-                                showBackButton: false,
                               ),
                             ),
                           );

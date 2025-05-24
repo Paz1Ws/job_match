@@ -33,6 +33,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _termsAgreed = false;
   final bool _passwordVisible = false;
   bool _showLoginForm = true;
+  bool _isLoading = false; // Added for loading state
 
   // Text Editing Controllers
   late TextEditingController _emailController;
@@ -171,61 +172,68 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _showLoginForm ? 'Iniciar Sesión' : 'Registrarse',
-                    style: const TextStyle(
-                      fontSize: 28.0,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8.0),
-                  Row(
+        LayoutBuilder(
+          builder: (context, constraints) {
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _showLoginForm
-                            ? "¿No tienes cuenta?"
-                            : "¿Ya tienes cuenta?",
-                      ),
-                      const SizedBox(width: 4.0),
-                      GestureDetector(
-                        onTap: _toggleForm,
-                        child: Text(
-                          _showLoginForm ? 'Regístrate' : 'Iniciar Sesión',
-                          style: const TextStyle(color: Colors.blue),
+                        _showLoginForm ? 'Iniciar Sesión' : 'Registrarse',
+                        style: const TextStyle(
+                          fontSize: 28.0,
+                          fontWeight: FontWeight.bold,
                         ),
+                      ),
+                      const SizedBox(height: 8.0),
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              _showLoginForm
+                                  ? "¿No tienes cuenta?"
+                                  : "¿Ya tienes cuenta?",
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 4.0),
+                          GestureDetector(
+                            onTap: _toggleForm,
+                            child: Text(
+                              _showLoginForm ? 'Regístrate' : 'Iniciar Sesión',
+                              style: const TextStyle(color: Colors.blue),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 24.0),
-            SizedBox(
-              width: 180,
-              child: DropdownButtonFormField<String>(
-                decoration: defaultIconDecoration('Tipo de usuario'),
-                value: _selectedUserType,
-                items:
-                    ['Candidato', 'Empresa'].map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value, style: defaultTextStyle),
-                      );
-                    }).toList(),
-                onChanged: (String? newValue) {
-                  _prefillForm(newValue);
-                },
-              ),
-            ),
-          ],
+                ),
+                const SizedBox(width: 24.0),
+                // Fix: Wrap DropdownButtonFormField in Flexible to avoid overflow
+                Flexible(
+                  child: DropdownButtonFormField<String>(
+                    decoration: defaultIconDecoration('Tipo de usuario'),
+                    value: _selectedUserType,
+                    items:
+                        ['Candidato', 'Empresa'].map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value, style: defaultTextStyle),
+                          );
+                        }).toList(),
+                    onChanged: (String? newValue) {
+                      _prefillForm(newValue);
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ],
     );
@@ -577,186 +585,147 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isWide = MediaQuery.sizeOf(context).width > 900;
-    final isMedium = MediaQuery.sizeOf(context).width > 600;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final size = MediaQuery.sizeOf(context);
+        final width = size.width;
+        final isMedium = width > 600;
+        final isWide = width > 900;
 
-    final jobsCount = ref.watch(jobsCountProvider);
-    final recentJobsCount = ref.watch(recentJobsCountProvider);
-    final candidatesCount = ref.watch(candidatesCountProvider);
-    final companiesCount = ref.watch(companiesCountProvider);
+        // Responsive paddings
+        final horizontalPadding = isWide ? 64.0 : 24.0;
+        final verticalPadding = isWide ? 64.0 : 24.0;
 
-    return Scaffold(
-      body: SafeArea(
-        child: Row(
-          children: [
-            Expanded(
-              flex: 1,
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(
-                  horizontal: isWide ? 64.0 : 24.0,
-                  vertical: isWide ? 64.0 : 24.0,
-                ),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Botón atrás
-                      Align(
-                        alignment: Alignment.topLeft,
-                        child: IconButton(
-                          icon: const Icon(
-                            Icons.arrow_back,
-                            color: Colors.black87,
-                          ),
-                          onPressed: () => Navigator.of(context).pop(),
-                          tooltip: 'Atrás',
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      _loginHeader(),
-                      const SizedBox(height: 30.0),
-
-                      // Conditional form content based on login or signup
-                      if (_showLoginForm) ...[
-                        TextFormField(
-                          controller: _emailController,
-                          decoration: defaultIconDecoration(
-                            'Correo electrónico',
-                          ),
-                          style: defaultTextStyle,
-                        ),
-                        const SizedBox(height: 16.0),
-                        TextFormField(
-                          controller: _passwordController,
-                          decoration: defaultIconDecoration('Contraseña'),
-                          obscureText: !_passwordVisible,
-                          style: defaultTextStyle,
-                        ),
-                        const SizedBox(height: 16.0),
-                        Row(
-                          children: [
-                            Checkbox(
-                              value: _termsAgreed,
-                              onChanged: (bool? value) {
-                                setState(() {
-                                  _termsAgreed = value!;
-                                });
-                              },
-                            ),
-                            const Text('He leído y acepto los '),
-                            GestureDetector(
-                              onTap: () {},
-                              child: const Text(
-                                'Términos de Servicio',
-                                style: TextStyle(color: Colors.blue),
+        return Scaffold(
+          body: SafeArea(
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 1,
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: horizontalPadding,
+                      vertical: verticalPadding,
+                    ),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Botón atrás
+                          Align(
+                            alignment: Alignment.topLeft,
+                            child: IconButton(
+                              icon: const Icon(
+                                Icons.arrow_back,
+                                color: Colors.black87,
                               ),
+                              onPressed: () => Navigator.of(context).pop(),
+                              tooltip: 'Atrás',
                             ),
+                          ),
+                          const SizedBox(height: 16),
+                          _loginHeader(),
+                          const SizedBox(height: 30.0),
+
+                          // Conditional form content based on login or signup
+                          if (_showLoginForm) ...[
+                            TextFormField(
+                              controller: _emailController,
+                              decoration: defaultIconDecoration(
+                                'Correo electrónico',
+                              ),
+                              style: defaultTextStyle,
+                            ),
+                            const SizedBox(height: 16.0),
+                            TextFormField(
+                              controller: _passwordController,
+                              decoration: defaultIconDecoration('Contraseña'),
+                              obscureText: !_passwordVisible,
+                              style: defaultTextStyle,
+                            ),
+                            const SizedBox(height: 16.0),
+                            Row(
+                              children: [
+                                Checkbox(
+                                  value: _termsAgreed,
+                                  onChanged: (bool? value) {
+                                    setState(() {
+                                      _termsAgreed = value!;
+                                    });
+                                  },
+                                ),
+                                const Text('He leído y acepto los '),
+                                GestureDetector(
+                                  onTap: () {},
+                                  child: const Text(
+                                    'Términos de Servicio',
+                                    style: TextStyle(color: Colors.blue),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 24.0),
+                          ] else if (_selectedUserType == 'Candidato') ...[
+                            _buildCandidateSignupForm(),
+                            const SizedBox(height: 24.0),
+                          ] else ...[
+                            _buildCompanySignupForm(),
+                            const SizedBox(height: 24.0),
                           ],
-                        ),
-                        const SizedBox(height: 24.0),
-                      ] else if (_selectedUserType == 'Candidato') ...[
-                        _buildCandidateSignupForm(),
-                        const SizedBox(height: 24.0),
-                      ] else ...[
-                        _buildCompanySignupForm(),
-                        const SizedBox(height: 24.0),
-                      ],
 
-                      // Single main button for login or signup
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blueAccent,
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(5),
+                          // Single main button for login or signup
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blueAccent,
+                                shape: const RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(5),
+                                  ),
+                                ),
+                                // Disable button when loading
+                                disabledBackgroundColor: Colors.blueAccent.withOpacity(0.7),
                               ),
-                            ),
-                          ),
-                          onPressed: () async {
-                            if (_formKey.currentState!.validate()) {
-                              _setUserType(_selectedUserType == 'Candidato');
-                              if (_showLoginForm) {
-                                // LOGIN
-                                try {
-                                  await signOut();
-                                  final user = await login(
-                                    _emailController.text,
-                                    _passwordController.text,
-                                  );
-                                  await fetchUserProfile(ref);
-                                  final candidate = ref.read(
-                                    candidateProfileProvider,
-                                  );
-                                  final company = ref.read(
-                                    companyProfileProvider,
-                                  );
-                                  if (_selectedUserType == 'Candidato' &&
-                                      candidate != null) {
-                                    Navigator.of(context).pushReplacement(
-                                      FadeThroughPageRoute(
-                                        page: const FindJobsScreen(),
-                                      ),
-                                    );
-                                  } else if (_selectedUserType == 'Empresa' &&
-                                      company != null) {
-                                    Navigator.of(context).pushReplacement(
-                                      FadeThroughPageRoute(
-                                        page: const EmployerDashboardScreen(),
-                                      ),
-                                    );
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'No se encontró perfil asociado a este usuario.',
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Error: $e')),
-                                  );
-                                }
-                              } else {
-                                if (_selectedUserType == 'Candidato') {
-                                  // REGISTRO CANDIDATO
+                              onPressed: _isLoading ? null : () async {
+                                if (_formKey.currentState!.validate()) {
+                                  setState(() {
+                                    _isLoading = true; // Start loading
+                                  });
                                   try {
-                                    await signOut();
-                                    final success = await registerCandidate(
-                                      email: _emailController.text,
-                                      password: _passwordController.text,
-                                      name: _fullNameController.text,
-                                      phone: _phoneController.text,
-                                      location: _locationController.text,
-                                      experienceLevel:
-                                          _experienceController.text,
-                                      experience: _experienceResume.text,
-                                      skills:
-                                          _skillsController.text
-                                              .split(',')
-                                              .map((e) => e.trim())
-                                              .where((e) => e.isNotEmpty)
-                                              .toList(),
-                                      bio: _bioController.text,
-                                      resumeUrl:
-                                          _resumeUrlController.text.isNotEmpty
-                                              ? _resumeUrlController.text
-                                              : null,
-                                      education: _educationController.text,
+                                    _setUserType(
+                                      _selectedUserType == 'Candidato',
                                     );
-                                    if (success) {
+                                    if (_showLoginForm) {
+                                      // LOGIN
+                                      await signOut();
+                                      await login(
+                                        _emailController.text,
+                                        _passwordController.text,
+                                      );
                                       await fetchUserProfile(ref);
                                       final candidate = ref.read(
                                         candidateProfileProvider,
                                       );
-                                      if (candidate != null) {
+                                      final company = ref.read(
+                                        companyProfileProvider,
+                                      );
+                                      if (!context.mounted) return;
+                                      if (_selectedUserType == 'Candidato' &&
+                                          candidate != null) {
                                         Navigator.of(context).pushReplacement(
                                           FadeThroughPageRoute(
                                             page: const FindJobsScreen(),
+                                          ),
+                                        );
+                                      } else if (_selectedUserType ==
+                                              'Empresa' &&
+                                          company != null) {
+                                        Navigator.of(context).pushReplacement(
+                                          FadeThroughPageRoute(
+                                            page:
+                                                const EmployerDashboardScreen(),
                                           ),
                                         );
                                       } else {
@@ -765,298 +734,414 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         ).showSnackBar(
                                           const SnackBar(
                                             content: Text(
-                                              'No se encontró perfil de candidato tras el registro.',
+                                              'No se encontró perfil asociado a este usuario.',
                                             ),
                                           ),
                                         );
                                       }
                                     } else {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            'Error al registrar el candidato',
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                  } catch (e) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Error: $e')),
-                                    );
-                                  }
-                                } else {
-                                  // REGISTRO EMPRESA
-                                  try {
-                                    String? logoUrl;
+                                      if (_selectedUserType == 'Candidato') {
+                                        // REGISTRO CANDIDATO
+                                        await signOut();
+                                        final success = await registerCandidate(
+                                          email: _emailController.text,
+                                          password: _passwordController.text,
+                                          name: _fullNameController.text,
+                                          phone: _phoneController.text,
+                                          location: _locationController.text,
+                                          experienceLevel:
+                                              _experienceController.text,
+                                          experience: _experienceResume.text,
+                                          skills:
+                                              _skillsController.text
+                                                  .split(',')
+                                                  .map((e) => e.trim())
+                                                  .where((e) => e.isNotEmpty)
+                                                  .toList(),
+                                          bio: _bioController.text,
+                                          resumeUrl:
+                                              _resumeUrlController
+                                                      .text
+                                                      .isNotEmpty
+                                                  ? _resumeUrlController.text
+                                                  : null,
+                                          education: _educationController.text,
+                                        );
+                                        if (!context.mounted) return;
+                                        if (success) {
+                                          await fetchUserProfile(ref);
+                                          final candidate = ref.read(
+                                            candidateProfileProvider,
+                                          );
+                                          if (candidate != null) {
+                                            Navigator.of(
+                                              context,
+                                            ).pushReplacement(
+                                              FadeThroughPageRoute(
+                                                page: const FindJobsScreen(),
+                                              ),
+                                            );
+                                          } else {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                  'No se encontró perfil de candidato tras el registro.',
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                        } else {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'Error al registrar el candidato',
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      } else {
+                                        // REGISTRO EMPRESA
+                                        String? logoUrl;
+                                        FilePickerResult? result;
 
-                                    // Upload logo first if selected
-                                    if (_selectedLogoPath != null) {
-                                      final result = await FilePicker.platform
-                                          .pickFiles(
+                                        if (_selectedLogoPath != null) {
+                                          // Attempt to get the previously picked file's bytes
+                                          // This assumes _pickCompanyLogo stored the result or path
+                                          // For simplicity, we re-pick if path is just a name.
+                                          // A more robust solution would cache the FileBytes.
+                                          result = await FilePicker.platform.pickFiles(
                                             type: FileType.image,
                                             allowMultiple: false,
                                             withData: true,
                                           );
 
-                                      if (result != null &&
-                                          result.files.single.bytes != null) {
-                                        final uploadLogo = ref.read(
-                                          uploadCompanyLogoProvider,
+                                          if (result != null && result.files.single.bytes != null) {
+                                            // Show dialog while uploading logo
+                                            if (context.mounted) {
+                                              showDialog(
+                                                context: context,
+                                                barrierDismissible: false,
+                                                builder: (_) => const Center(
+                                                  child: CircularProgressIndicator(),
+                                                ),
+                                              );
+                                            }
+                                            final uploadLogo = ref.read(uploadCompanyLogoProvider);
+                                            try {
+                                              logoUrl = await uploadLogo(
+                                                result.files.single.bytes!,
+                                                result.files.single.name,
+                                              );
+                                            } catch (e) {
+                                              if (context.mounted) Navigator.of(context, rootNavigator: true).pop(); // Close dialog
+                                              throw Exception('Error al subir logo: $e');
+                                            }
+                                            if (context.mounted) Navigator.of(context, rootNavigator: true).pop(); // Close dialog
+                                          }
+                                        }
+
+                                        await registerCompany(
+                                          email: _emailController.text,
+                                          password: _passwordController.text,
+                                          companyName: _companyNameController.text,
+                                          phone: _companyPhoneController.text,
+                                          address: _companyLocationController.text,
+                                          industry: _companyIndustry,
+                                          description: _companyDescriptionController.text,
+                                          website: null,
+                                          logo: logoUrl,
                                         );
-                                        logoUrl = await uploadLogo(
-                                          result.files.single.bytes!,
-                                          result.files.single.name,
-                                        );
+
+                                        if (!context.mounted) return;
+                                        await fetchUserProfile(ref);
+                                        final company = ref.read(companyProfileProvider);
+
+                                        if (company != null) {
+                                          Navigator.of(context).pushReplacement(
+                                            FadeThroughPageRoute(
+                                              page: const EmployerDashboardScreen(),
+                                            ),
+                                          );
+                                        } else {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'No se encontró perfil de empresa tras el registro.',
+                                              ),
+                                            ),
+                                          );
+                                        }
                                       }
                                     }
-
-                                    await registerCompany(
-                                      email: _emailController.text,
-                                      password: _passwordController.text,
-                                      companyName: _companyNameController.text,
-                                      phone: _companyPhoneController.text,
-                                      address: _companyLocationController.text,
-                                      industry: _companyIndustry,
-                                      description:
-                                          _companyDescriptionController.text,
-                                      website: null,
-                                      logo:
-                                          logoUrl, // Pass the uploaded logo URL
-                                    );
-                                    await fetchUserProfile(ref);
-                                    final company = ref.read(
-                                      companyProfileProvider,
-                                    );
-                                    if (company != null) {
-                                      Navigator.of(context).pushReplacement(
-                                        FadeThroughPageRoute(
-                                          page: const EmployerDashboardScreen(),
-                                        ),
-                                      );
-                                    } else {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            'No se encontró perfil de empresa tras el registro.',
-                                          ),
-                                        ),
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('Error: $e')),
                                       );
                                     }
-                                  } catch (e) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Error: $e')),
-                                    );
+                                  } finally {
+                                    if (context.mounted) {
+                                      setState(() {
+                                        _isLoading = false; // Stop loading
+                                      });
+                                    }
                                   }
+                                } else {
+                                  // Form is not valid, or user type not selected
+                                  // (The user type dropdown has its own validation implicitly)
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Por favor completa todos los campos requeridos.',
+                                      ),
+                                    ),
+                                  );
                                 }
-                              }
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Por favor selecciona un tipo de usuario',
-                                  ),
-                                ),
-                              );
-                            }
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 20),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  _showLoginForm
-                                      ? 'Iniciar Sesión'
-                                      : 'Registrarse',
-                                ),
-                                const SizedBox(width: 8.0),
-                                Icon(
-                                  _showLoginForm
-                                      ? Icons.login
-                                      : Icons.arrow_forward,
-                                  color: Colors.white,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24.0),
-                      _signUpOptions(),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            // Imagen (derecha)
-            if (isMedium)
-              Expanded(
-                flex: 1,
-                child: SizedBox(
-                  height: double.infinity,
-                  child: Stack(
-                    children: [
-                      ClipPath(
-                        clipper: LeftCutTrapezoidClipper(),
-                        child: Image.asset(
-                          'assets/images/login_background.png',
-
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(60.0),
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              const SizedBox(height: 16),
-
-                              Padding(
+                              },
+                              child: Padding(
                                 padding: const EdgeInsets.symmetric(
-                                  vertical: 8.0,
+                                  vertical: 20,
                                 ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2.0,
+                                        ),
+                                      )
+                                    : Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    AnimatedTextKit(
-                                      animatedTexts: [
-                                        TyperAnimatedText(
-                                          companiesCount.when(
-                                            data: (data) => '+$data empresas',
-                                            error:
-                                                (error, stackTrace) =>
-                                                    '0 empresas',
-                                            loading: () => '-',
-                                          ),
-                                          textStyle: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 48.0,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                          textAlign: TextAlign.start,
-                                          speed: const Duration(
-                                            milliseconds: 100,
-                                          ),
-                                        ),
-                                      ],
-                                      totalRepeatCount: 1,
-                                      displayFullTextOnTap: true,
-                                      stopPauseOnTap: true,
-                                    ),
-                                    AnimatedTextKit(
-                                      animatedTexts: [
-                                        TyperAnimatedText(
-                                          candidatesCount.when(
-                                            data: (data) => '+$data candidatos',
-                                            error:
-                                                (error, stackTrace) =>
-                                                    '0 candidatos',
-                                            loading: () => '-',
-                                          ),
-                                          textStyle: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 48.0,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                          textAlign: TextAlign.start,
-                                          speed: const Duration(
-                                            milliseconds: 100,
-                                          ),
-                                        ),
-                                      ],
-                                      totalRepeatCount: 1,
-                                      displayFullTextOnTap: true,
-                                      stopPauseOnTap: true,
-                                    ),
-
                                     Text(
-                                      'Esperando el match perfecto.',
-                                      textAlign: TextAlign.start,
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 48.0,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                      _showLoginForm
+                                          ? 'Iniciar Sesión'
+                                          : 'Registrarse',
+                                    ),
+                                    const SizedBox(width: 8.0),
+                                    Icon(
+                                      _showLoginForm
+                                          ? Icons.login
+                                          : Icons.arrow_forward,
+                                      color: Colors.white,
                                     ),
                                   ],
                                 ),
                               ),
-
-                              const SizedBox(height: 60),
-
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  spacing: 20,
-                                  children: [
-                                    InfoCard(
-                                      title: jobsCount.when(
-                                        data: (data) => data.toString(),
-                                        error: (error, stackTrace) => '0',
-                                        loading: () => '-',
-                                      ),
-                                      subtitle: 'Empleos Activos',
-                                      icon: const Icon(
-                                        Icons.work_outline,
-                                        color: Colors.white,
-                                        size: 42,
-                                      ),
-                                    ),
-                                    Spacer(),
-
-                                    InfoCard(
-                                      title: companiesCount.when(
-                                        data: (data) => data.toString(),
-                                        error: (error, stackTrace) => '0',
-                                        loading: () => '-',
-                                      ),
-                                      subtitle: 'Empresas',
-                                      icon: const Icon(
-                                        Icons.location_city,
-                                        color: Colors.white,
-                                        size: 42,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Spacer(),
-
-                                    InfoCard(
-                                      title: recentJobsCount.when(
-                                        data: (data) => data.toString(),
-                                        error: (error, stackTrace) => '0',
-                                        loading: () => '-',
-                                      ),
-                                      subtitle: 'Nuevos Empleos',
-                                      icon: const Icon(
-                                        Icons.work_outline,
-                                        color: Colors.white,
-                                        size: 42,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 24.0),
+                          _signUpOptions(),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-          ],
-        ),
-      ),
+                // Imagen (derecha)
+                if (isMedium)
+                  Expanded(
+                    flex: 1,
+                    child: SizedBox(
+                      height: double.infinity,
+                      child: Stack(
+                        children: [
+                          ClipPath(
+                            clipper: LeftCutTrapezoidClipper(),
+                            child: Image.asset(
+                              'assets/images/login_background.png',
+
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.all(isWide ? 60.0 : 24.0),
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  const SizedBox(height: 16),
+
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8.0,
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        AnimatedTextKit(
+                                          animatedTexts: [
+                                            TyperAnimatedText(
+                                              ref
+                                                  .watch(companiesCountProvider)
+                                                  .when(
+                                                    data:
+                                                        (data) =>
+                                                            '+$data empresas',
+                                                    error:
+                                                        (error, stackTrace) =>
+                                                            '0 empresas',
+                                                    loading: () => '-',
+                                                  ),
+                                              textStyle: TextStyle(
+                                                color: Colors.white,
+                                                fontSize:
+                                                    isWide
+                                                        ? 48.0
+                                                        : (isMedium
+                                                            ? 32.0
+                                                            : 22.0),
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              textAlign: TextAlign.start,
+                                              speed: const Duration(
+                                                milliseconds: 100,
+                                              ),
+                                            ),
+                                          ],
+                                          totalRepeatCount: 1,
+                                          displayFullTextOnTap: true,
+                                          stopPauseOnTap: true,
+                                        ),
+                                        AnimatedTextKit(
+                                          animatedTexts: [
+                                            TyperAnimatedText(
+                                              ref
+                                                  .watch(
+                                                    candidatesCountProvider,
+                                                  )
+                                                  .when(
+                                                    data:
+                                                        (data) =>
+                                                            '+$data candidatos',
+                                                    error:
+                                                        (error, stackTrace) =>
+                                                            '0 candidatos',
+                                                    loading: () => '-',
+                                                  ),
+                                              textStyle: TextStyle(
+                                                color: Colors.white,
+                                                fontSize:
+                                                    isWide
+                                                        ? 48.0
+                                                        : (isMedium
+                                                            ? 32.0
+                                                            : 22.0),
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              textAlign: TextAlign.start,
+                                              speed: const Duration(
+                                                milliseconds: 100,
+                                              ),
+                                            ),
+                                          ],
+                                          totalRepeatCount: 1,
+                                          displayFullTextOnTap: true,
+                                          stopPauseOnTap: true,
+                                        ),
+
+                                        Text(
+                                          'Esperando el match perfecto.',
+                                          textAlign: TextAlign.start,
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize:
+                                                isWide
+                                                    ? 48.0
+                                                    : (isMedium ? 32.0 : 22.0),
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  SizedBox(height: isWide ? 60 : 24),
+
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        InfoCard(
+                                          title: ref
+                                              .watch(jobsCountProvider)
+                                              .when(
+                                                data: (data) => data.toString(),
+                                                error:
+                                                    (error, stackTrace) => '0',
+                                                loading: () => '-',
+                                              ),
+                                          subtitle: 'Empleos Activos',
+                                          icon: Icon(
+                                            Icons.work_outline,
+                                            color: Colors.white,
+                                            size: isWide ? 42 : 32,
+                                          ),
+                                        ),
+                                        const Spacer(),
+                                        InfoCard(
+                                          title: ref
+                                              .watch(companiesCountProvider)
+                                              .when(
+                                                data: (data) => data.toString(),
+                                                error:
+                                                    (error, stackTrace) => '0',
+                                                loading: () => '-',
+                                              ),
+                                          subtitle: 'Empresas',
+                                          icon: Icon(
+                                            Icons.location_city,
+                                            color: Colors.white,
+                                            size: isWide ? 42 : 32,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        const Spacer(),
+                                        InfoCard(
+                                          title: ref
+                                              .watch(recentJobsCountProvider)
+                                              .when(
+                                                data: (data) => data.toString(),
+                                                error:
+                                                    (error, stackTrace) => '0',
+                                                loading: () => '-',
+                                              ),
+                                          subtitle: 'Nuevos Empleos',
+                                          icon: Icon(
+                                            Icons.work_outline,
+                                            color: Colors.white,
+                                            size: isWide ? 42 : 32,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -1073,6 +1158,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
       return;
     }
+
+    setState(() {
+      _isLoading = true; // Start loading for CV upload
+    });
 
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -1113,20 +1202,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ref.read(isCandidateProvider.notifier).state = true;
 
         // Navega al perfil
-        Navigator.of(
-          context,
-        ).push(FadeThroughPageRoute(page: const UserProfile()));
+        if (mounted) {
+          Navigator.of(
+            context,
+          ).push(FadeThroughPageRoute(page: const UserProfile()));
+        }
       } catch (e) {
         // Cierra el diálogo si ocurre error
         if (mounted) Navigator.of(context, rootNavigator: true).pop();
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error al procesar el CV: $e')));
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false; // Stop loading
+          });
+        }
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No se seleccionó ningún CV')),
       );
+      if (mounted) {
+        setState(() {
+          _isLoading = false; // Stop loading if no CV selected
+        });
+      }
     }
   }
 
@@ -1190,10 +1292,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               // Only enable CV upload when:
               // 1. In login mode (not signup mode)
               // 2. User type is Candidate
-              onPressed:
-                  (_selectedUserType == 'Empresa' || !_showLoginForm)
-                      ? null
-                      : _showCVAnimationAndNavigate,
+              // 3. Not currently loading
+              onPressed: _isLoading || (_selectedUserType == 'Empresa' || !_showLoginForm)
+                  ? null
+                  : _showCVAnimationAndNavigate,
               // Note: We maintain the disabled logic for company user type
             ),
           ],
@@ -1425,7 +1527,6 @@ class _TestimonialCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 3,
-      // margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Container(
         width: width,
@@ -1442,35 +1543,60 @@ class _TestimonialCard extends StatelessWidget {
                 ),
               ),
             ),
-            // Spacer(),
             Expanded(
-              // fit: BoxFit.fill,
-              // clipBehavior: Clip.none,
               child: Text(
                 data.text,
-                overflow: TextOverflow.visible,
+                overflow: TextOverflow.ellipsis,
                 maxLines: 5,
                 style: TextStyle(color: const Color(0xFF5F6C7B)),
               ),
             ),
-            // Spacer(),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Row(
-                spacing: kSpacing20,
-                children: [
-                  Image.asset(data.logo, height: logoSize),
-                  Spacer(),
-                  Text(
-                    data.name,
-                    style: TextStyle(
-                      decoration: TextDecoration.underline,
-                      fontWeight: FontWeight.bold,
-                      fontSize: nameFontSize,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  // Si el ancho es pequeño, apila logo y nombre
+                  if (constraints.maxWidth < 180) {
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Image.asset(data.logo, height: logoSize),
+                        Spacer(),
+
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            data.name,
+                            style: TextStyle(
+                              decoration: TextDecoration.underline,
+                              fontWeight: FontWeight.bold,
+                              fontSize: nameFontSize,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+                  // Si hay espacio, muestra en fila
+                  return Row(
+                    children: [
+                      Image.asset(data.logo, height: logoSize),
+                      Flexible(
+                        child: Text(
+                          data.name,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            decoration: TextDecoration.underline,
+                            fontWeight: FontWeight.bold,
+                            fontSize: nameFontSize,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ],

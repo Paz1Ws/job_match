@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:job_match/core/data/supabase_http_requests.dart';
-import 'package:job_match/presentation/screens/job_detail_screen.dart';
 import 'package:job_match/presentation/widgets/homepage/find_job/simple_job_card.dart';
 import 'package:animate_do/animate_do.dart';
 
