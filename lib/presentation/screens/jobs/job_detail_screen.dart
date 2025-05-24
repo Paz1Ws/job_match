@@ -559,7 +559,7 @@ class JobDetailScreen extends ConsumerWidget {
   void _showApplyDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => JobApplyDialog(jobTitle: job.title),
+      builder: (context) => JobApplyDialog(jobTitle: job.title, jobId: job.id),
     );
   }
 }

@@ -577,6 +577,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final isWide = MediaQuery.sizeOf(context).width > 900;
     final isMedium = MediaQuery.sizeOf(context).width > 600;
 
+    final jobsCount = ref.watch(jobsCountProvider);
+    final recentJobsCount = ref.watch(recentJobsCountProvider);
+    final candidatesCount = ref.watch(candidatesCountProvider);
+    final companiesCount = ref.watch(companiesCountProvider);
+
     return Scaffold(
       body: SafeArea(
         child: Row(
@@ -895,86 +900,120 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       Padding(
                         padding: const EdgeInsets.all(60.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 16),
+                        child: SingleChildScrollView( //* Temporal fix
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 16),
+                          
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8.0,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      companiesCount.when(
+                                        data: (data) => '$data empresas',
+                                        error: (error, stackTrace) => '0 empresas',
+                                        loading: () => '-',
+                                      ),
+                                      textAlign: TextAlign.start,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 48.0,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
 
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 8.0,
+                                    Text(
+                                      candidatesCount.when(
+                                        data: (data) => '$data candidatos',
+                                        error: (error, stackTrace) => '0 candidatos',
+                                        loading: () => '-',
+                                      ),
+                                      textAlign: TextAlign.start,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 48.0,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+
+
+                                    Text(
+                                      'Esperando el match perfecto.',
+                                      textAlign: TextAlign.start,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 48.0,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '+56,986 empresas \n+175,324 candidatos\n',
-                                    textAlign: TextAlign.start,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 48.0,
-                                      fontWeight: FontWeight.bold,
+                          
+                              const SizedBox(height: 60),
+                          
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  spacing: 20,
+                                  children: [
+                                    InfoCard(
+                                      title: jobsCount.when(
+                                        data: (data) => data.toString(),
+                                        error: (error, stackTrace) => '0',
+                                        loading: () => '-',
+                                      ),
+                                      subtitle: 'Empleos Activos',
+                                      icon: const Icon(
+                                        Icons.work_outline,
+                                        color: Colors.white,
+                                        size: 42,
+                                      ),
                                     ),
-                                  ),
-                                  Text(
-                                    'Esperando el match perfecto.',
-                                    textAlign: TextAlign.start,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 48.0,
-                                      fontWeight: FontWeight.bold,
+                                    Spacer(),
+                          
+                                    InfoCard(
+                                      title: companiesCount.when(
+                                        data: (data) => data.toString(),
+                                        error: (error, stackTrace) => '0',
+                                        loading: () => '-',
+                                      ),
+                                      subtitle: 'Empresas',
+                                      icon: const Icon(
+                                        Icons.location_city,
+                                        color: Colors.white,
+                                        size: 42,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(width: 12),
+                                    Spacer(),
+                          
+                                    InfoCard(
+                                      title: recentJobsCount.when(
+                                        data: (data) => data.toString(),
+                                        error: (error, stackTrace) => '0',
+                                        loading: () => '-',
+                                      ),
+                                      subtitle: 'Nuevos Empleos',
+                                      icon: const Icon(
+                                        Icons.work_outline,
+                                        color: Colors.white,
+                                        size: 42,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-
-                            const SizedBox(height: 60),
-
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                spacing: 20,
-                                children: [
-                                  InfoCard(
-                                    title: '175,324',
-                                    subtitle: 'Empleos Activos',
-                                    icon: const Icon(
-                                      Icons.work_outline,
-                                      color: Colors.white,
-                                      size: 42,
-                                    ),
-                                  ),
-                                  Spacer(),
-
-                                  InfoCard(
-                                    title: '97,354',
-                                    subtitle: 'Empresas',
-                                    icon: const Icon(
-                                      Icons.location_city,
-                                      color: Colors.white,
-                                      size: 42,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Spacer(),
-
-                                  InfoCard(
-                                    title: '7,532',
-                                    subtitle: 'Nuevos Empleos',
-                                    icon: const Icon(
-                                      Icons.work_outline,
-                                      color: Colors.white,
-                                      size: 42,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ],
