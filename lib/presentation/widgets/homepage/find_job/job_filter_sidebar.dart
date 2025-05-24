@@ -11,7 +11,6 @@ class JobFilterSidebar extends StatefulWidget {
 }
 
 class _JobFilterSidebarState extends State<JobFilterSidebar> {
-
   final _jobTitleTextController = TextEditingController();
 
   JobFilterState _filter = JobFilterState();
@@ -170,12 +169,7 @@ class _JobFilterSidebarState extends State<JobFilterSidebar> {
               'Precio Fijo',
             ]),
             buildSectionTitle('Nivel de experiencia'),
-            buildCheckboxList([
-              'Sin experiencia',
-              'Novato',
-              'Intermedio',
-              'Experto',
-            ]),
+            buildCheckboxList(['Novato', 'Intermedio', 'Experto']),
             buildSectionTitle('Fecha de publicación'),
             buildCheckboxList([
               'Todos',
@@ -219,12 +213,14 @@ class _JobFilterSidebarState extends State<JobFilterSidebar> {
                           backgroundColor: Colors.orange,
                         ),
                         onPressed: () {
-                          _filter = _filter.copyWith(jobTitleLike: _jobTitleTextController.text.trim());
+                          _filter = _filter.copyWith(
+                            jobTitleLike: _jobTitleTextController.text.trim(),
+                          );
                           ref.read(jobFilterProvider.notifier).state = _filter;
                         },
                         child: const Text('Applicar'),
                       );
-                    }
+                    },
                   ),
                 ],
               ),

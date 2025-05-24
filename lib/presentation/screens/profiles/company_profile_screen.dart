@@ -5,6 +5,7 @@ import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:job_match/config/util/animations.dart';
 import 'package:job_match/core/data/auth_request.dart';
 import 'package:job_match/core/data/supabase_http_requests.dart';
+import 'package:job_match/core/data/cv_parsing.dart' show generateRandomMatchPercentage; // Added import
 import 'package:job_match/core/domain/models/company_model.dart';
 import 'package:job_match/presentation/screens/dashboard/employer_dashboard_screen.dart';
 import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
@@ -605,7 +606,7 @@ class CompanyProfileHeader extends ConsumerWidget {
                                 salary: job.salary,
                                 isFeatured: job.isFeatured ?? false,
                                 logoBackgroundColor: Colors.blue.shade100,
-                                matchPercentage: 85, // Default match percentage
+                                matchPercentage: generateRandomMatchPercentage(), // Updated
                               ),
                             ),
                           );

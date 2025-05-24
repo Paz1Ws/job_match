@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // Added
+import 'package:job_match/config/constants/layer_constants.dart'; // Added
 import 'package:job_match/config/util/animations.dart';
 import 'package:job_match/core/data/auth_request.dart';
 import 'package:job_match/presentation/screens/auth/screens/login_screen.dart';
+import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart'; // Added for isCandidateProvider
+import 'package:job_match/presentation/screens/profiles/user_profile.dart'; // Added
+import 'package:job_match/presentation/screens/profiles/company_profile_screen.dart'; // Added
 import 'package:job_match/presentation/widgets/homepage/find_job/footer_find_jobs.dart';
 import 'package:job_match/presentation/widgets/homepage/find_job/job_filter_sidebar.dart';
 import 'package:job_match/presentation/widgets/homepage/find_job/simple_job_card_list_view.dart';
@@ -9,11 +14,11 @@ import 'package:job_match/presentation/widgets/homepage/find_job/top_companies.d
 import 'package:animate_do/animate_do.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 
-class FindJobsScreen extends StatelessWidget {
+class FindJobsScreen extends ConsumerWidget { // Changed to ConsumerWidget
   const FindJobsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) { // Added WidgetRef ref
     return Scaffold(
       body: SingleChildScrollView(
         child: Column(
@@ -23,7 +28,7 @@ class FindJobsScreen extends StatelessWidget {
               height: 80,
               width: double.infinity,
               color: Colors.black,
-              child: _buildTopBar(context),
+              child: _buildTopBar(context, ref), // Pass ref
             ),
             FadeInDown(
               duration: const Duration(milliseconds: 500),
@@ -142,7 +147,13 @@ class FindJobsScreen extends StatelessWidget {
   }
 }
 
-Widget _buildTopBar(BuildContext context) {
+Widget _buildTopBar(BuildContext context, WidgetRef ref) { // Added WidgetRef ref
+  final candidate = ref.watch(candidateProfileProvider);
+  final company = ref.watch(companyProfileProvider);
+  final isCandidate = ref.watch(isCandidateProvider);
+
+  final bool isLoggedIn = candidate != null || company != null;
+
   return Align(
     alignment: Alignment.center,
     child: Padding(
@@ -178,36 +189,65 @@ Widget _buildTopBar(BuildContext context) {
           FadeInRight(
             duration: const Duration(milliseconds: 600),
             child: FittedBox(
-              child: Row(
-                children: [
-                  TextButton(
-                    onPressed:
-                        () => Navigator.of(
-                          context,
-                        ).push(SlideUpFadePageRoute(page: const LoginScreen())),
-                    child: const Text(
-                      'Iniciar Sesión',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
+              child: isLoggedIn
+                  ? InkWell(
+                      onTap: () {
+                        if (isCandidate && candidate != null) {
+                          Navigator.of(context).push(
+                            SlideUpFadePageRoute(page: const UserProfile()),
+                          );
+                        } else if (!isCandidate && company != null) {
+                          Navigator.of(context).push(
+                            SlideUpFadePageRoute(
+                                page: const CompanyProfileScreen()),
+                          );
+                        } else {
+                          // Fallback if profile is somehow null despite isLoggedIn being true
+                          Navigator.of(context).push(
+                              SlideUpFadePageRoute(page: const LoginScreen()));
+                        }
+                      },
+                      child: CircleAvatar(
+                        backgroundColor: Colors.blueGrey,
+                        radius: kRadius20 + kSpacing4 / 2, // Adjusted radius for visibility
+                        backgroundImage: !isCandidate && company?.logo != null
+                            ? NetworkImage(company!.logo!)
+                            : null,
+                        child: !isCandidate && company?.logo != null
+                            ? null
+                            : const Icon(Icons.person, color: Colors.white),
                       ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 0,
-                      ),
+                    )
+                  : Row(
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.of(
+                            context,
+                          ).push(SlideUpFadePageRoute(
+                              page: const LoginScreen())),
+                          child: const Text(
+                            'Iniciar Sesión',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 0,
+                            ),
+                          ),
+                          onPressed: () => Navigator.of(
+                            context,
+                          ).push(SlideUpFadePageRoute(
+                              page: const LoginScreen())),
+                          child: const Text('Registrarse'),
+                        ),
+                      ],
                     ),
-                    onPressed:
-                        () => Navigator.of(
-                          context,
-                        ).push(SlideUpFadePageRoute(page: const LoginScreen())),
-                    child: const Text('Registrarse'),
-                  ),
-                ],
-              ),
             ),
           ),
         ],

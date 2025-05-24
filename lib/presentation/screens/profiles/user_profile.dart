@@ -11,6 +11,7 @@ import 'package:job_match/presentation/widgets/auth/profile_display_elements.dar
 import 'package:job_match/presentation/widgets/auth/related_job_card.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:job_match/core/domain/models/job_model.dart';
+import 'package:job_match/core/data/cv_parsing.dart' show generateRandomMatchPercentage;
 
 class UserProfile extends ConsumerStatefulWidget {
   final Candidate? candidateData; // Optional external candidate data
@@ -179,7 +180,7 @@ class ProfileDetailHeader extends ConsumerWidget {
                                         duration: const Duration(
                                           milliseconds: 700,
                                         ),
-                                        child: Text(
+                                        child: SelectableText(
                                           candidate.location ?? '',
                                           style: const TextStyle(
                                             fontSize: 15.0,
@@ -581,7 +582,7 @@ class ProfileDetailHeader extends ConsumerWidget {
                                 isFeatured: job['is_featured'] ?? false,
                                 logoBackgroundColor:
                                     Colors.blue.shade100, // Example
-                                matchPercentage: 80, // Example
+                                matchPercentage: generateRandomMatchPercentage(), // Example
                               ),
                             ),
                           );

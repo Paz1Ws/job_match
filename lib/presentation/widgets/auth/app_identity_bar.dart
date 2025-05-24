@@ -114,12 +114,13 @@ class AppIdentityBar extends ConsumerWidget {
           ),
           const SizedBox(width: kSpacing12 + kSpacing4),
           InkWell(
-            onTap: onProfileTap ??
+            onTap:
+                onProfileTap ??
                 () {
                   if (isCandidate) {
-                    Navigator.of(context).push(
-                      SlideUpFadePageRoute(page: const UserProfile()),
-                    );
+                    Navigator.of(
+                      context,
+                    ).push(SlideUpFadePageRoute(page: const UserProfile()));
                   } else {
                     Navigator.of(context).push(
                       SlideUpFadePageRoute(page: const CompanyProfileScreen()),
@@ -129,12 +130,14 @@ class AppIdentityBar extends ConsumerWidget {
             child: CircleAvatar(
               backgroundColor: Colors.blueGrey,
               radius: kRadius20,
-              backgroundImage: !isCandidate && company?.logo != null
-                  ? NetworkImage(company!.logo!)
-                  : null,
-              child: !isCandidate && company?.logo != null
-                  ? null
-                  : const Icon(Icons.person, color: Colors.white),
+              backgroundImage:
+                  !isCandidate && company?.logo != null
+                      ? NetworkImage(company!.logo!)
+                      : null,
+              child:
+                  !isCandidate && company?.logo != null
+                      ? null
+                      : const Icon(Icons.person, color: Colors.white),
             ),
           ),
         ],

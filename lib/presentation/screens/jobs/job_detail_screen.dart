@@ -8,11 +8,14 @@ import 'package:job_match/presentation/widgets/auth/profile_display_elements.dar
 import 'package:job_match/presentation/widgets/auth/related_job_card.dart';
 import 'package:job_match/core/data/supabase_http_requests.dart';
 import 'package:intl/intl.dart';
+import 'package:job_match/core/data/cv_parsing.dart'
+    show generateRandomMatchPercentage; // Added import
 
 class JobDetailScreen extends ConsumerWidget {
   final Job job;
+  final String fit;
 
-  const JobDetailScreen({super.key, required this.job});
+  const JobDetailScreen({super.key, required this.job, required this.fit});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -29,7 +32,6 @@ class JobDetailScreen extends ConsumerWidget {
 
     // Fetch related jobs data
     final relatedJobsAsync = ref.watch(jobsProvider);
-
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FA),
       appBar: AppBar(
@@ -156,7 +158,7 @@ class JobDetailScreen extends ConsumerWidget {
                       children: [
                         _buildTag(jobType),
                         _buildTag(jobSalary),
-                        _buildTag('${job.matchPercentage}% Match'),
+                        _buildTag('$fit% Match'),
                       ],
                     ),
 
@@ -423,7 +425,7 @@ class JobDetailScreen extends ConsumerWidget {
                                       relatedJob['is_featured'] ?? false,
                                   logoBackgroundColor: Colors.blue.shade100,
                                   matchPercentage:
-                                      80, // Default match percentage
+                                      generateRandomMatchPercentage(), // Updated
                                 ),
                                 showBackButton: false,
                               ),

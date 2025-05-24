@@ -7,6 +7,10 @@ import 'package:job_match/core/domain/models/candidate_model.dart';
 import 'package:job_match/core/data/auth_request.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase, User;
 
+int generateRandomMatchPercentage() {
+  return Random().nextInt(41) + 60; // Generates a number from 0-40, then adds 60
+}
+
 class CvParser {
   final _client = Dio(
     BaseOptions(
@@ -56,11 +60,12 @@ class CvParser {
     }
   }
 
-  // Parse CV and create new user instead of updating existing one
+  // Parse CV and create new user with provided credentials
   Future<Candidate> parseAndSaveCandidate({
     required Uint8List bytes,
     required String filename,
-    required String userId,
+    required String email,
+    required String password,
   }) async {
     // Parse the CV using the existing parseCv method that uses Affinda
     final resp = await parseCv(bytes, filename);
@@ -94,18 +99,17 @@ class CvParser {
     final bio =
         data['summary']?.toString() ??
         'Professional looking for new opportunities';
-    final location = data['location']?.toString() ?? 'Not specified';
+
+    // Format location properly from raw location data
+    final location = _formatLocation(data['location']);
+
     final phone =
         data['phone_numbers'] != null &&
                 (data['phone_numbers'] as List).isNotEmpty
             ? data['phone_numbers'][0]?.toString() ?? '974023810'
             : '${900000000 + Random().nextInt(99999999)}';
 
-    // Generate unique email and password based on parsed data
-    final String email = _generateEmail(formattedName);
-    final String password = _generateRandomPassword();
-
-    // Create new user
+    // Create new user with provided email and password
     final User user = await signUpWithEmailAndPassword(
       email: email,
       password: password,
@@ -131,11 +135,6 @@ class CvParser {
     await Supabase.instance.client
         .from('candidates')
         .insert(candidate.toJson());
-
-    // Print credentials to console for testing purposes
-    print('Created new user from CV upload:');
-    print('Email: $email');
-    print('Password: $password');
 
     return candidate;
   }
@@ -166,33 +165,54 @@ class CvParser {
     return rawName.toString().trim();
   }
 
-  // Generate email based on name
-  String _generateEmail(String name) {
-    // Convert to lowercase, replace spaces with dots and remove special characters
-    String sanitizedName = name
-        .toLowerCase()
-        .replaceAll(RegExp(r'[^\w\s]'), '') // Remove special characters
-        .trim()
-        .replaceAll(' ', '.');
+  // Format location to be human-readable from raw location data
+  String _formatLocation(dynamic rawLocation) {
+    if (rawLocation == null) return 'No especificado';
 
-    // Add random number to ensure uniqueness
-    final random = Random();
-    final randomNum = random.nextInt(9999);
+    // If it's a string, return it directly
+    if (rawLocation is String) return rawLocation;
 
-    return '$sanitizedName$randomNum@gmail.com';
-  }
+    // If it's a map, process the fields
+    if (rawLocation is Map<String, dynamic>) {
+      // Priority elements for location
+      List<String> locationParts = [];
 
-  // Generate random password
-  String _generateRandomPassword() {
-    const chars =
-        'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    final random = Random();
-    return String.fromCharCodes(
-      Iterable.generate(
-        10, // 10 character password
-        (_) => chars.codeUnitAt(random.nextInt(chars.length)),
-      ),
-    );
+      // Add city if available
+      if (rawLocation['city'] != null &&
+          rawLocation['city'].toString().isNotEmpty) {
+        locationParts.add(rawLocation['city'].toString());
+      }
+
+      // Add state if available
+      if (rawLocation['state'] != null &&
+          rawLocation['state'].toString().isNotEmpty) {
+        locationParts.add(rawLocation['state'].toString());
+      }
+
+      // Add country if available
+      if (rawLocation['country'] != null &&
+          rawLocation['country'].toString().isNotEmpty) {
+        locationParts.add(rawLocation['country'].toString());
+      }
+
+      // If we have formatted field, use it as fallback
+      if (locationParts.isEmpty && rawLocation['formatted'] != null) {
+        return rawLocation['formatted'].toString();
+      }
+
+      // If we have raw input, use it as second fallback
+      if (locationParts.isEmpty && rawLocation['rawInput'] != null) {
+        return rawLocation['rawInput'].toString();
+      }
+
+      // Join all parts with commas
+      if (locationParts.isNotEmpty) {
+        return locationParts.join(', ');
+      }
+    }
+
+    // Last resort fallback
+    return 'No especificado';
   }
 
   // Helper method to determine experience level based on employment history

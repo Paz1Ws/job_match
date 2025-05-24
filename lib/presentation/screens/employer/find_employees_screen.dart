@@ -208,12 +208,7 @@ class _FindEmployeesScreenState extends ConsumerState<FindEmployeesScreen> {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          _buildFilterSection('Experiencia', [
-            'Sin experiencia',
-            'Junior',
-            'Mid',
-            'Senior',
-          ]),
+          _buildFilterSection('Experiencia', ['Junior', 'Mid', 'Senior']),
           const SizedBox(height: 16),
           _buildFilterSection('Ubicación', [
             'Lima',

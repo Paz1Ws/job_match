@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:job_match/core/data/cv_parsing.dart';
 import 'package:job_match/core/domain/models/job_model.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:job_match/presentation/screens/jobs/job_detail_screen.dart';
@@ -25,15 +26,18 @@ class RelatedJobCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Color fitColor = _getFitColor(job.matchPercentage);
+    final fit = generateRandomMatchPercentage().toString();
     return FadeInUp(
       duration: const Duration(milliseconds: 600),
       child: Stack(
         children: [
           GestureDetector(
             onTap: () {
-              Navigator.of(
-                context,
-              ).push(ParallaxSlidePageRoute(page: JobDetailScreen(job: job)));
+              Navigator.of(context).push(
+                ParallaxSlidePageRoute(
+                  page: JobDetailScreen(job: job, fit: fit),
+                ),
+              );
             },
             child: Container(
               padding: const EdgeInsets.all(kPadding20),
@@ -182,7 +186,7 @@ class RelatedJobCard extends StatelessWidget {
                                 ),
                                 const SizedBox(width: kSpacing4),
                                 Text(
-                                  '${job.matchPercentage}% Fit',
+                                  '$fit Fit',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 11.0,

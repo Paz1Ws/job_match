@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:job_match/core/data/cv_parsing.dart';
 import 'package:job_match/core/domain/models/job_model.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:job_match/presentation/screens/jobs/job_detail_screen.dart';
@@ -55,6 +56,7 @@ class SimpleJobCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Color fitColor = _getFitColor(job.matchPercentage);
+    final fit = generateRandomMatchPercentage().toString();
     return FadeInUp(
       duration: const Duration(milliseconds: 500),
       child: Stack(
@@ -72,9 +74,11 @@ class SimpleJobCard extends StatelessWidget {
             ),
             child: InkWell(
               onTap: () {
-                Navigator.of(
-                  context,
-                ).push(ParallaxSlidePageRoute(page: JobDetailScreen(job: job)));
+                Navigator.of(context).push(
+                  ParallaxSlidePageRoute(
+                    page: JobDetailScreen(job: job, fit: fit),
+                  ),
+                );
               },
               borderRadius: BorderRadius.circular(kRadius12),
               child: Padding(
@@ -192,7 +196,7 @@ class SimpleJobCard extends StatelessWidget {
                               ),
                               const SizedBox(width: kSpacing4),
                               Text(
-                                '${job.matchPercentage}% Fit',
+                                '$fit% Fit',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 11.0,

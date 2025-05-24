@@ -63,11 +63,13 @@ final jobsCountProvider = FutureProvider.autoDispose<int>((ref) async {
 
 final recentJobsCountProvider = FutureProvider.autoDispose<int>((ref) async {
   final response = await Supabase.instance.client
-    .from('jobs')
-    .select('id')
-    .gte('created_at', DateTime.now().subtract(const Duration(days: 4)).toIso8601String())
-    .lte('created_at', DateTime.now().toIso8601String())
-    ;
+      .from('jobs')
+      .select('id')
+      .gte(
+        'created_at',
+        DateTime.now().subtract(const Duration(days: 4)).toIso8601String(),
+      )
+      .lte('created_at', DateTime.now().toIso8601String());
 
   final count = response.length;
   return count;
@@ -191,7 +193,7 @@ final applyToJobProvider = Provider((ref) {
           'user_id': userId,
           'job_id': jobId,
           'status': 'pending',
-          'applied_at': DateTime.now().toIso8601String()
+          'applied_at': DateTime.now().toIso8601String(),
         }).select();
 
     return response;
@@ -278,7 +280,7 @@ final uploadCompanyLogoProvider = Provider((ref) {
           .uploadBinary(
             storagePath,
             bytes,
-            fileOptions: const FileOptions(upsert: true),
+            fileOptions: const FileOptions(upsert: false),
           );
 
       final publicUrl = supabase.storage

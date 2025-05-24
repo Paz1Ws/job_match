@@ -128,7 +128,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         setState(() {
           _selectedLogoPath = result.files.single.name;
         });
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Logo seleccionado: ${result.files.single.name}'),
@@ -311,9 +311,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ? _experienceController.text
                   : null,
           items:
-              ['Sin experiencia', 'Junior', 'Mid', 'Senior'].map((
-                String value,
-              ) {
+              ['Junior', 'Mid', 'Senior'].map((String value) {
                 return DropdownMenuItem<String>(
                   value: value,
                   child: Text(value, style: defaultTextStyle),
@@ -535,23 +533,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(width: 8),
                   Text(
                     'Logo de la empresa',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[700],
-                    ),
+                    style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
               ElevatedButton.icon(
                 onPressed: _pickCompanyLogo,
-                icon: Icon(_selectedLogoPath != null ? Icons.check_circle : Icons.upload_file),
-                label: Text(_selectedLogoPath != null 
-                    ? 'Logo seleccionado: $_selectedLogoPath' 
-                    : 'Seleccionar logo de empresa'),
+                icon: Icon(
+                  _selectedLogoPath != null
+                      ? Icons.check_circle
+                      : Icons.upload_file,
+                ),
+                label: Text(
+                  _selectedLogoPath != null
+                      ? 'Logo seleccionado: $_selectedLogoPath'
+                      : 'Seleccionar logo de empresa',
+                ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _selectedLogoPath != null ? Colors.green[50] : null,
-                  foregroundColor: _selectedLogoPath != null ? Colors.green[700] : null,
+                  backgroundColor:
+                      _selectedLogoPath != null ? Colors.green[50] : null,
+                  foregroundColor:
+                      _selectedLogoPath != null ? Colors.green[700] : null,
                 ),
               ),
               if (_selectedLogoPath != null) ...[
@@ -787,17 +790,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   // REGISTRO EMPRESA
                                   try {
                                     String? logoUrl;
-                                    
+
                                     // Upload logo first if selected
                                     if (_selectedLogoPath != null) {
-                                      final result = await FilePicker.platform.pickFiles(
-                                        type: FileType.image,
-                                        allowMultiple: false,
-                                        withData: true,
-                                      );
-                                      
-                                      if (result != null && result.files.single.bytes != null) {
-                                        final uploadLogo = ref.read(uploadCompanyLogoProvider);
+                                      final result = await FilePicker.platform
+                                          .pickFiles(
+                                            type: FileType.image,
+                                            allowMultiple: false,
+                                            withData: true,
+                                          );
+
+                                      if (result != null &&
+                                          result.files.single.bytes != null) {
+                                        final uploadLogo = ref.read(
+                                          uploadCompanyLogoProvider,
+                                        );
                                         logoUrl = await uploadLogo(
                                           result.files.single.bytes!,
                                           result.files.single.name,
@@ -812,9 +819,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       phone: _companyPhoneController.text,
                                       address: _companyLocationController.text,
                                       industry: _companyIndustry,
-                                      description: _companyDescriptionController.text,
+                                      description:
+                                          _companyDescriptionController.text,
                                       website: null,
-                                      logo: logoUrl, // Pass the uploaded logo URL
+                                      logo:
+                                          logoUrl, // Pass the uploaded logo URL
                                     );
                                     await fetchUserProfile(ref);
                                     final company = ref.read(
@@ -827,7 +836,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         ),
                                       );
                                     } else {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
                                         const SnackBar(
                                           content: Text(
                                             'No se encontró perfil de empresa tras el registro.',
@@ -900,48 +911,71 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       Padding(
                         padding: const EdgeInsets.all(60.0),
-                        child: SingleChildScrollView( //* Temporal fix
+                        child: Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               const SizedBox(height: 16),
-                          
+
                               Padding(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 8.0,
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Text(
-                                      companiesCount.when(
-                                        data: (data) => '$data empresas',
-                                        error: (error, stackTrace) => '0 empresas',
-                                        loading: () => '-',
-                                      ),
-                                      textAlign: TextAlign.start,
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 48.0,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                    AnimatedTextKit(
+                                      animatedTexts: [
+                                        TyperAnimatedText(
+                                          companiesCount.when(
+                                            data: (data) => '+$data empresas',
+                                            error:
+                                                (error, stackTrace) =>
+                                                    '0 empresas',
+                                            loading: () => '-',
+                                          ),
+                                          textStyle: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 48.0,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          textAlign: TextAlign.start,
+                                          speed: const Duration(
+                                            milliseconds: 100,
+                                          ),
+                                        ),
+                                      ],
+                                      totalRepeatCount: 1,
+                                      displayFullTextOnTap: true,
+                                      stopPauseOnTap: true,
                                     ),
-
-                                    Text(
-                                      candidatesCount.when(
-                                        data: (data) => '$data candidatos',
-                                        error: (error, stackTrace) => '0 candidatos',
-                                        loading: () => '-',
-                                      ),
-                                      textAlign: TextAlign.start,
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 48.0,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                    AnimatedTextKit(
+                                      animatedTexts: [
+                                        TyperAnimatedText(
+                                          candidatesCount.when(
+                                            data: (data) => '+$data candidatos',
+                                            error:
+                                                (error, stackTrace) =>
+                                                    '0 candidatos',
+                                            loading: () => '-',
+                                          ),
+                                          textStyle: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 48.0,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          textAlign: TextAlign.start,
+                                          speed: const Duration(
+                                            milliseconds: 100,
+                                          ),
+                                        ),
+                                      ],
+                                      totalRepeatCount: 1,
+                                      displayFullTextOnTap: true,
+                                      stopPauseOnTap: true,
                                     ),
-
 
                                     Text(
                                       'Esperando el match perfecto.',
@@ -955,9 +989,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   ],
                                 ),
                               ),
-                          
+
                               const SizedBox(height: 60),
-                          
+
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: Row(
@@ -979,7 +1013,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       ),
                                     ),
                                     Spacer(),
-                          
+
                                     InfoCard(
                                       title: companiesCount.when(
                                         data: (data) => data.toString(),
@@ -995,7 +1029,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     ),
                                     const SizedBox(width: 12),
                                     Spacer(),
-                          
+
                                     InfoCard(
                                       title: recentJobsCount.when(
                                         data: (data) => data.toString(),
@@ -1027,6 +1061,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _showCVAnimationAndNavigate() async {
+    // Check if email and password are filled
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Por favor completa el correo y contraseña para continuar con el CV',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf'],
@@ -1046,14 +1093,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
 
       try {
-        final tempUserId = const Uuid().v4();
         final parser = ref.read(parseCandidateProvider);
-        // Parse CV and create new user (esto puede demorar)
+        // Parse CV using the provided email and password
         final candidate = await parser.parseAndSaveCandidate(
           bytes: bytes,
           filename: filename,
-          userId: tempUserId,
+          email: _emailController.text,
+          password: _passwordController.text,
         );
+
         final uploadCv = ref.read(uploadCvProvider);
         final url = await uploadCv(bytes, filename);
         if (mounted) Navigator.of(context, rootNavigator: true).pop();
@@ -1139,10 +1187,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 'Iniciar con CV',
                 style: TextStyle(color: Colors.black87),
               ),
+              // Only enable CV upload when:
+              // 1. In login mode (not signup mode)
+              // 2. User type is Candidate
               onPressed:
-                  _selectedUserType == 'Empresa'
+                  (_selectedUserType == 'Empresa' || !_showLoginForm)
                       ? null
                       : _showCVAnimationAndNavigate,
+              // Note: We maintain the disabled logic for company user type
             ),
           ],
         ),
