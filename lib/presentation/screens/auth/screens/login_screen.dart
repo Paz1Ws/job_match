@@ -245,12 +245,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             icon: Icons.email_outlined,
           ),
           keyboardType: TextInputType.emailAddress,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Por favor ingresa tu correo electrónico';
-            }
-            return null;
-          },
+          validator: FormUtils.validateEmailForSingUp,
         ),
         const SizedBox(height: 16.0),
         TextFormField(
@@ -260,12 +255,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             icon: Icons.lock_outline,
           ),
           obscureText: true,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Por favor ingresa tu contraseña';
-            }
-            return null;
-          },
+          validator: FormUtils.validatePasswordForSingUp,
         ),
         const SizedBox(height: 16.0),
         TextFormField(
@@ -274,12 +264,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             'Nombre completo',
             icon: Icons.person_outline,
           ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Por favor ingresa tu nombre completo';
-            }
-            return null;
-          },
+          validator: FormUtils.validateName,
         ),
         const SizedBox(height: 16.0),
         TextFormField(
@@ -288,6 +273,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             'Número de teléfono (opcional)',
             icon: Icons.phone_outlined,
           ),
+          validator: FormUtils.validatePhone,
           keyboardType: TextInputType.phone,
         ),
         const SizedBox(height: 16.0),
@@ -297,12 +283,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             'Ubicación (ciudad/país)',
             icon: Icons.location_on_outlined,
           ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Por favor ingresa tu ubicación';
-            }
-            return null;
-          },
+          validator: FormUtils.validateAddress,
         ),
         const SizedBox(height: 16.0),
         DropdownButtonFormField<String>(
@@ -328,6 +309,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               });
             }
           },
+          validator: FormUtils.validateExperience,
         ),
         const SizedBox(height: 16.0),
         TextFormField(
@@ -336,12 +318,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             'Educación (ej: Licenciatura en X, Universidad Y)',
             icon: Icons.school_outlined,
           ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Por favor ingresa tu educación';
-            }
-            return null;
-          },
+          validator: FormUtils.validateEducation,
         ),
         const SizedBox(height: 16.0),
         TextFormField(
@@ -350,12 +327,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             'Experiencia laboral (breve resumen)',
             icon: Icons.work_history_outlined,
           ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Por favor describe tu experiencia';
-            }
-            return null;
-          },
+          validator: FormUtils.validateWorkExperience,
         ),
 
         const SizedBox(height: 16.0),
@@ -365,6 +337,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             'URL de tu CV (opcional)',
             icon: Icons.link,
           ),
+          validator: FormUtils.validateUrlCv,
+          keyboardType: TextInputType.url,
         ),
         const SizedBox(height: 16.0),
         TextFormField(
@@ -373,12 +347,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             'Habilidades principales (separadas por comas)',
             icon: Icons.psychology_outlined,
           ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Por favor ingresa al menos una habilidad';
-            }
-            return null;
-          },
+          validator: FormUtils.validateSkillsSeparatedByCommas,
+          keyboardType: TextInputType.text,
         ),
         const SizedBox(height: 16.0),
         TextFormField(
@@ -388,12 +358,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             icon: Icons.description_outlined,
           ),
           maxLines: 4,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Por favor ingresa una breve biografía o descripción';
-            }
-            return null;
-          },
+          validator: FormUtils.validateBio,
         ),
       ],
     );
@@ -409,12 +374,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             icon: Icons.email_outlined,
           ),
           keyboardType: TextInputType.emailAddress,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Por favor ingresa un correo electrónico';
-            }
-            return null;
-          },
+          validator: FormUtils.validateEmailForSingUp
         ),
         const SizedBox(height: 16.0),
         TextFormField(
@@ -424,12 +384,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             icon: Icons.lock_outline,
           ),
           obscureText: true,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Por favor ingresa una contraseña';
-            }
-            return null;
-          },
+          validator: FormUtils.validatePasswordForSingUp,
         ),
         const SizedBox(height: 16.0),
         TextFormField(
@@ -438,12 +393,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             'Nombre de la empresa',
             icon: Icons.business_outlined,
           ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Por favor ingresa el nombre de la empresa';
-            }
-            return null;
-          },
+          validator: FormUtils.validateCompanyName,
         ),
         const SizedBox(height: 16.0),
         TextFormField(
@@ -453,12 +403,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             icon: Icons.phone_outlined,
           ),
           keyboardType: TextInputType.phone,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Por favor ingresa un teléfono de contacto';
-            }
-            return null;
-          },
+          validator: FormUtils.validateCompanyPhone,
         ),
         const SizedBox(height: 16.0),
         TextFormField(
@@ -467,12 +412,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             'Ubicación o dirección (ciudad/país)',
             icon: Icons.location_on_outlined,
           ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Por favor ingresa la ubicación';
-            }
-            return null;
-          },
+          validator: FormUtils.validateAddress,
         ),
         const SizedBox(height: 16.0),
         DropdownButtonFormField<String>(
@@ -504,6 +444,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               });
             }
           },
+          validator: FormUtils.validateIndustrySelected,
         ),
         const SizedBox(height: 16.0),
         TextFormField(
@@ -513,12 +454,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             icon: Icons.description_outlined,
           ),
           maxLines: 3,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Por favor ingresa una descripción';
-            }
-            return null;
-          },
+          validator: FormUtils.validateCompanyDescription,
         ),
         const SizedBox(height: 16.0),
         Container(
