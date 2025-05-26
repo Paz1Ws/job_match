@@ -1026,6 +1026,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   : _showCVAnimationAndNavigate,
               // Note: We maintain the disabled logic for company user type
             ),
+            OutlinedButton.icon(
+              style: ElevatedButton.styleFrom(
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(5)),
+                ),
+              ),
+              icon: const Icon(Icons.mail_outline, color: Colors.red),
+              label: const Text(
+                'Iniciar con Google',
+                style: TextStyle(color: Colors.black87),
+              ),
+              onPressed: () {},
+            ),
           ],
         ),
         const SizedBox(height: 32.0),
