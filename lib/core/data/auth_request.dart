@@ -20,7 +20,8 @@ Future<User> login(String email, String password) async {
       throw Exception('No se pudo autenticar al usuario.');
     }
   } on AuthException catch (e) {
-    throw Exception('Error de autenticación: ${e.message}');
+    print('Error de autenticación: ${e.message}'); 
+    throw Exception('Error de autenticación: Verifica tus credenciales.');
   } catch (e) {
     // Manejo de otros errores
     throw Exception('Error inesperado: $e');
