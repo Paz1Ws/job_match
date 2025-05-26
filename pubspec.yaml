@@ -21,6 +21,7 @@ dependencies:
   uuid: ^4.5.1
   animated_text_kit: ^4.2.2
   web_smooth_scroll: ^2.0.0
+  google_sign_in: ^6.3.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
