@@ -2,6 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:job_match/config/util/animations.dart';
+import 'package:job_match/config/util/form_utils.dart';
 import 'package:job_match/core/data/auth_request.dart';
 import 'package:job_match/core/data/cv_parsing.dart';
 import 'package:job_match/core/data/supabase_http_requests.dart';
@@ -103,7 +104,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _companyLocationController.clear();
       _companyDescriptionController.clear();
       _selectedLogoPath = null; // Clear logo selection
-      _termsAgreed = false;
       // Actualiza el provider global según selección
       _setUserType(_selectedUserType == 'Candidato');
     });
@@ -628,10 +628,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           if (_showLoginForm) ...[
                             TextFormField(
                               controller: _emailController,
-                              decoration: defaultIconDecoration(
-                                'Correo electrónico',
-                              ),
+                              decoration: defaultIconDecoration('Correo electrónico'),
                               style: defaultTextStyle,
+                              validator: FormUtils.validateEmailLogin
                             ),
                             const SizedBox(height: 16.0),
                             TextFormField(
@@ -639,6 +638,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               decoration: defaultIconDecoration('Contraseña'),
                               obscureText: !_passwordVisible,
                               style: defaultTextStyle,
+                              validator: FormUtils.validatePasswordLogin,
                             ),
                             const SizedBox(height: 16.0),
                             Row(
@@ -647,9 +647,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   value: _termsAgreed,
                                   onChanged: (bool? value) {
                                     setState(() {
-                                      _termsAgreed = value!;
+                                      _termsAgreed = value ?? false;
                                     });
                                   },
+                                  tristate: false,
                                 ),
                                 const Text('He leído y acepto los '),
                                 GestureDetector(
@@ -685,7 +686,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 disabledBackgroundColor: Colors.blueAccent.withOpacity(0.7),
                               ),
                               onPressed: _isLoading ? null : () async {
+
                                 if (_formKey.currentState!.validate()) {
+                                  if (!_termsAgreed) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Acepta los términos de servicio para continuar.',
+                                        ),
+                                      ),
+                                    );
+                                    return;
+                                  }
+
                                   setState(() {
                                     _isLoading = true; // Start loading
                                   });
@@ -896,6 +909,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       ),
                                     ),
                                   );
+
                                 }
                               },
                               child: Padding(
