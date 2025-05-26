@@ -87,7 +87,9 @@ class SimpleJobCard extends ConsumerWidget {
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Las empresas no pueden aplicar a trabajos.'),
+                      content: Text(
+                        'Las empresas no pueden aplicar a trabajos.',
+                      ),
                       backgroundColor: Colors.orangeAccent,
                     ),
                   );

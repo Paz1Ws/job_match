@@ -686,252 +686,338 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   ),
                                 ),
                                 // Disable button when loading
-                                disabledBackgroundColor: Colors.blueAccent.withOpacity(0.7),
+                                disabledBackgroundColor: Colors.blueAccent
+                                    .withOpacity(0.7),
                               ),
-                              onPressed: _isLoading ? null : () async {
-                                if (_formKey.currentState!.validate()) {
-                                  setState(() {
-                                    _isLoading = true; // Start loading
-                                  });
-                                  try {
-                                    _setUserType(
-                                      _selectedUserType == 'Candidato',
-                                    );
-                                    if (_showLoginForm) {
-                                      // LOGIN
-                                      await signOut();
-                                      await login(
-                                        _emailController.text,
-                                        _passwordController.text,
-                                      );
-                                      await fetchUserProfile(ref);
-                                      final candidate = ref.read(
-                                        candidateProfileProvider,
-                                      );
-                                      final company = ref.read(
-                                        companyProfileProvider,
-                                      );
-                                      if (!context.mounted) return;
-                                      if (_selectedUserType == 'Candidato' &&
-                                          candidate != null) {
-                                        Navigator.of(context).pushReplacement(
-                                          FadeThroughPageRoute(
-                                            page: const FindJobsScreen(),
-                                          ),
-                                        );
-                                      } else if (_selectedUserType ==
-                                              'Empresa' &&
-                                          company != null) {
-                                        Navigator.of(context).pushReplacement(
-                                          FadeThroughPageRoute(
-                                            page:
-                                                const EmployerDashboardScreen(),
-                                          ),
-                                        );
-                                      } else {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                              'No se encontró perfil asociado a este usuario.',
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                    } else {
-                                      if (_selectedUserType == 'Candidato') {
-                                        // REGISTRO CANDIDATO
-                                        await signOut();
-                                        final success = await registerCandidate(
-                                          email: _emailController.text,
-                                          password: _passwordController.text,
-                                          name: _fullNameController.text,
-                                          phone: _phoneController.text,
-                                          location: _locationController.text,
-                                          experienceLevel:
-                                              _experienceController.text,
-                                          experience: _experienceResume.text,
-                                          skills:
-                                              _skillsController.text
-                                                  .split(',')
-                                                  .map((e) => e.trim())
-                                                  .where((e) => e.isNotEmpty)
-                                                  .toList(),
-                                          bio: _bioController.text,
-                                          resumeUrl:
-                                              _resumeUrlController
-                                                      .text
-                                                      .isNotEmpty
-                                                  ? _resumeUrlController.text
-                                                  : null,
-                                          education: _educationController.text,
-                                        );
-                                        if (!context.mounted) return;
-                                        if (success) {
-                                          await fetchUserProfile(ref);
-                                          final candidate = ref.read(
-                                            candidateProfileProvider,
-                                          );
-                                          if (candidate != null) {
-                                            Navigator.of(
-                                              context,
-                                            ).pushReplacement(
-                                              FadeThroughPageRoute(
-                                                page: const FindJobsScreen(),
-                                              ),
+                              onPressed:
+                                  _isLoading
+                                      ? null
+                                      : () async {
+                                        if (_formKey.currentState!.validate()) {
+                                          setState(() {
+                                            _isLoading = true; // Start loading
+                                          });
+                                          try {
+                                            _setUserType(
+                                              _selectedUserType == 'Candidato',
                                             );
-                                          } else {
-                                            ScaffoldMessenger.of(
-                                              context,
-                                            ).showSnackBar(
-                                              const SnackBar(
-                                                content: Text(
-                                                  'No se encontró perfil de candidato tras el registro.',
+                                            if (_showLoginForm) {
+                                              // LOGIN
+                                              await signOut();
+                                              await login(
+                                                _emailController.text,
+                                                _passwordController.text,
+                                              );
+                                              await fetchUserProfile(ref);
+                                              final candidate = ref.read(
+                                                candidateProfileProvider,
+                                              );
+                                              final company = ref.read(
+                                                companyProfileProvider,
+                                              );
+                                              if (!context.mounted) return;
+                                              if (_selectedUserType ==
+                                                      'Candidato' &&
+                                                  candidate != null) {
+                                                Navigator.of(
+                                                  context,
+                                                ).pushReplacement(
+                                                  FadeThroughPageRoute(
+                                                    page:
+                                                        const FindJobsScreen(),
+                                                  ),
+                                                );
+                                              } else if (_selectedUserType ==
+                                                      'Empresa' &&
+                                                  company != null) {
+                                                Navigator.of(
+                                                  context,
+                                                ).pushReplacement(
+                                                  FadeThroughPageRoute(
+                                                    page:
+                                                        const EmployerDashboardScreen(),
+                                                  ),
+                                                );
+                                              } else {
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text(
+                                                      'No se encontró perfil asociado a este usuario.',
+                                                    ),
+                                                  ),
+                                                );
+                                              }
+                                            } else {
+                                              if (_selectedUserType ==
+                                                  'Candidato') {
+                                                // REGISTRO CANDIDATO
+                                                await signOut();
+                                                final success =
+                                                    await registerCandidate(
+                                                      email:
+                                                          _emailController.text,
+                                                      password:
+                                                          _passwordController
+                                                              .text,
+                                                      name:
+                                                          _fullNameController
+                                                              .text,
+                                                      phone:
+                                                          _phoneController.text,
+                                                      location:
+                                                          _locationController
+                                                              .text,
+                                                      experienceLevel:
+                                                          _experienceController
+                                                              .text,
+                                                      experience:
+                                                          _experienceResume
+                                                              .text,
+                                                      skills:
+                                                          _skillsController.text
+                                                              .split(',')
+                                                              .map(
+                                                                (e) => e.trim(),
+                                                              )
+                                                              .where(
+                                                                (e) =>
+                                                                    e.isNotEmpty,
+                                                              )
+                                                              .toList(),
+                                                      bio: _bioController.text,
+                                                      resumeUrl:
+                                                          _resumeUrlController
+                                                                  .text
+                                                                  .isNotEmpty
+                                                              ? _resumeUrlController
+                                                                  .text
+                                                              : null,
+                                                      education:
+                                                          _educationController
+                                                              .text,
+                                                    );
+                                                if (!context.mounted) return;
+                                                if (success) {
+                                                  await fetchUserProfile(ref);
+                                                  final candidate = ref.read(
+                                                    candidateProfileProvider,
+                                                  );
+                                                  if (candidate != null) {
+                                                    Navigator.of(
+                                                      context,
+                                                    ).pushReplacement(
+                                                      FadeThroughPageRoute(
+                                                        page:
+                                                            const FindJobsScreen(),
+                                                      ),
+                                                    );
+                                                  } else {
+                                                    ScaffoldMessenger.of(
+                                                      context,
+                                                    ).showSnackBar(
+                                                      const SnackBar(
+                                                        content: Text(
+                                                          'No se encontró perfil de candidato tras el registro.',
+                                                        ),
+                                                      ),
+                                                    );
+                                                  }
+                                                } else {
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    const SnackBar(
+                                                      content: Text(
+                                                        'Error al registrar el candidato',
+                                                      ),
+                                                    ),
+                                                  );
+                                                }
+                                              } else {
+                                                // REGISTRO EMPRESA
+                                                String? logoUrl;
+                                                FilePickerResult? result;
+
+                                                if (_selectedLogoPath != null) {
+                                                  // Attempt to get the previously picked file's bytes
+                                                  // This assumes _pickCompanyLogo stored the result or path
+                                                  // For simplicity, we re-pick if path is just a name.
+                                                  // A more robust solution would cache the FileBytes.
+                                                  result = await FilePicker
+                                                      .platform
+                                                      .pickFiles(
+                                                        type: FileType.image,
+                                                        allowMultiple: false,
+                                                        withData: true,
+                                                      );
+
+                                                  if (result != null &&
+                                                      result
+                                                              .files
+                                                              .single
+                                                              .bytes !=
+                                                          null) {
+                                                    // Show dialog while uploading logo
+                                                    if (context.mounted) {
+                                                      showDialog(
+                                                        context: context,
+                                                        barrierDismissible:
+                                                            false,
+                                                        builder:
+                                                            (_) => const Center(
+                                                              child:
+                                                                  CircularProgressIndicator(),
+                                                            ),
+                                                      );
+                                                    }
+                                                    final uploadLogo = ref.read(
+                                                      uploadCompanyLogoProvider,
+                                                    );
+                                                    try {
+                                                      logoUrl =
+                                                          await uploadLogo(
+                                                            result
+                                                                .files
+                                                                .single
+                                                                .bytes!,
+                                                            result
+                                                                .files
+                                                                .single
+                                                                .name,
+                                                          );
+                                                    } catch (e) {
+                                                      if (context.mounted)
+                                                        Navigator.of(
+                                                          context,
+                                                          rootNavigator: true,
+                                                        ).pop(); // Close dialog
+                                                      throw Exception(
+                                                        'Error al subir logo: $e',
+                                                      );
+                                                    }
+                                                    if (context.mounted)
+                                                      Navigator.of(
+                                                        context,
+                                                        rootNavigator: true,
+                                                      ).pop(); // Close dialog
+                                                  }
+                                                }
+
+                                                await registerCompany(
+                                                  email: _emailController.text,
+                                                  password:
+                                                      _passwordController.text,
+                                                  companyName:
+                                                      _companyNameController
+                                                          .text,
+                                                  phone:
+                                                      _companyPhoneController
+                                                          .text,
+                                                  address:
+                                                      _companyLocationController
+                                                          .text,
+                                                  industry: _companyIndustry,
+                                                  description:
+                                                      _companyDescriptionController
+                                                          .text,
+                                                  website: null,
+                                                  logo: logoUrl,
+                                                );
+
+                                                if (!context.mounted) return;
+                                                await fetchUserProfile(ref);
+                                                final company = ref.read(
+                                                  companyProfileProvider,
+                                                );
+
+                                                if (company != null) {
+                                                  Navigator.of(
+                                                    context,
+                                                  ).pushReplacement(
+                                                    FadeThroughPageRoute(
+                                                      page:
+                                                          const EmployerDashboardScreen(),
+                                                    ),
+                                                  );
+                                                } else {
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    const SnackBar(
+                                                      content: Text(
+                                                        'No se encontró perfil de empresa tras el registro.',
+                                                      ),
+                                                    ),
+                                                  );
+                                                }
+                                              }
+                                            }
+                                          } catch (e) {
+                                            if (context.mounted) {
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                SnackBar(
+                                                  content: Text('Error: $e'),
                                                 ),
-                                              ),
-                                            );
+                                              );
+                                            }
+                                          } finally {
+                                            if (context.mounted) {
+                                              setState(() {
+                                                _isLoading =
+                                                    false; // Stop loading
+                                              });
+                                            }
                                           }
                                         } else {
+                                          // Form is not valid, or user type not selected
+                                          // (The user type dropdown has its own validation implicitly)
                                           ScaffoldMessenger.of(
                                             context,
                                           ).showSnackBar(
                                             const SnackBar(
                                               content: Text(
-                                                'Error al registrar el candidato',
+                                                'Por favor completa todos los campos requeridos.',
                                               ),
                                             ),
                                           );
                                         }
-                                      } else {
-                                        // REGISTRO EMPRESA
-                                        String? logoUrl;
-                                        FilePickerResult? result;
-
-                                        if (_selectedLogoPath != null) {
-                                          // Attempt to get the previously picked file's bytes
-                                          // This assumes _pickCompanyLogo stored the result or path
-                                          // For simplicity, we re-pick if path is just a name.
-                                          // A more robust solution would cache the FileBytes.
-                                          result = await FilePicker.platform.pickFiles(
-                                            type: FileType.image,
-                                            allowMultiple: false,
-                                            withData: true,
-                                          );
-
-                                          if (result != null && result.files.single.bytes != null) {
-                                            // Show dialog while uploading logo
-                                            if (context.mounted) {
-                                              showDialog(
-                                                context: context,
-                                                barrierDismissible: false,
-                                                builder: (_) => const Center(
-                                                  child: CircularProgressIndicator(),
-                                                ),
-                                              );
-                                            }
-                                            final uploadLogo = ref.read(uploadCompanyLogoProvider);
-                                            try {
-                                              logoUrl = await uploadLogo(
-                                                result.files.single.bytes!,
-                                                result.files.single.name,
-                                              );
-                                            } catch (e) {
-                                              if (context.mounted) Navigator.of(context, rootNavigator: true).pop(); // Close dialog
-                                              throw Exception('Error al subir logo: $e');
-                                            }
-                                            if (context.mounted) Navigator.of(context, rootNavigator: true).pop(); // Close dialog
-                                          }
-                                        }
-
-                                        await registerCompany(
-                                          email: _emailController.text,
-                                          password: _passwordController.text,
-                                          companyName: _companyNameController.text,
-                                          phone: _companyPhoneController.text,
-                                          address: _companyLocationController.text,
-                                          industry: _companyIndustry,
-                                          description: _companyDescriptionController.text,
-                                          website: null,
-                                          logo: logoUrl,
-                                        );
-
-                                        if (!context.mounted) return;
-                                        await fetchUserProfile(ref);
-                                        final company = ref.read(companyProfileProvider);
-
-                                        if (company != null) {
-                                          Navigator.of(context).pushReplacement(
-                                            FadeThroughPageRoute(
-                                              page: const EmployerDashboardScreen(),
-                                            ),
-                                          );
-                                        } else {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(
-                                              content: Text(
-                                                'No se encontró perfil de empresa tras el registro.',
-                                              ),
-                                            ),
-                                          );
-                                        }
-                                      }
-                                    }
-                                  } catch (e) {
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Error: $e')),
-                                      );
-                                    }
-                                  } finally {
-                                    if (context.mounted) {
-                                      setState(() {
-                                        _isLoading = false; // Stop loading
-                                      });
-                                    }
-                                  }
-                                } else {
-                                  // Form is not valid, or user type not selected
-                                  // (The user type dropdown has its own validation implicitly)
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Por favor completa todos los campos requeridos.',
-                                      ),
-                                    ),
-                                  );
-                                }
-                              },
+                                      },
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 20,
                                 ),
-                                child: _isLoading
-                                    ? const SizedBox(
-                                        width: 24,
-                                        height: 24,
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2.0,
+                                child:
+                                    _isLoading
+                                        ? const SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 2.0,
+                                          ),
+                                        )
+                                        : Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              _showLoginForm
+                                                  ? 'Iniciar Sesión'
+                                                  : 'Registrarse',
+                                            ),
+                                            const SizedBox(width: 8.0),
+                                            Icon(
+                                              _showLoginForm
+                                                  ? Icons.login
+                                                  : Icons.arrow_forward,
+                                              color: Colors.white,
+                                            ),
+                                          ],
                                         ),
-                                      )
-                                    : Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      _showLoginForm
-                                          ? 'Iniciar Sesión'
-                                          : 'Registrarse',
-                                    ),
-                                    const SizedBox(width: 8.0),
-                                    Icon(
-                                      _showLoginForm
-                                          ? Icons.login
-                                          : Icons.arrow_forward,
-                                      color: Colors.white,
-                                    ),
-                                  ],
-                                ),
                               ),
                             ),
                           ),
@@ -1293,9 +1379,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               // 1. In login mode (not signup mode)
               // 2. User type is Candidate
               // 3. Not currently loading
-              onPressed: _isLoading || (_selectedUserType == 'Empresa' || !_showLoginForm)
-                  ? null
-                  : _showCVAnimationAndNavigate,
+              onPressed:
+                  _isLoading ||
+                          (_selectedUserType == 'Empresa' || !_showLoginForm)
+                      ? null
+                      : _showCVAnimationAndNavigate,
               // Note: We maintain the disabled logic for company user type
             ),
           ],

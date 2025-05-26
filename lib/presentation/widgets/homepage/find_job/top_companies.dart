@@ -73,7 +73,7 @@ class TopCompanies extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16.0),
-          
+
           // En móvil: mostrar con scroll horizontal
           if (isMobile)
             SizedBox(

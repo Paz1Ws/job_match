@@ -326,7 +326,7 @@ Widget _buildTopBar(BuildContext context, WidgetRef ref) {
               onTap: () {
                 // Add safety check before navigation
                 if (!context.mounted) return;
-                
+
                 // Use a slight delay to ensure ink effects complete
                 Future.microtask(() {
                   if (context.mounted) {
@@ -366,62 +366,92 @@ Widget _buildTopBar(BuildContext context, WidgetRef ref) {
           FadeInRight(
             duration: const Duration(milliseconds: 600),
             child: FittedBox(
-              child: isLoggedIn
-                  ? InkWell(
-                      onTap: () {
-                        // Add safety check before navigation
-                        if (!context.mounted) return;
-                        
-                        // Use Future.microtask to ensure ink animations complete first
-                        Future.microtask(() {
+              child:
+                  isLoggedIn
+                      ? InkWell(
+                        onTap: () {
+                          // Add safety check before navigation
                           if (!context.mounted) return;
-                          
-                          if (isCandidate && candidate != null) {
-                            Navigator.of(context).push(
-                              SlideUpFadePageRoute(page: const UserProfile()),
-                            );
-                          } else if (!isCandidate && company != null) {
-                            Navigator.of(context).push(
-                              SlideUpFadePageRoute(
-                                page: const CompanyProfileScreen(),
-                              ),
-                            );
-                          } else {
-                            Navigator.of(context).push(
-                              SlideUpFadePageRoute(page: const LoginScreen()),
-                            );
-                          }
-                        });
-                      },
-                      // Add key to help with unique identification
-                      key: const ValueKey('profile-avatar-ink'),
-                      child: CircleAvatar(
-                        backgroundColor: Colors.blueGrey,
-                        radius:
-                            kRadius20 +
-                            kSpacing4 / 2, // Adjusted radius for visibility
-                        backgroundImage:
-                            !isCandidate && company?.logo != null
-                                ? NetworkImage(company!.logo!)
-                                : null,
-                        child:
-                            !isCandidate && company?.logo != null
-                                ? null
-                                : const Icon(
-                                  Icons.person,
-                                  color: Colors.white,
+
+                          // Use Future.microtask to ensure ink animations complete first
+                          Future.microtask(() {
+                            if (!context.mounted) return;
+
+                            if (isCandidate && candidate != null) {
+                              Navigator.of(context).push(
+                                SlideUpFadePageRoute(page: const UserProfile()),
+                              );
+                            } else if (!isCandidate && company != null) {
+                              Navigator.of(context).push(
+                                SlideUpFadePageRoute(
+                                  page: const CompanyProfileScreen(),
                                 ),
-                      ),
-                    )
-                  : Wrap(
-                      spacing: 8,
-                      children: [
-                        if (!isMobile)
-                          TextButton(
+                              );
+                            } else {
+                              Navigator.of(context).push(
+                                SlideUpFadePageRoute(page: const LoginScreen()),
+                              );
+                            }
+                          });
+                        },
+                        // Add key to help with unique identification
+                        key: const ValueKey('profile-avatar-ink'),
+                        child: CircleAvatar(
+                          backgroundColor: Colors.blueGrey,
+                          radius:
+                              kRadius20 +
+                              kSpacing4 / 2, // Adjusted radius for visibility
+                          backgroundImage:
+                              !isCandidate && company?.logo != null
+                                  ? NetworkImage(company!.logo!)
+                                  : null,
+                          child:
+                              !isCandidate && company?.logo != null
+                                  ? null
+                                  : const Icon(
+                                    Icons.person,
+                                    color: Colors.white,
+                                  ),
+                        ),
+                      )
+                      : Wrap(
+                        spacing: 8,
+                        children: [
+                          if (!isMobile)
+                            TextButton(
+                              onPressed: () {
+                                // Add safety check before navigation
+                                if (!context.mounted) return;
+
+                                Future.microtask(() {
+                                  if (context.mounted) {
+                                    Navigator.of(context).push(
+                                      SlideUpFadePageRoute(
+                                        page: const LoginScreen(),
+                                      ),
+                                    );
+                                  }
+                                });
+                              },
+                              child: const Text(
+                                'Iniciar Sesión',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 0,
+                              ),
+                            ),
                             onPressed: () {
                               // Add safety check before navigation
                               if (!context.mounted) return;
-                              
+
                               Future.microtask(() {
                                 if (context.mounted) {
                                   Navigator.of(context).push(
@@ -432,39 +462,10 @@ Widget _buildTopBar(BuildContext context, WidgetRef ref) {
                                 }
                               });
                             },
-                            child: const Text(
-                              'Iniciar Sesión',
-                              style: TextStyle(color: Colors.white),
-                            ),
+                            child: const Text('Registrarse'),
                           ),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 0,
-                            ),
-                          ),
-                          onPressed: () {
-                            // Add safety check before navigation
-                            if (!context.mounted) return;
-                            
-                            Future.microtask(() {
-                              if (context.mounted) {
-                                Navigator.of(context).push(
-                                  SlideUpFadePageRoute(
-                                    page: const LoginScreen(),
-                                  ),
-                                );
-                              }
-                            });
-                          },
-                          child: const Text('Registrarse'),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
             ),
           ),
         ],
