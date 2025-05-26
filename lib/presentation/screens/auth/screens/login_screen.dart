@@ -1,22 +1,15 @@
-import 'package:animate_do/animate_do.dart';
-import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:job_match/config/util/animations.dart';
 import 'package:job_match/core/data/auth_request.dart';
 import 'package:job_match/core/data/cv_parsing.dart';
 import 'package:job_match/core/data/supabase_http_requests.dart';
-import 'package:job_match/presentation/screens/auth/widgets/info_card.dart';
-import 'package:job_match/presentation/screens/auth/widgets/left_cut_trapezoid_clipper.dart';
+import 'package:job_match/presentation/screens/auth/widgets/cv_lottie_dialog.dart';
+import 'package:job_match/presentation/screens/auth/widgets/right_sing_up_image_information.dart';
+import 'package:job_match/presentation/screens/auth/widgets/testimonial_carousel.dart';
 import 'package:job_match/presentation/screens/profiles/user_profile.dart';
-import 'package:job_match/presentation/screens/profiles/company_profile_screen.dart'; // For company profile navigation
 import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
-import 'package:lottie/lottie.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart';
 import 'package:job_match/presentation/screens/homepage/find_jobs_screen.dart';
 import 'package:job_match/presentation/screens/dashboard/employer_dashboard_screen.dart';
 
@@ -40,23 +33,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   late TextEditingController _passwordController;
 
   // Text controllers for signup fields (candidate)
-  final TextEditingController _fullNameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _locationController = TextEditingController();
-  final TextEditingController _skillsController = TextEditingController();
-  final TextEditingController _bioController = TextEditingController();
-  final TextEditingController _educationController = TextEditingController();
-  final TextEditingController _experienceController = TextEditingController();
-  final TextEditingController _resumeUrlController = TextEditingController();
-  final TextEditingController _experienceResume = TextEditingController();
+  final _fullNameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _locationController = TextEditingController();
+  final _skillsController = TextEditingController();
+  final _bioController = TextEditingController();
+  final _educationController = TextEditingController();
+  final _experienceController = TextEditingController();
+  final _resumeUrlController = TextEditingController();
+  final _experienceResume = TextEditingController();
 
   // Text controllers for signup fields (company)
-  final TextEditingController _companyNameController = TextEditingController();
-  final TextEditingController _companyPhoneController = TextEditingController();
-  final TextEditingController _companyLocationController =
-      TextEditingController();
-  final TextEditingController _companyDescriptionController =
-      TextEditingController();
+  final _companyNameController = TextEditingController();
+  final _companyPhoneController = TextEditingController();
+  final _companyLocationController = TextEditingController();
+  final _companyDescriptionController = TextEditingController();
+
   String _companyIndustry = 'Tecnología';
 
   String _selectedUserType = 'Candidato';
@@ -130,6 +122,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           _selectedLogoPath = result.files.single.name;
         });
 
+        if(!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Logo seleccionado: ${result.files.single.name}'),
@@ -138,6 +131,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
       }
     } catch (e) {
+      if(!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error seleccionando logo: $e'),
@@ -148,18 +142,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   final defaultTextStyle = TextStyle(color: Colors.grey.shade900);
-  InputDecoration defaultIconDecoration(String labelText, {IconData? icon}) =>
-      InputDecoration(
-        labelText: labelText,
-        border: const OutlineInputBorder(),
-        enabledBorder: const OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.grey),
-        ),
-        focusedBorder: const OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.grey),
-        ),
-        suffixIcon: icon != null ? Icon(icon, color: Colors.grey) : null,
-      );
+  
+  InputDecoration defaultIconDecoration(String labelText, {IconData? icon}) {
+    return InputDecoration(
+      labelText: labelText,
+      border: const OutlineInputBorder(),
+      enabledBorder: const OutlineInputBorder(
+        borderSide: BorderSide(color: Colors.grey),
+      ),
+      focusedBorder: const OutlineInputBorder(
+        borderSide: BorderSide(color: Colors.grey),
+      ),
+      suffixIcon: icon != null ? Icon(icon, color: Colors.grey) : null,
+    );
+  }
 
   void _toggleForm() {
     setState(() {
@@ -944,199 +940,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 // Imagen (derecha)
                 if (isMedium)
-                  Expanded(
-                    flex: 1,
-                    child: SizedBox(
-                      height: double.infinity,
-                      child: Stack(
-                        children: [
-                          ClipPath(
-                            clipper: LeftCutTrapezoidClipper(),
-                            child: Image.asset(
-                              'assets/images/login_background.png',
-
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.all(isWide ? 60.0 : 24.0),
-                            child: Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  const SizedBox(height: 16),
-
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 8.0,
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        AnimatedTextKit(
-                                          animatedTexts: [
-                                            TyperAnimatedText(
-                                              ref
-                                                  .watch(companiesCountProvider)
-                                                  .when(
-                                                    data:
-                                                        (data) =>
-                                                            '+$data empresas',
-                                                    error:
-                                                        (error, stackTrace) =>
-                                                            '0 empresas',
-                                                    loading: () => '-',
-                                                  ),
-                                              textStyle: TextStyle(
-                                                color: Colors.white,
-                                                fontSize:
-                                                    isWide
-                                                        ? 48.0
-                                                        : (isMedium
-                                                            ? 32.0
-                                                            : 22.0),
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                              textAlign: TextAlign.start,
-                                              speed: const Duration(
-                                                milliseconds: 100,
-                                              ),
-                                            ),
-                                          ],
-                                          totalRepeatCount: 1,
-                                          displayFullTextOnTap: true,
-                                          stopPauseOnTap: true,
-                                        ),
-                                        AnimatedTextKit(
-                                          animatedTexts: [
-                                            TyperAnimatedText(
-                                              ref
-                                                  .watch(
-                                                    candidatesCountProvider,
-                                                  )
-                                                  .when(
-                                                    data:
-                                                        (data) =>
-                                                            '+$data candidatos',
-                                                    error:
-                                                        (error, stackTrace) =>
-                                                            '0 candidatos',
-                                                    loading: () => '-',
-                                                  ),
-                                              textStyle: TextStyle(
-                                                color: Colors.white,
-                                                fontSize:
-                                                    isWide
-                                                        ? 48.0
-                                                        : (isMedium
-                                                            ? 32.0
-                                                            : 22.0),
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                              textAlign: TextAlign.start,
-                                              speed: const Duration(
-                                                milliseconds: 100,
-                                              ),
-                                            ),
-                                          ],
-                                          totalRepeatCount: 1,
-                                          displayFullTextOnTap: true,
-                                          stopPauseOnTap: true,
-                                        ),
-
-                                        Text(
-                                          'Esperando el match perfecto.',
-                                          textAlign: TextAlign.start,
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize:
-                                                isWide
-                                                    ? 48.0
-                                                    : (isMedium ? 32.0 : 22.0),
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                                  SizedBox(height: isWide ? 60 : 24),
-
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        InfoCard(
-                                          title: ref
-                                              .watch(jobsCountProvider)
-                                              .when(
-                                                data: (data) => data.toString(),
-                                                error:
-                                                    (error, stackTrace) => '0',
-                                                loading: () => '-',
-                                              ),
-                                          subtitle: 'Empleos Activos',
-                                          icon: Icon(
-                                            Icons.work_outline,
-                                            color: Colors.white,
-                                            size: isWide ? 42 : 32,
-                                          ),
-                                        ),
-                                        const Spacer(),
-                                        InfoCard(
-                                          title: ref
-                                              .watch(companiesCountProvider)
-                                              .when(
-                                                data: (data) => data.toString(),
-                                                error:
-                                                    (error, stackTrace) => '0',
-                                                loading: () => '-',
-                                              ),
-                                          subtitle: 'Empresas',
-                                          icon: Icon(
-                                            Icons.location_city,
-                                            color: Colors.white,
-                                            size: isWide ? 42 : 32,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        const Spacer(),
-                                        InfoCard(
-                                          title: ref
-                                              .watch(recentJobsCountProvider)
-                                              .when(
-                                                data: (data) => data.toString(),
-                                                error:
-                                                    (error, stackTrace) => '0',
-                                                loading: () => '-',
-                                              ),
-                                          subtitle: 'Nuevos Empleos',
-                                          icon: Icon(
-                                            Icons.work_outline,
-                                            color: Colors.white,
-                                            size: isWide ? 42 : 32,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                  RightSingUpImageInformation(isWide: isWide, isMedium: isMedium),
               ],
             ),
           ),
@@ -1178,7 +982,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         context: context,
         barrierColor: Colors.black.withAlpha(220),
         barrierDismissible: false,
-        builder: (_) => const _CVLottieDialog(),
+        builder: (_) => const CVLottieDialog(),
       );
 
       try {
@@ -1258,32 +1062,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   borderRadius: BorderRadius.all(Radius.circular(5)),
                 ),
               ),
-              icon: const Icon(Icons.facebook, color: Colors.blue),
-              label: const Text(
-                'Iniciar con Facebook',
-                style: TextStyle(color: Colors.black87),
-              ),
-              onPressed: () {},
-            ),
-            OutlinedButton.icon(
-              style: ElevatedButton.styleFrom(
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(5)),
-                ),
-              ),
-              icon: const Icon(Icons.mail_outline, color: Colors.red),
-              label: const Text(
-                'Iniciar con Google',
-                style: TextStyle(color: Colors.black87),
-              ),
-              onPressed: () {},
-            ),
-            OutlinedButton.icon(
-              style: ElevatedButton.styleFrom(
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(5)),
-                ),
-              ),
               icon: const Icon(Icons.upload_file, color: Colors.green),
               label: const Text(
                 'Iniciar con CV',
@@ -1301,307 +1079,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ],
         ),
         const SizedBox(height: 32.0),
-        _TestimonialCarousel(),
+        TestimonialCarousel(),
       ],
-    );
-  }
-}
-
-class _CVLottieDialog extends StatefulWidget {
-  const _CVLottieDialog();
-
-  @override
-  State<_CVLottieDialog> createState() => _CVLottieDialogState();
-}
-
-class _CVLottieDialogState extends State<_CVLottieDialog> {
-  @override
-  Widget build(BuildContext context) {
-    return FadeIn(
-      child: Dialog(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Center(
-              child: Lottie.asset(
-                'assets/animations/cv_lottie.json',
-                width: 250,
-                height: 250,
-                repeat: true, // Keep repeating until dialog is closed
-              ),
-            ),
-            const Text(
-              'Leyendo Datos...',
-              style: TextStyle(color: Colors.white),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Testimonial Carousel Widget (add at the end of the file)
-class _TestimonialCarousel extends StatefulWidget {
-  @override
-  State<_TestimonialCarousel> createState() => _TestimonialCarouselState();
-}
-
-class _TestimonialCarouselState extends State<_TestimonialCarousel> {
-  final PageController _controller = PageController(
-    viewportFraction: 0.55,
-    initialPage: 1000, // A large number to simulate infinite scrolling
-  );
-  double _currentPage = 1000;
-
-  final List<_TestimonialData> testimonials = [
-    _TestimonialData(
-      stars: 5,
-      text:
-          'La búsqueda de proveedores de nuestro sistema web fue clave después de obtener el fondo Mipymes Digitales, además hicieron un gran diagnóstico digital inicial.',
-      logo: 'assets/images/mcatalan.png',
-      name: 'MCatalan',
-    ),
-    _TestimonialData(
-      stars: 5,
-      text:
-          'Buscamos la asesoría de IncaValley para obtener el fondo de Startup Perú, entendieron rápidamente nuestros objetivos de crecimiento en Latam y fue una gran experiencia el postular con expertos en formulación.',
-      logo: 'assets/images/fresnos.png',
-      name: 'Fresnos',
-    ),
-    _TestimonialData(
-      stars: 5,
-      text:
-          'Gracias al equipo de consultores se pudo moldear la propuesta de innovación considerando variables que sumaron al proyecto y al Diagnóstico Empresarial.',
-      logo: 'assets/images/carze.png',
-      name: 'Carze',
-    ),
-    _TestimonialData(
-      stars: 5,
-      text:
-          'El acompañamiento y la experiencia del equipo fue fundamental para lograr nuestros objetivos de innovación.',
-      logo: 'assets/images/efecto_eureka.png',
-      name: 'Efecto Eureka',
-    ),
-    _TestimonialData(
-      stars: 5,
-      text:
-          'El soporte y la dedicación del equipo nos permitió crecer y mejorar nuestros procesos.',
-      logo: 'assets/images/dicesa.png',
-      name: 'Dicesa',
-    ),
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _precacheTestimonialImages();
-      _startAutoScroll();
-    });
-  }
-
-  void _precacheTestimonialImages() {
-    for (var testimonial in testimonials) {
-      precacheImage(AssetImage(testimonial.logo), context);
-    }
-  }
-
-  void _startAutoScroll() async {
-    while (mounted) {
-      await Future.delayed(const Duration(milliseconds: 2500));
-      if (!mounted) break;
-      _currentPage += 1;
-      _controller.animateToPage(
-        _currentPage.toInt(),
-        duration: const Duration(milliseconds: 650),
-        curve: Curves.easeInOut,
-      );
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    double cardWidth = 370;
-    double cardPadding = 24;
-    double fontSize = 17;
-    double logoSize = 24;
-    double nameFontSize = 17;
-
-    if (width < 600) {
-      cardWidth = width * 0.8;
-      cardPadding = 12;
-      fontSize = 14;
-      logoSize = 20;
-      nameFontSize = 15;
-    } else if (width < 900) {
-      cardWidth = 300;
-      cardPadding = 16;
-      fontSize = 15;
-      logoSize = 22;
-      nameFontSize = 16;
-    }
-
-    return SizedBox(
-      height: width < 600 ? 180 : 220,
-      child: PageView.builder(
-        controller: _controller,
-        itemBuilder: (context, index) {
-          final int realIndex = index % testimonials.length;
-          return AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              double selectedness = 0.0;
-              if (_controller.position.hasContentDimensions) {
-                selectedness =
-                    ((_controller.page ?? _controller.initialPage) - index)
-                        .toDouble();
-                selectedness = (1 - (selectedness.abs() * 0.5)).clamp(0.7, 1.0);
-              }
-              return Center(
-                child: Transform.scale(
-                  scale: selectedness,
-                  child: FadeIn(
-                    // Add FadeIn animation here
-                    duration: const Duration(milliseconds: 300),
-                    child: _TestimonialCard(
-                      data: testimonials[realIndex],
-                      width: cardWidth,
-                      padding: cardPadding,
-                      fontSize: fontSize,
-                      logoSize: logoSize,
-                      nameFontSize: nameFontSize,
-                    ),
-                  ),
-                ),
-              );
-            },
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _TestimonialData {
-  final int stars;
-  final String text;
-  final String logo;
-  final String name;
-
-  const _TestimonialData({
-    required this.stars,
-    required this.text,
-    required this.logo,
-    required this.name,
-  });
-}
-
-class _TestimonialCard extends StatelessWidget {
-  final _TestimonialData data;
-  final double width;
-  final double padding;
-  final double fontSize;
-  final double logoSize;
-  final double nameFontSize;
-
-  const _TestimonialCard({
-    required this.data,
-    required this.width,
-    required this.padding,
-    required this.fontSize,
-    required this.logoSize,
-    required this.nameFontSize,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Container(
-        width: width,
-        padding: EdgeInsets.all(padding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            FittedBox(
-              child: Row(
-                children: List.generate(
-                  data.stars,
-                  (index) =>
-                      Icon(Icons.star, color: Colors.amber, size: logoSize),
-                ),
-              ),
-            ),
-            Expanded(
-              child: Text(
-                data.text,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 5,
-                style: TextStyle(color: const Color(0xFF5F6C7B)),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  // Si el ancho es pequeño, apila logo y nombre
-                  if (constraints.maxWidth < 180) {
-                    return Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Image.asset(data.logo, height: logoSize),
-                        Spacer(),
-
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            data.name,
-                            style: TextStyle(
-                              decoration: TextDecoration.underline,
-                              fontWeight: FontWeight.bold,
-                              fontSize: nameFontSize,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  }
-                  // Si hay espacio, muestra en fila
-                  return Row(
-                    children: [
-                      Image.asset(data.logo, height: logoSize),
-                      Flexible(
-                        child: Text(
-                          data.name,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            decoration: TextDecoration.underline,
-                            fontWeight: FontWeight.bold,
-                            fontSize: nameFontSize,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
