@@ -139,19 +139,19 @@ class _EmployerDashboardScreenState
                     children: [
                       CircleAvatar(
                         radius: isMobile ? 40 : 60,
-                        backgroundColor: Colors.blueGrey,
+                        backgroundColor: Colors.blueGrey.shade100, // Fallback background
                         backgroundImage:
-                            company?.logo != null
-                                ? NetworkImage(company!.logo!)
+                            company?.logo != null && company!.logo!.isNotEmpty
+                                ? NetworkImage(company.logo!)
                                 : null,
                         child:
-                            company?.logo != null
-                                ? null
-                                : Icon(
+                            (company?.logo == null || company!.logo!.isEmpty)
+                                ? Icon(
                                   Icons.business,
                                   size: isMobile ? 40 : 60,
-                                  color: Colors.white,
-                                ),
+                                  color: Colors.blueGrey.shade700,
+                                )
+                                : null,
                       ),
                       const SizedBox(height: 20),
                       Text(

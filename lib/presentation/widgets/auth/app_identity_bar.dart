@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:job_match/config/util/animations.dart';
 import 'package:job_match/core/data/auth_request.dart';
+import 'package:job_match/presentation/screens/auth/screens/login_screen.dart';
+import 'package:job_match/presentation/screens/employer/find_employees_screen.dart';
 import 'package:job_match/presentation/screens/homepage/find_jobs_screen.dart';
 import 'package:job_match/presentation/screens/profiles/user_profile.dart';
 import 'package:job_match/presentation/screens/profiles/company_profile_screen.dart';
@@ -20,8 +22,33 @@ class AppIdentityBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isCandidate = ref.watch(isCandidateProvider);
+    final candidate = ref.watch(candidateProfileProvider);
     final company = ref.watch(companyProfileProvider);
+    final isCandidate = ref.watch(isCandidateProvider);
+    final bool isLoggedIn = candidate != null || company != null;
+
+    ImageProvider? backgroundImage;
+    Widget? childIcon;
+
+    if (isLoggedIn) {
+      if (isCandidate &&
+          candidate?.photo != null &&
+          candidate!.photo!.isNotEmpty) {
+        backgroundImage = NetworkImage(candidate.photo!);
+      } else if (!isCandidate &&
+          company?.logo != null &&
+          company!.logo!.isNotEmpty) {
+        backgroundImage = NetworkImage(company.logo!);
+      }
+    }
+
+    if (backgroundImage == null) {
+      childIcon = Icon(
+        isCandidate ? Icons.person : Icons.business,
+        color: Colors.white,
+        size: kRadius20, // Adjust size as needed
+      );
+    }
 
     return Container(
       height: height,
@@ -37,8 +64,8 @@ class AppIdentityBar extends ConsumerWidget {
             },
             child: Image.asset(
               'assets/images/job_match_black.png',
-              width: kIconSize48,
-              height: kIconSize48,
+              width: 64,
+              height: 64,
             ),
           ),
           Spacer(),
@@ -49,43 +76,49 @@ class AppIdentityBar extends ConsumerWidget {
               color: Colors.grey[700],
               size: kIconSize24 + kSpacing4,
             ),
-            onPressed: () {},
+            onPressed: () {
+              isCandidate
+                  ? Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const FindJobsScreen(),
+                    ),
+                  )
+                  : Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const FindEmployeesScreen(),
+                    ),
+                  );
+            },
           ),
-          const SizedBox(width: kSpacing8),
-          IconButton(
-            icon: Icon(
-              Icons.notifications_none,
-              color: Colors.grey[700],
-              size: kIconSize24 + kSpacing4,
-            ),
-            onPressed: () {},
-          ),
+
           const SizedBox(width: kSpacing12 + kSpacing4),
           InkWell(
             onTap:
                 onProfileTap ??
                 () {
-                  if (isCandidate) {
+                  if (isLoggedIn) {
+                    if (isCandidate) {
+                      Navigator.of(
+                        context,
+                      ).push(FadeThroughPageRoute(page: const UserProfile()));
+                    } else {
+                      Navigator.of(context).push(
+                        FadeThroughPageRoute(
+                          page: const CompanyProfileScreen(),
+                        ),
+                      );
+                    }
+                  } else {
                     Navigator.of(
                       context,
-                    ).push(SlideUpFadePageRoute(page: const UserProfile()));
-                  } else {
-                    Navigator.of(context).push(
-                      SlideUpFadePageRoute(page: const CompanyProfileScreen()),
-                    );
+                    ).push(FadeThroughPageRoute(page: const LoginScreen()));
                   }
                 },
             child: CircleAvatar(
               backgroundColor: Colors.blueGrey,
               radius: kRadius20,
-              backgroundImage:
-                  !isCandidate && company?.logo != null
-                      ? NetworkImage(company!.logo!)
-                      : null,
-              child:
-                  !isCandidate && company?.logo != null
-                      ? null
-                      : const Icon(Icons.person, color: Colors.white),
+              backgroundImage: backgroundImage,
+              child: childIcon,
             ),
           ),
         ],

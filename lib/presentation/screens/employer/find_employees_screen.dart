@@ -60,12 +60,12 @@ class _FindEmployeesScreenState extends ConsumerState<FindEmployeesScreen> {
                                 ],
                               ),
                             ),
-                            const Divider(),
-                            Expanded(
-                              child: SingleChildScrollView(
-                                child: _buildEmployeeFilterSidebar(),
-                              ),
-                            ),
+                            // const Divider(),
+                            // Expanded(
+                            //   child: SingleChildScrollView(
+                            //     child: _buildEmployeeFilterSidebar(),
+                            //   ),
+                            // ),
                           ],
                         ),
                       ),
@@ -261,16 +261,16 @@ class _FindEmployeesScreenState extends ConsumerState<FindEmployeesScreen> {
                           : Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                flex: 2,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: FadeInLeft(
-                                    duration: const Duration(milliseconds: 700),
-                                    child: _buildEmployeeFilterSidebar(),
-                                  ),
-                                ),
-                              ),
+                              // Expanded(
+                              //   flex: 2,
+                              //   child: Padding(
+                              //     padding: const EdgeInsets.all(16.0),
+                              //     child: FadeInLeft(
+                              //       duration: const Duration(milliseconds: 700),
+                              //       child: _buildEmployeeFilterSidebar(),
+                              //     ),
+                              //   ),
+                              // ),
                               Expanded(
                                 flex: 5,
                                 child: Padding(
@@ -344,50 +344,50 @@ class _FindEmployeesScreenState extends ConsumerState<FindEmployeesScreen> {
     );
   }
 
-  Widget _buildEmployeeFilterSidebar() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Filtros de Búsqueda',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          _buildFilterSection('Experiencia', ['Junior', 'Mid', 'Senior']),
-          const SizedBox(height: 16),
-          _buildFilterSection('Ubicación', [
-            'Lima',
-            'Arequipa',
-            'Cusco',
-            'Remoto',
-            'Trujillo',
-          ]),
-          const SizedBox(height: 16),
-          _buildFilterSection('Habilidades', [
-            'Flutter',
-            'React',
-            'Python',
-            'Java',
-            'JavaScript',
-          ]),
-        ],
-      ),
-    );
-  }
+  // Widget _buildEmployeeFilterSidebar() {
+  //   return Container(
+  //     padding: const EdgeInsets.all(16),
+  //     decoration: BoxDecoration(
+  //       color: Colors.white,
+  //       borderRadius: BorderRadius.circular(8),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: Colors.grey.withOpacity(0.1),
+  //           spreadRadius: 1,
+  //           blurRadius: 4,
+  //           offset: const Offset(0, 2),
+  //         ),
+  //       ],
+  //     ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         const Text(
+  //           'Filtros de Búsqueda',
+  //           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+  //         ),
+  //         const SizedBox(height: 16),
+  //         _buildFilterSection('Experiencia', ['Junior', 'Mid', 'Senior']),
+  //         const SizedBox(height: 16),
+  //         _buildFilterSection('Ubicación', [
+  //           'Lima',
+  //           'Arequipa',
+  //           'Cusco',
+  //           'Remoto',
+  //           'Trujillo',
+  //         ]),
+  //         const SizedBox(height: 16),
+  //         _buildFilterSection('Habilidades', [
+  //           'Flutter',
+  //           'React',
+  //           'Python',
+  //           'Java',
+  //           'JavaScript',
+  //         ]),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildFilterSection(String title, List<String> options) {
     return Column(
@@ -487,7 +487,7 @@ class _FindEmployeesScreenState extends ConsumerState<FindEmployeesScreen> {
                     ),
                     SizedBox(height: isMobile ? 2 : 4),
                     Text(
-                      candidate.experienceLevel ?? 'Nivel no especificado',
+                      candidate.mainPosition ?? 'Nivel no especificado',
                       style: TextStyle(
                         fontSize: isMobile ? 12 : 14,
                         color: Colors.grey.shade600,

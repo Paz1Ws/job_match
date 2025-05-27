@@ -9,7 +9,8 @@ class Candidate {
   final String? location;
   final String? resumeUrl;
   final String? phone;
-  final String? experienceLevel; // Debe ser 'Junior', 'Mid' o 'Senior'
+  final String? mainPosition;
+  final String? photo;
 
   Candidate({
     required this.userId,
@@ -22,7 +23,8 @@ class Candidate {
     this.location,
     this.resumeUrl,
     this.phone,
-    this.experienceLevel,
+    this.mainPosition,
+    this.photo,
   });
 
   factory Candidate.fromJson(Map<String, dynamic> json) => Candidate(
@@ -37,7 +39,8 @@ class Candidate {
     location: json['location'] as String?,
     resumeUrl: json['resume_url'] as String?,
     phone: json['phone'] as String?,
-    experienceLevel: json['experience_level'] as String?,
+    mainPosition: json['main_position'] as String?,
+    photo: json['photo'] as String?,
   );
 
   Map<String, dynamic> toJson() => {
@@ -51,7 +54,8 @@ class Candidate {
     if (location != null) 'location': location,
     if (resumeUrl != null) 'resume_url': resumeUrl,
     if (phone != null) 'phone': phone,
-    if (experienceLevel != null) 'experience_level': experienceLevel,
+    if (mainPosition != null) 'main_position': mainPosition,
+    if (photo != null) 'photo': photo,
   };
   Candidate copyWith({
     String? userId,
@@ -64,7 +68,8 @@ class Candidate {
     String? location,
     String? resumeUrl,
     String? phone,
-    String? experienceLevel,
+    String? mainPosition,
+    String? photo,
   }) {
     return Candidate(
       userId: userId ?? this.userId,
@@ -77,7 +82,8 @@ class Candidate {
       location: location ?? this.location,
       resumeUrl: resumeUrl ?? this.resumeUrl,
       phone: phone ?? this.phone,
-      experienceLevel: experienceLevel ?? this.experienceLevel,
+      mainPosition: mainPosition ?? this.mainPosition,
+      photo: photo ?? this.photo,
     );
   }
 }

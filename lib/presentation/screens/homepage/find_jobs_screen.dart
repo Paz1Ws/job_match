@@ -61,12 +61,12 @@ class FindJobsScreen extends ConsumerWidget {
                                 ],
                               ),
                             ),
-                            const Divider(),
-                            Expanded(
-                              child: SingleChildScrollView(
-                                child: JobFilterSidebar(),
-                              ),
-                            ),
+                            // const Divider(),
+                            // Expanded(
+                            //   child: SingleChildScrollView(
+                            //     child: JobFilterSidebar(),
+                            //   ),
+                            // ),
                           ],
                         ),
                       ),
@@ -264,17 +264,17 @@ class FindJobsScreen extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Flexible(
-                                flex: 2,
-                                fit: FlexFit.loose,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: FadeInLeft(
-                                    duration: const Duration(milliseconds: 700),
-                                    child: JobFilterSidebar(),
-                                  ),
-                                ),
-                              ),
+                              // Flexible(
+                              //   flex: 2,
+                              //   fit: FlexFit.loose,
+                              //   child: Padding(
+                              //     padding: const EdgeInsets.all(16.0),
+                              //     child: FadeInLeft(
+                              //       duration: const Duration(milliseconds: 700),
+                              //       child: JobFilterSidebar(),
+                              //     ),
+                              //   ),
+                              // ),
                               Flexible(
                                 flex: 5,
                                 fit: FlexFit.loose,
@@ -314,6 +314,29 @@ Widget _buildTopBar(BuildContext context, WidgetRef ref) {
   final size = MediaQuery.sizeOf(context);
   final isMobile = size.width < 700;
 
+  ImageProvider? userImageProvider;
+  Widget? fallbackIcon;
+
+  if (isLoggedIn) {
+    if (isCandidate &&
+        candidate?.photo != null &&
+        candidate!.photo!.isNotEmpty) {
+      userImageProvider = NetworkImage(candidate.photo!);
+    } else if (!isCandidate &&
+        company?.logo != null &&
+        company!.logo!.isNotEmpty) {
+      userImageProvider = NetworkImage(company.logo!);
+    }
+  }
+
+  if (userImageProvider == null && isLoggedIn) {
+    fallbackIcon = Icon(
+      isCandidate ? Icons.person : Icons.business,
+      color: Colors.white,
+      size: kIconSize20,
+    );
+  }
+
   return Align(
     alignment: Alignment.center,
     child: Padding(
@@ -345,22 +368,6 @@ Widget _buildTopBar(BuildContext context, WidgetRef ref) {
               ),
             ),
           ),
-          const Spacer(),
-          if (!isMobile)
-            FadeInDown(
-              duration: const Duration(milliseconds: 600),
-              child: Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildTopBarButton('Inicio', selected: true),
-                    _buildTopBarButton('Empleos'),
-                    _buildTopBarButton('Sobre Nosotros'),
-                    _buildTopBarButton('Contáctanos'),
-                  ],
-                ),
-              ),
-            ),
 
           const Spacer(),
           FadeInRight(
@@ -370,101 +377,48 @@ Widget _buildTopBar(BuildContext context, WidgetRef ref) {
                   isLoggedIn
                       ? InkWell(
                         onTap: () {
+                          if (isCandidate) {
+                            Navigator.of(context).push(
+                              FadeThroughPageRoute(page: const UserProfile()),
+                            );
+                          } else {
+                            Navigator.of(context).push(
+                              FadeThroughPageRoute(
+                                page: const CompanyProfileScreen(),
+                              ),
+                            );
+                          }
+                        },
+                        child: CircleAvatar(
+                          radius: kIconSize20,
+                          backgroundColor: Colors.blueGrey.shade700,
+                          backgroundImage: userImageProvider,
+                          child: fallbackIcon,
+                        ),
+                      )
+                      : ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 0,
+                          ),
+                        ),
+                        onPressed: () {
                           // Add safety check before navigation
                           if (!context.mounted) return;
 
-                          // Use Future.microtask to ensure ink animations complete first
                           Future.microtask(() {
-                            if (!context.mounted) return;
-
-                            if (isCandidate && candidate != null) {
-                              Navigator.of(context).push(
-                                SlideUpFadePageRoute(page: const UserProfile()),
-                              );
-                            } else if (!isCandidate && company != null) {
-                              Navigator.of(context).push(
-                                SlideUpFadePageRoute(
-                                  page: const CompanyProfileScreen(),
-                                ),
-                              );
-                            } else {
+                            if (context.mounted) {
                               Navigator.of(context).push(
                                 SlideUpFadePageRoute(page: const LoginScreen()),
                               );
                             }
                           });
                         },
-                        // Add key to help with unique identification
-                        key: const ValueKey('profile-avatar-ink'),
-                        child: CircleAvatar(
-                          backgroundColor: Colors.blueGrey,
-                          radius:
-                              kRadius20 +
-                              kSpacing4 / 2, // Adjusted radius for visibility
-                          backgroundImage:
-                              !isCandidate && company?.logo != null
-                                  ? NetworkImage(company!.logo!)
-                                  : null,
-                          child:
-                              !isCandidate && company?.logo != null
-                                  ? null
-                                  : const Icon(
-                                    Icons.person,
-                                    color: Colors.white,
-                                  ),
-                        ),
-                      )
-                      : Wrap(
-                        spacing: 8,
-                        children: [
-                          if (!isMobile)
-                            TextButton(
-                              onPressed: () {
-                                // Add safety check before navigation
-                                if (!context.mounted) return;
-
-                                Future.microtask(() {
-                                  if (context.mounted) {
-                                    Navigator.of(context).push(
-                                      SlideUpFadePageRoute(
-                                        page: const LoginScreen(),
-                                      ),
-                                    );
-                                  }
-                                });
-                              },
-                              child: const Text(
-                                'Iniciar Sesión',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 0,
-                              ),
-                            ),
-                            onPressed: () {
-                              // Add safety check before navigation
-                              if (!context.mounted) return;
-
-                              Future.microtask(() {
-                                if (context.mounted) {
-                                  Navigator.of(context).push(
-                                    SlideUpFadePageRoute(
-                                      page: const LoginScreen(),
-                                    ),
-                                  );
-                                }
-                              });
-                            },
-                            child: const Text('Registrarse'),
-                          ),
-                        ],
+                        child: const Text('Registrarse'),
                       ),
             ),
           ),

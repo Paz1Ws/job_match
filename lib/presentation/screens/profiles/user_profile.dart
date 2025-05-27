@@ -14,6 +14,7 @@ import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:job_match/core/domain/models/job_model.dart';
 import 'package:job_match/core/data/cv_parsing.dart'
     show generateRandomMatchPercentage;
+import 'package:url_launcher/url_launcher_string.dart';
 
 class UserProfile extends ConsumerStatefulWidget {
   final Candidate? candidateData;
@@ -98,7 +99,7 @@ class ProfileDetailHeader extends ConsumerWidget {
                   height: bannerHeight,
                   width: double.infinity,
                   child: Image.asset(
-                    'assets/images/profile_background.jpeg',
+                    'assets/images/jobmatch_background.jpg',
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -149,55 +150,16 @@ class ProfileDetailHeader extends ConsumerWidget {
                     ? (kPadding20 + kSpacing4) - cardOverlap + kPadding12
                     : kPadding12,
           ),
-          // "Compartir este perfil" section
-          FadeInLeft(
-            duration: const Duration(milliseconds: 700),
-            child: Center(
-              child: Padding(
-                padding: kPaddingAll12,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      'Compartir este perfil:',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 15.0,
-                        color: Color(0xFF222B45),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 8,
-                      children: [
-                        ProfileSocialShareButton(
-                          color: const Color(0xFF1877F3),
-                          icon: Icons.facebook,
-                          label: 'Facebook',
-                          onPressed: () {},
-                        ),
-                        ProfileSocialShareButton(
-                          color: const Color(0xFF1DA1F2),
-                          icon: Icons.alternate_email,
-                          label: 'Twitter',
-                          onPressed: () {},
-                        ),
-                        ProfileSocialShareButton(
-                          color: const Color(0xFFE60023),
-                          icon: Icons.push_pin,
-                          label: 'Pinterest',
-                          onPressed: () {},
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
+
+          // Profile Details Section (Bio, Education, Experience, etc.)
+          // This section will now be rendered for both mobile and desktop.
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: pageHorizontalPadding),
+            child: _buildProfileDetails(context, isMobile: isMobile),
           ),
+          const SizedBox(
+            height: kPadding20 + kSpacing4,
+          ), // Added spacing after profile details
           // "Trabajos Recomendados" title
           FadeInUp(
             duration: const Duration(milliseconds: 700),
@@ -308,9 +270,19 @@ class ProfileDetailHeader extends ConsumerWidget {
                   duration: const Duration(milliseconds: 900),
                   child: CircleAvatar(
                     radius: kRadius20 + kRadius12,
-                    backgroundImage: const AssetImage(
-                      'assets/images/job_match.jpg',
-                    ),
+                    backgroundColor: Colors.grey.shade200,
+                    backgroundImage:
+                        candidate.photo != null && candidate.photo!.isNotEmpty
+                            ? NetworkImage(candidate.photo!)
+                            : null,
+                    child:
+                        candidate.photo == null || candidate.photo!.isEmpty
+                            ? Icon(
+                              Icons.person,
+                              size: kRadius20 + kRadius12,
+                              color: Colors.grey.shade400,
+                            )
+                            : null,
                   ),
                 ),
               ),
@@ -320,7 +292,7 @@ class ProfileDetailHeader extends ConsumerWidget {
                 duration: const Duration(milliseconds: 700),
                 child: Center(
                   child: SelectableText(
-                    candidate.name ?? '',
+                    candidate.name ?? 'Nombre no disponible',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 18.0,
@@ -335,11 +307,37 @@ class ProfileDetailHeader extends ConsumerWidget {
                 duration: const Duration(milliseconds: 700),
                 child: Center(
                   child: SelectableText(
-                    candidate.location ?? '',
+                    candidate.mainPosition ?? 'Puesto no especificado',
                     style: const TextStyle(
-                      fontSize: 13.0,
-                      color: Color(0xFF6C757D),
+                      fontSize: 15.0,
+                      color: Color(0xFF3366FF),
+                      fontWeight: FontWeight.w500,
                     ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: kSpacing4),
+              FadeInLeft(
+                delay: const Duration(milliseconds: 200),
+                duration: const Duration(milliseconds: 700),
+                child: Center(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.location_on_outlined,
+                        size: 16,
+                        color: Colors.grey.shade600,
+                      ),
+                      const SizedBox(width: 4),
+                      SelectableText(
+                        candidate.location ?? 'Ubicación no especificada',
+                        style: TextStyle(
+                          fontSize: 13.0,
+                          color: Color(0xFF6C757D),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -353,13 +351,20 @@ class ProfileDetailHeader extends ConsumerWidget {
                     alignment: WrapAlignment.center,
                     spacing: 6,
                     children: [
-                      if (candidate.skills != null)
+                      if (candidate.skills != null &&
+                          candidate.skills!.isNotEmpty)
                         ...candidate.skills!.map(
                           (skill) => InfoChip(
                             label: skill,
                             backgroundColor: const Color(0xFF3366FF),
                             textColor: Colors.white,
                           ),
+                        )
+                      else
+                        InfoChip(
+                          label: "Sin habilidades registradas",
+                          backgroundColor: Colors.grey.shade300,
+                          textColor: Colors.black87,
                         ),
                     ],
                   ),
@@ -369,6 +374,7 @@ class ProfileDetailHeader extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 16),
+
         // Botones centrados: Dashboard y Buscar Empleo
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -443,115 +449,6 @@ class ProfileDetailHeader extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 16),
-
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                const SectionTitle(text: 'Perfil Profesional'),
-                JustifiedText(text: candidate.bio ?? ''),
-                if (candidate.resumeUrl != null &&
-                    candidate.resumeUrl!.contains('http'))
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12, bottom: 8),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.picture_as_pdf,
-                          color: Colors.red,
-                          size: 22,
-                        ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Link al CV:',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 15,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: SelectableText(
-                            candidate.resumeUrl!,
-                            style: const TextStyle(
-                              color: Colors.blue,
-                              decoration: TextDecoration.underline,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                const SectionTitle(text: 'Educación'),
-                Text(candidate.education ?? ''),
-                const SectionTitle(text: 'Experiencia'),
-                Text(candidate.experience ?? ''),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        // Panel de características del perfil ocupa todo el ancho
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 0),
-          child: FadeInRight(
-            duration: const Duration(milliseconds: 700),
-            child: Container(
-              width: double.infinity,
-              padding: kPaddingAll20,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF7F8FA),
-                border: Border.all(
-                  color: Colors.grey.shade200,
-                  width: kStroke1,
-                ),
-                borderRadius: BorderRadius.circular(kRadius12 + kRadius4 / 2),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Características del Perfil',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Color(0xFF222B45),
-                    ),
-                  ),
-                  const SizedBox(height: kSpacing12),
-                  ProfileOverviewItem(
-                    icon: Icons.person,
-                    label: 'Nivel',
-                    value: candidate.experienceLevel ?? '',
-                  ),
-                  ProfileOverviewItem(
-                    icon: Icons.location_on,
-                    label: 'Ubicación',
-                    value: candidate.location ?? '',
-                  ),
-                  ProfileOverviewItem(
-                    icon: Icons.school,
-                    label: 'Educación',
-                    value: candidate.education ?? '',
-                  ),
-                  ProfileOverviewItem(
-                    icon: Icons.work,
-                    label: 'Experiencia',
-                    value: candidate.experience ?? '',
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // Perfil profesional, educación, experiencia
       ],
     );
   }
@@ -569,7 +466,19 @@ class ProfileDetailHeader extends ConsumerWidget {
           duration: const Duration(milliseconds: 900),
           child: CircleAvatar(
             radius: kRadius20 + kRadius12,
-            backgroundImage: const AssetImage('assets/images/job_match.jpg'),
+            backgroundColor: Colors.grey.shade200,
+            backgroundImage:
+                candidate.photo != null && candidate.photo!.isNotEmpty
+                    ? NetworkImage(candidate.photo!)
+                    : null,
+            child:
+                candidate.photo == null || candidate.photo!.isEmpty
+                    ? Icon(
+                      Icons.person,
+                      size: kRadius20 + kRadius12,
+                      color: Colors.grey.shade400,
+                    )
+                    : null,
           ),
         ),
         const SizedBox(width: kSpacing20),
@@ -580,7 +489,7 @@ class ProfileDetailHeader extends ConsumerWidget {
               FadeInLeft(
                 duration: const Duration(milliseconds: 700),
                 child: SelectableText(
-                  candidate.name ?? '',
+                  candidate.name ?? 'Nombre no disponible',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 22.0,
@@ -588,16 +497,39 @@ class ProfileDetailHeader extends ConsumerWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: kSpacing8),
+              const SizedBox(height: kSpacing4),
+              FadeInLeft(
+                delay: const Duration(milliseconds: 100),
+                duration: const Duration(milliseconds: 700),
+                child: SelectableText(
+                  candidate.mainPosition ?? 'Puesto no especificado',
+                  style: const TextStyle(
+                    fontSize: 16.0,
+                    color: Color(0xFF3366FF),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              const SizedBox(height: kSpacing4),
               FadeInLeft(
                 delay: const Duration(milliseconds: 200),
                 duration: const Duration(milliseconds: 700),
-                child: SelectableText(
-                  candidate.location ?? '',
-                  style: const TextStyle(
-                    fontSize: 15.0,
-                    color: Color(0xFF6C757D),
-                  ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.location_on_outlined,
+                      size: 16,
+                      color: Colors.grey.shade600,
+                    ),
+                    const SizedBox(width: 4),
+                    SelectableText(
+                      candidate.location ?? 'Ubicación no especificada',
+                      style: const TextStyle(
+                        fontSize: 15.0,
+                        color: Color(0xFF6C757D),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: kSpacing12),
@@ -608,7 +540,8 @@ class ProfileDetailHeader extends ConsumerWidget {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      if (candidate.skills != null)
+                      if (candidate.skills != null &&
+                          candidate.skills!.isNotEmpty)
                         ...candidate.skills!.map(
                           (skill) => Padding(
                             padding: const EdgeInsets.only(right: 8.0),
@@ -618,6 +551,12 @@ class ProfileDetailHeader extends ConsumerWidget {
                               textColor: Colors.white,
                             ),
                           ),
+                        )
+                      else
+                        InfoChip(
+                          label: "Sin habilidades registradas",
+                          backgroundColor: Colors.grey.shade300,
+                          textColor: Colors.black87,
                         ),
                     ],
                   ),
@@ -627,63 +566,34 @@ class ProfileDetailHeader extends ConsumerWidget {
           ),
         ),
         const SizedBox(width: kSpacing20),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Container(
-              width: kRadius40 + kSpacing4,
-              height: kRadius40 + kSpacing4,
-              decoration: BoxDecoration(
-                color: Colors.lightBlue[100],
-                borderRadius: BorderRadius.circular(kRadius8),
-              ),
-              child: IconButton(
-                icon: const Icon(
-                  Icons.bookmark_border,
-                  color: Colors.blue,
-                  size: kIconSize24 + kSpacing4,
+        SizedBox(
+          height: kRadius40 + kSpacing4,
+          child: Material(
+            color: Colors.transparent,
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.arrow_forward, size: kIconSize20),
+              label: const Text('Dashboard', style: TextStyle(fontSize: 15)),
+              onPressed: () {
+                Navigator.of(context).push(
+                  FadeThroughPageRoute(page: const CandidateDashboardScreen()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF3366FF),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: kPadding20 + kSpacing4,
+                  vertical: 0,
                 ),
-                onPressed: () {},
-                tooltip: 'Guardar',
-                iconSize: kIconSize24 + kSpacing4,
+                textStyle: const TextStyle(fontSize: 15.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(kRadius8),
+                ),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                minimumSize: Size.zero,
               ),
             ),
-            const SizedBox(width: kSpacing12 + kSpacing4 / 2),
-            SizedBox(
-              height: kRadius40 + kSpacing4,
-              child: Material(
-                color: Colors.transparent,
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.arrow_forward, size: kIconSize20),
-                  label: const Text(
-                    'Dashboard',
-                    style: TextStyle(fontSize: 15),
-                  ),
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      FadeThroughPageRoute(
-                        page: const CandidateDashboardScreen(),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF3366FF),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: kPadding20 + kSpacing4,
-                      vertical: 0,
-                    ),
-                    textStyle: const TextStyle(fontSize: 15.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(kRadius8),
-                    ),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    minimumSize: Size.zero,
-                  ),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ],
     );
@@ -701,76 +611,333 @@ class ProfileDetailHeader extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SectionTitle(text: 'Perfil Profesional'),
-              JustifiedText(text: candidate.bio ?? ''),
-              if (candidate.resumeUrl != null &&
-                  candidate.resumeUrl!.contains('http'))
-                Padding(
-                  padding: const EdgeInsets.only(top: 12, bottom: 8),
-                  child: Row(
+              // SECCIÓN: PERFIL PROFESIONAL
+              FadeInLeft(
+                duration: const Duration(milliseconds: 700),
+                child: Container(
+                  padding: EdgeInsets.all(isMobile ? kPadding16 : kPadding20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(kRadius12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.1),
+                        spreadRadius: 1,
+                        blurRadius: 3,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
-                        Icons.picture_as_pdf,
-                        color: Colors.red,
-                        size: 22,
-                      ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Link al CV:',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 15,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: SelectableText(
-                          candidate.resumeUrl!,
-                          style: const TextStyle(
-                            color: Colors.blue,
-                            decoration: TextDecoration.underline,
-                            fontSize: 14,
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.person_outline,
+                            color: Colors.blue.shade700,
                           ),
+                          const SizedBox(width: kSpacing8),
+                          const Text(
+                            'Perfil Profesional',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              color: Color(0xFF222B45),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: kSpacing12),
+                      JustifiedText(
+                        text:
+                            candidate.bio ??
+                            'Información biográfica no disponible',
+                      ),
+                      const SizedBox(height: kSpacing8),
+                      if (candidate.mainPosition != null &&
+                          candidate.mainPosition!.isNotEmpty)
+                        Container(
+                          margin: const EdgeInsets.only(top: 8),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.work_outline,
+                                size: 18,
+                                color: Colors.blue.shade600,
+                              ),
+                              const SizedBox(width: kSpacing8),
+                              Flexible(
+                                child: Text(
+                                  'Puesto principal: ${candidate.mainPosition}',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    color: Colors.blue.shade700,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: kSpacing12),
+
+              // SECCIÓN: CV
+              if (candidate.resumeUrl != null &&
+                  candidate.resumeUrl!.contains("http"))
+                FadeInLeft(
+                  delay: const Duration(milliseconds: 200),
+                  duration: const Duration(milliseconds: 700),
+                  child: Container(
+                    padding: EdgeInsets.all(isMobile ? kPadding16 : kPadding20),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(kRadius12),
+                      border: Border.all(color: Colors.blue.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(kPadding12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(kRadius8),
+                          ),
+                          child: const Icon(
+                            Icons.picture_as_pdf,
+                            color: Colors.red,
+                            size: 28,
+                          ),
+                        ),
+                        const SizedBox(width: kSpacing12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Curriculum Vitae',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(height: kSpacing4),
+                              InkWell(
+                                onTap: () async {
+                                  // Aquí se podría implementar la lógica para abrir el PDF
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Abriendo CV...'),
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  'Ver CV',
+                                  style: TextStyle(
+                                    color: Colors.blue.shade700,
+                                    decoration: TextDecoration.underline,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.download_outlined,
+                            color: Colors.blue,
+                          ),
+                          onPressed: () {
+                            // Aquí se implementaría la descarga
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Descargando CV...'),
+                              ),
+                            );
+                          },
+                          tooltip: 'Descargar CV',
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+              if (candidate.resumeUrl != null &&
+                  candidate.resumeUrl!.contains("http"))
+                const SizedBox(height: kSpacing12),
+
+              // SECCIÓN: EDUCACIÓN
+              FadeInLeft(
+                delay: const Duration(milliseconds: 250),
+                duration: const Duration(milliseconds: 700),
+                child: Container(
+                  padding: EdgeInsets.all(isMobile ? kPadding16 : kPadding20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(kRadius12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.1),
+                        spreadRadius: 1,
+                        blurRadius: 3,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.school_outlined,
+                            color: Colors.blue.shade700,
+                          ),
+                          const SizedBox(width: kSpacing8),
+                          const Text(
+                            'Educación',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              color: Color(0xFF222B45),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: kSpacing12),
+                      Container(
+                        padding: const EdgeInsets.all(kPadding12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(kRadius8),
+                          border: Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              candidate.education ??
+                                  'Educación no especificada',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-              const SectionTitle(text: 'Educación'),
-              Text(candidate.education ?? ''),
-              const SectionTitle(text: 'Experiencia'),
-              Text(candidate.experience ?? ''),
+              ),
+
+              const SizedBox(height: kSpacing12),
+
+              // SECCIÓN: EXPERIENCIA
+              FadeInLeft(
+                delay: const Duration(milliseconds: 300),
+                duration: const Duration(milliseconds: 700),
+                child: Container(
+                  padding: EdgeInsets.all(isMobile ? kPadding16 : kPadding20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(kRadius12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.1),
+                        spreadRadius: 1,
+                        blurRadius: 3,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.work_outline,
+                            color: Colors.orange.shade700,
+                          ),
+                          const SizedBox(width: kSpacing8),
+                          const Text(
+                            'Experiencia Laboral',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              color: Color(0xFF222B45),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: kSpacing12),
+                      Container(
+                        padding: const EdgeInsets.all(kPadding12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(kRadius8),
+                          border: Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              candidate.experience ??
+                                  'Experiencia no especificada',
+                              style: const TextStyle(fontSize: 15),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),
         SizedBox(
           width: isMobile ? 0 : kSpacing30 + kSpacing4 / 2,
-          height: isMobile ? 16 : 0,
+          height: isMobile ? kSpacing12 : 0,
         ),
         Flexible(
           flex: 1,
           fit: FlexFit.loose,
           child: Column(
             children: [
+              // PANEL: INFORMACIÓN DE CONTACTO
               FadeInRight(
                 duration: const Duration(milliseconds: 700),
                 child: Container(
-                  padding: kPaddingAll20,
+                  padding: EdgeInsets.all(isMobile ? kPadding16 : kPadding20),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF7F8FA),
                     border: Border.all(
                       color: Colors.grey.shade200,
                       width: kStroke1,
                     ),
-                    borderRadius: BorderRadius.circular(
-                      kRadius12 + kRadius4 / 2,
-                    ),
+                    borderRadius: BorderRadius.circular(kRadius12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.05),
+                        spreadRadius: 1,
+                        blurRadius: 3,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Características del Perfil',
+                        'Información de Contacto',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -780,28 +947,61 @@ class ProfileDetailHeader extends ConsumerWidget {
                       const SizedBox(height: kSpacing12),
                       ProfileOverviewItem(
                         icon: Icons.person,
-                        label: 'Nivel',
-                        value: candidate.experienceLevel ?? '',
+                        label: 'Nombre',
+                        value: candidate.name ?? 'No disponible',
+                      ),
+
+                      ProfileOverviewItem(
+                        icon: Icons.work,
+                        label: 'Puesto',
+                        value: candidate.mainPosition ?? 'No especificado',
                       ),
                       ProfileOverviewItem(
                         icon: Icons.location_on,
                         label: 'Ubicación',
-                        value: candidate.location ?? '',
+                        value: candidate.location ?? 'No disponible',
+                      ),
+                      ProfileOverviewItem(
+                        icon: Icons.phone,
+                        label: 'Teléfono',
+                        value: candidate.phone ?? 'No disponible',
                       ),
                       ProfileOverviewItem(
                         icon: Icons.school,
                         label: 'Educación',
-                        value: candidate.education ?? '',
+                        value: candidate.education ?? 'No disponible',
                       ),
-                      ProfileOverviewItem(
-                        icon: Icons.work,
-                        label: 'Experiencia',
-                        value: candidate.experience ?? '',
-                      ),
+
+                      // Agregamos un botón de contacto para facilitar la comunicación
+                      const SizedBox(height: kSpacing12),
+                      if (candidate.phone != null || candidate.name != null)
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              launchUrlString(
+                                'https://wa.me/${candidate.phone}',
+                              );
+                            },
+                            icon: const Icon(Icons.email),
+                            label: const Text('Contactar'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue.shade700,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: kSpacing12,
+                              ),
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
               ),
+
+              const SizedBox(height: kSpacing12),
+
+              // PANEL: MATCH CON EMPLEOS
             ],
           ),
         ),

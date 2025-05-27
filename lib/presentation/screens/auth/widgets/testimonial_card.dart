@@ -22,7 +22,8 @@ class TestimonialCard extends StatelessWidget {
   final double logoSize;
   final double nameFontSize;
 
-  const TestimonialCard({super.key, 
+  const TestimonialCard({
+    super.key,
     required this.data,
     required this.width,
     required this.padding,
@@ -41,6 +42,7 @@ class TestimonialCard extends StatelessWidget {
         padding: EdgeInsets.all(padding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+
           children: [
             FittedBox(
               child: Row(
@@ -88,6 +90,8 @@ class TestimonialCard extends StatelessWidget {
                   }
                   // Si hay espacio, muestra en fila
                   return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
                     children: [
                       Image.asset(data.logo, height: logoSize),
                       Flexible(

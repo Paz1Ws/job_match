@@ -422,13 +422,31 @@ class _CandidateDashboardScreenState
           FadeInDown(
             duration: const Duration(milliseconds: 600),
             child: Row(
-              spacing: kSpacing12,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.blue),
-                  onPressed: () => Navigator.of(context).maybePop(),
-                  tooltip: 'Atrás',
+                if (!isMobile) // Only show back button on desktop as mobile has drawer
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.blue),
+                    onPressed: () => Navigator.of(context).maybePop(),
+                    tooltip: 'Atrás',
+                  ),
+                if (!isMobile) const SizedBox(width: kSpacing8),
+                CircleAvatar(
+                  radius: isMobile ? 20 : 24,
+                  backgroundImage:
+                      candidate.photo != null && candidate.photo!.isNotEmpty
+                          ? NetworkImage(candidate.photo!)
+                          : null,
+                  backgroundColor: Colors.grey.shade300,
+                  child:
+                      candidate.photo != null && candidate.photo!.isNotEmpty
+                          ? null
+                          : Icon(
+                            Icons.person,
+                            color: Colors.white,
+                            size: isMobile ? 20 : 24,
+                          ),
                 ),
+                const SizedBox(width: kSpacing12),
                 Text(
                   candidate.name ?? '',
                   style: TextStyle(

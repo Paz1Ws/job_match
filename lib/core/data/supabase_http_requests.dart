@@ -6,13 +6,16 @@ import 'package:job_match/core/domain/models/candidate_model.dart';
 import 'package:job_match/core/domain/models/job_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-// Cliente global
-final supabase = Supabase.instance.client;
+// Supabase client provider
+final supabaseProvider = Provider<SupabaseClient>((ref) {
+  return Supabase.instance.client;
+});
 
 // 2.1. Candidates
 final candidatesProvider = FutureProvider.autoDispose<List<Candidate>>((
   ref,
 ) async {
+  final supabase = ref.read(supabaseProvider);
   final res = await supabase.from('candidates').select('*').order('name');
   return res.map((e) => Candidate.fromJson(e)).toList();
 });
@@ -20,6 +23,7 @@ final candidatesProvider = FutureProvider.autoDispose<List<Candidate>>((
 // 2.2. Companies
 final companiesProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
+      final supabase = ref.read(supabaseProvider);
       final res = await supabase.from('companies').select('*');
       return res;
     });
@@ -28,6 +32,7 @@ final companiesProvider =
 final jobsProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((
   ref,
 ) async {
+  final supabase = ref.read(supabaseProvider);
   final res = await supabase
       .from('jobs')
       .select('*')
@@ -37,6 +42,7 @@ final jobsProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((
 
 final jobsProviderWithCompanyName =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
+      final supabase = ref.read(supabaseProvider);
       final res = await supabase
           .from('jobs')
           .select('*, users!company_id(companies(company_name))')
@@ -48,6 +54,7 @@ final jobsProviderWithCompanyName =
 // 2.4. Applications
 final applicationsProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
+      final supabase = ref.read(supabaseProvider);
       final res = await supabase
           .from('applications')
           .select('*')
@@ -56,14 +63,16 @@ final applicationsProvider =
     });
 
 final jobsCountProvider = FutureProvider.autoDispose<int>((ref) async {
-  final response = await Supabase.instance.client.from('jobs').select('id');
+  final supabase = ref.read(supabaseProvider);
+  final response = await supabase.from('jobs').select('id');
 
   final count = response.length;
   return count;
 });
 
 final recentJobsCountProvider = FutureProvider.autoDispose<int>((ref) async {
-  final response = await Supabase.instance.client
+  final supabase = ref.read(supabaseProvider);
+  final response = await supabase
       .from('jobs')
       .select('id')
       .gte(
@@ -77,18 +86,16 @@ final recentJobsCountProvider = FutureProvider.autoDispose<int>((ref) async {
 });
 
 final candidatesCountProvider = FutureProvider.autoDispose<int>((ref) async {
-  final response = await Supabase.instance.client
-      .from('candidates')
-      .select('user_id');
+  final supabase = ref.read(supabaseProvider);
+  final response = await supabase.from('candidates').select('user_id');
 
   final count = response.length;
   return count;
 });
 
 final companiesCountProvider = FutureProvider.autoDispose<int>((ref) async {
-  final response = await Supabase.instance.client
-      .from('companies')
-      .select('user_id');
+  final supabase = ref.read(supabaseProvider);
+  final response = await supabase.from('companies').select('user_id');
 
   final count = response.length;
   return count;
@@ -99,12 +106,13 @@ final companiesCountProvider = FutureProvider.autoDispose<int>((ref) async {
 /// 1. Crear una empresa (POST /companies)
 /// Permite a un usuario autenticado registrar una nueva empresa.
 final createCompanyProvider = Provider((ref) {
+  final supabase = ref.read(supabaseProvider);
   return (String name, String description) async {
-    final userId = Supabase.instance.client.auth.currentUser?.id;
+    final userId = supabase.auth.currentUser?.id;
     if (userId == null) throw Exception('Usuario no autenticado');
 
     final response =
-        await Supabase.instance.client.from('companies').insert({
+        await supabase.from('companies').insert({
           'user_id': userId,
           'company_name': name,
           'description': description,
@@ -117,12 +125,13 @@ final createCompanyProvider = Provider((ref) {
 /// 2. Actualizar una empresa (PUT /companies/{id})
 /// Permite a un usuario autenticado modificar los detalles de su empresa.
 final updateCompanyProvider = Provider((ref) {
+  final supabase = ref.read(supabaseProvider);
   return (int companyId, Map<String, dynamic> updates) async {
-    final userId = Supabase.instance.client.auth.currentUser?.id;
+    final userId = supabase.auth.currentUser?.id;
     if (userId == null) throw Exception('Usuario no autenticado');
 
     final response =
-        await Supabase.instance.client
+        await supabase
             .from('companies')
             .update(updates)
             .eq('id', companyId)
@@ -138,6 +147,7 @@ final updateCompanyProvider = Provider((ref) {
 final createJobProvider = Provider<
   Future<Map<String, dynamic>> Function(Map<String, dynamic>)
 >((ref) {
+  final supabase = ref.read(supabaseProvider);
   return (Map<String, dynamic> jobData) async {
     try {
       final List<Map<String, dynamic>> insertedData =
@@ -170,13 +180,10 @@ final createJobProvider = Provider<
 /// 4. Actualizar una vacante (PUT /jobs/{id})
 /// Permite a una empresa modificar los detalles de una vacante existente.
 final updateJobProvider = Provider((ref) {
+  final supabase = ref.read(supabaseProvider);
   return (int jobId, Map<String, dynamic> updates) async {
     final response =
-        await Supabase.instance.client
-            .from('jobs')
-            .update(updates)
-            .eq('id', jobId)
-            .select();
+        await supabase.from('jobs').update(updates).eq('id', jobId).select();
 
     return response;
   };
@@ -187,7 +194,7 @@ final updateJobProvider = Provider((ref) {
 final applyToJobProvider = Provider<
   Future<void> Function(String jobId, String candidateName, String coverLetter)
 >((ref) {
-  final supabase = Supabase.instance.client;
+  final supabase = ref.read(supabaseProvider);
   final candidate = ref.watch(candidateProfileProvider);
 
   // Get the current user
@@ -225,12 +232,13 @@ final applyToJobProvider = Provider<
 /// 6. Actualizar el perfil de usuario (PUT /profiles/{id})
 /// Permite a un usuario autenticado actualizar su perfil.
 final updateProfileProvider = Provider((ref) {
+  final supabase = ref.read(supabaseProvider);
   return (Map<String, dynamic> updates) async {
-    final userId = Supabase.instance.client.auth.currentUser?.id;
+    final userId = supabase.auth.currentUser?.id;
     if (userId == null) throw Exception('Usuario no autenticado');
 
     final response =
-        await Supabase.instance.client
+        await supabase
             .from('candidates')
             .update(updates)
             .eq('user_id', userId)
@@ -241,6 +249,7 @@ final updateProfileProvider = Provider((ref) {
 });
 
 final uploadCvProvider = Provider((ref) {
+  final supabase = ref.read(supabaseProvider);
   return (Uint8List fileBytes, String fileName) async {
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) throw Exception('Usuario no autenticado');
@@ -271,6 +280,7 @@ final jobsByCompanyIdProvider = FutureProvider.family<List<Job>, String>((
   ref,
   companyId,
 ) async {
+  final supabase = ref.read(supabaseProvider);
   if (companyId.isEmpty) return [];
 
   try {
@@ -289,6 +299,7 @@ final jobsByCompanyIdProvider = FutureProvider.family<List<Job>, String>((
 
 /// Provider que expone la función de subida de logo de empresa
 final uploadCompanyLogoProvider = Provider((ref) {
+  final supabase = ref.read(supabaseProvider);
   Future<String> uploadLogo(Uint8List bytes, String filename) async {
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) {
@@ -321,4 +332,41 @@ final uploadCompanyLogoProvider = Provider((ref) {
   }
 
   return uploadLogo;
+});
+
+/// Provider que expone la función de subida de foto de perfil de candidato
+final uploadCandidatePhotoProvider = Provider((ref) {
+  final supabase = ref.read(supabaseProvider);
+  Future<String> uploadPhoto(Uint8List bytes, String filename) async {
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) {
+      throw Exception('Usuario no autenticado');
+    }
+
+    try {
+      final storagePath = '$userId/$filename';
+      await supabase.storage
+          .from('candidatephotos')
+          .uploadBinary(
+            storagePath,
+            bytes,
+            fileOptions: const FileOptions(upsert: false),
+          );
+
+      final publicUrl = supabase.storage
+          .from('candidatephotos')
+          .getPublicUrl(storagePath);
+
+      await supabase
+          .from('candidates')
+          .update({'photo': publicUrl})
+          .eq('user_id', userId);
+
+      return publicUrl;
+    } catch (e) {
+      throw Exception('Error procesando la foto de perfil: $e');
+    }
+  }
+
+  return uploadPhoto;
 });

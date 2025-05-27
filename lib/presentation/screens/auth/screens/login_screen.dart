@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,6 +7,7 @@ import 'package:job_match/config/util/animations.dart';
 import 'package:job_match/config/util/form_utils.dart';
 import 'package:job_match/core/data/auth_request.dart';
 import 'package:job_match/core/data/cv_parsing.dart';
+import 'package:job_match/core/data/google_sign_in.dart';
 import 'package:job_match/core/data/supabase_http_requests.dart';
 import 'package:job_match/presentation/screens/auth/widgets/cv_lottie_dialog.dart';
 import 'package:job_match/presentation/screens/auth/widgets/right_sing_up_image_information.dart';
@@ -13,6 +16,7 @@ import 'package:job_match/presentation/screens/profiles/user_profile.dart';
 import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
 import 'package:job_match/presentation/screens/homepage/find_jobs_screen.dart';
 import 'package:job_match/presentation/screens/dashboard/employer_dashboard_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   final String userType;
@@ -24,37 +28,40 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  bool _termsAgreed = false;
+  final bool _termsAgreed = false;
   final bool _passwordVisible = false;
   bool _showLoginForm = true;
-  bool _isLoading = false; // Added for loading state
+  bool _isLoading = false;
 
   // Text Editing Controllers
   late TextEditingController _emailController;
   late TextEditingController _passwordController;
 
-  // Text controllers for signup fields (candidate)
+  // Candidate signup fields
   final _fullNameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _locationController = TextEditingController();
   final _skillsController = TextEditingController();
   final _bioController = TextEditingController();
   final _educationController = TextEditingController();
-  final _experienceController = TextEditingController();
-  final _resumeUrlController = TextEditingController();
   final _experienceResume = TextEditingController();
+  final _countryController = TextEditingController();
+  final _mainPositionController = TextEditingController(); // Added
 
-  // Text controllers for signup fields (company)
+  // Company signup fields
   final _companyNameController = TextEditingController();
   final _companyPhoneController = TextEditingController();
   final _companyLocationController = TextEditingController();
   final _companyDescriptionController = TextEditingController();
 
   String _companyIndustry = 'Tecnología';
-
   String _selectedUserType = 'Candidato';
   final _formKey = GlobalKey<FormState>();
-  String? _selectedLogoPath; // Add this to track selected logo
+
+  // File selection variables
+  String? _selectedLogoPath;
+  String? _selectedCandidatePhotoPath;
+  Uint8List? _selectedCandidatePhotoBytes;
 
   @override
   void initState() {
@@ -74,17 +81,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     _skillsController.dispose();
     _bioController.dispose();
     _educationController.dispose();
-    _experienceController.dispose();
-    _resumeUrlController.dispose();
-    _companyNameController.dispose();
+    _mainPositionController.dispose(); // Added
     _experienceResume.dispose();
+    _companyNameController.dispose();
     _companyPhoneController.dispose();
     _companyLocationController.dispose();
     _companyDescriptionController.dispose();
+    _countryController.dispose();
     super.dispose();
   }
 
-  // Cambia el tipo de usuario globalmente usando Riverpod
   void _setUserType(bool isCandidate) {
     ref.read(isCandidateProvider.notifier).state = isCandidate;
   }
@@ -92,24 +98,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void _prefillForm(String? userType) {
     setState(() {
       _selectedUserType = userType ?? '';
-      // No mock data, just clear fields
       _emailController.clear();
       _passwordController.clear();
       _fullNameController.clear();
       _phoneController.clear();
       _locationController.clear();
+      _countryController.clear();
       _skillsController.clear();
+      _educationController.clear();
+      _mainPositionController.clear(); // Added
+      _experienceResume.clear();
+      _bioController.clear();
       _companyNameController.clear();
       _companyPhoneController.clear();
       _companyLocationController.clear();
       _companyDescriptionController.clear();
-      _selectedLogoPath = null; // Clear logo selection
-      // Actualiza el provider global según selección
+      _selectedLogoPath = null;
+      _selectedCandidatePhotoPath = null;
+      _selectedCandidatePhotoBytes = null;
       _setUserType(_selectedUserType == 'Candidato');
     });
   }
 
-  Future<void> _pickCompanyLogo() async {
+  Future<void> _pickFile({
+    required bool isLogo,
+    required Function(String name, Uint8List bytes) onPicked,
+  }) async {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.image,
@@ -118,31 +132,55 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
 
       if (result != null && result.files.single.bytes != null) {
-        setState(() {
-          _selectedLogoPath = result.files.single.name;
-        });
+        final name = result.files.single.name;
+        final bytes = result.files.single.bytes!;
 
-        if(!mounted) return;
+        onPicked(name, bytes);
+
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Logo seleccionado: ${result.files.single.name}'),
+            content: Text('${isLogo ? 'Logo' : 'Foto'} seleccionado: $name'),
             backgroundColor: Colors.green,
           ),
         );
       }
     } catch (e) {
-      if(!mounted) return;
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error seleccionando logo: $e'),
+          content: Text('Error seleccionando ${isLogo ? 'logo' : 'foto'}: $e'),
           backgroundColor: Colors.red,
         ),
       );
     }
   }
 
+  Future<void> _pickCompanyLogo() async {
+    return _pickFile(
+      isLogo: true,
+      onPicked: (name, _) {
+        setState(() {
+          _selectedLogoPath = name;
+        });
+      },
+    );
+  }
+
+  Future<void> _pickCandidatePhoto() async {
+    return _pickFile(
+      isLogo: false,
+      onPicked: (name, bytes) {
+        setState(() {
+          _selectedCandidatePhotoPath = name;
+          _selectedCandidatePhotoBytes = bytes;
+        });
+      },
+    );
+  }
+
   final defaultTextStyle = TextStyle(color: Colors.grey.shade900);
-  
+
   InputDecoration defaultIconDecoration(String labelText, {IconData? icon}) {
     return InputDecoration(
       labelText: labelText,
@@ -210,7 +248,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ),
                 const SizedBox(width: 24.0),
-                // Fix: Wrap DropdownButtonFormField in Flexible to avoid overflow
                 Flexible(
                   child: DropdownButtonFormField<String>(
                     decoration: defaultIconDecoration('Tipo de usuario'),
@@ -235,7 +272,86 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
+  Widget _buildFileSelectionField({
+    required String title,
+    required String? selectedPath,
+    required VoidCallback onSelect,
+    IconData icon = Icons.upload_file,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: Colors.grey),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton.icon(
+            onPressed: onSelect,
+            icon: Icon(
+              selectedPath != null ? Icons.check_circle : Icons.upload_file,
+            ),
+            label: Text(
+              selectedPath != null
+                  ? 'Seleccionado: $selectedPath'
+                  : 'Seleccionar',
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: selectedPath != null ? Colors.green[50] : null,
+              foregroundColor: selectedPath != null ? Colors.green[700] : null,
+            ),
+          ),
+          if (selectedPath != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Archivo seleccionado: $selectedPath',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.green[600],
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildCandidateSignupForm() {
+    const educationLevels = [
+      'Primaria',
+      'Secundaria',
+      'Técnico',
+      'Universitario Incompleto',
+      'Universitario Completo',
+      'Maestría',
+      'Doctorado',
+      'Otro',
+    ];
+
+    const countries = [
+      'Perú',
+      'Argentina',
+      'Colombia',
+      'Chile',
+      'México',
+      'España',
+      'Otro',
+    ];
+
     return Column(
       children: [
         TextFormField(
@@ -270,33 +386,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         TextFormField(
           controller: _phoneController,
           decoration: defaultIconDecoration(
-            'Número de teléfono (opcional)',
+            'Número de teléfono',
             icon: Icons.phone_outlined,
           ),
-          validator: FormUtils.validatePhone,
+          validator: FormUtils.validateCompanyPhone,
           keyboardType: TextInputType.phone,
         ),
         const SizedBox(height: 16.0),
         TextFormField(
           controller: _locationController,
           decoration: defaultIconDecoration(
-            'Ubicación (ciudad/país)',
-            icon: Icons.location_on_outlined,
+            'Ciudad',
+            icon: Icons.location_city,
           ),
-          validator: FormUtils.validateAddress,
+          validator: FormUtils.validateCity,
         ),
         const SizedBox(height: 16.0),
         DropdownButtonFormField<String>(
-          decoration: defaultIconDecoration(
-            'Nivel de experiencia',
-            icon: Icons.work_outline,
-          ),
+          decoration: defaultIconDecoration('País', icon: Icons.public),
           value:
-              ['Junior', 'Mid', 'Senior'].contains(_experienceController.text)
-                  ? _experienceController.text
-                  : null,
+              _countryController.text.isEmpty ? null : _countryController.text,
           items:
-              ['Junior', 'Mid', 'Senior'].map((String value) {
+              countries.map((String value) {
                 return DropdownMenuItem<String>(
                   value: value,
                   child: Text(value, style: defaultTextStyle),
@@ -305,46 +416,60 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           onChanged: (String? newValue) {
             if (newValue != null) {
               setState(() {
-                _experienceController.text = newValue;
+                _countryController.text = newValue;
               });
             }
           },
-          validator: FormUtils.validateExperience,
+          validator: FormUtils.validateCountry,
         ),
         const SizedBox(height: 16.0),
         TextFormField(
-          controller: _educationController,
+          // Added for Puesto Principal
+          controller: _mainPositionController,
           decoration: defaultIconDecoration(
-            'Educación (ej: Licenciatura en X, Universidad Y)',
+            'Puesto Principal (ej: Desarrollador Frontend)',
+            icon: Icons.work_outline,
+          ),
+        ),
+        const SizedBox(height: 16.0),
+        DropdownButtonFormField<String>(
+          decoration: defaultIconDecoration(
+            'Nivel Educativo',
             icon: Icons.school_outlined,
           ),
+          value:
+              _educationController.text.isEmpty
+                  ? null
+                  : _educationController.text,
+          items:
+              educationLevels.map((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value, style: defaultTextStyle),
+                );
+              }).toList(),
+          onChanged: (String? newValue) {
+            if (newValue != null) {
+              setState(() => _educationController.text = newValue);
+            }
+          },
           validator: FormUtils.validateEducation,
         ),
         const SizedBox(height: 16.0),
         TextFormField(
           controller: _experienceResume,
           decoration: defaultIconDecoration(
-            'Experiencia laboral (breve resumen)',
+            'Experiencia laboral (breve resumen, min. 50 caracteres)',
             icon: Icons.work_history_outlined,
           ),
+          maxLines: 3,
           validator: FormUtils.validateWorkExperience,
-        ),
-
-        const SizedBox(height: 16.0),
-        TextFormField(
-          controller: _resumeUrlController,
-          decoration: defaultIconDecoration(
-            'URL de tu CV (opcional)',
-            icon: Icons.link,
-          ),
-          validator: FormUtils.validateUrlCv,
-          keyboardType: TextInputType.url,
         ),
         const SizedBox(height: 16.0),
         TextFormField(
           controller: _skillsController,
           decoration: defaultIconDecoration(
-            'Habilidades principales (separadas por comas)',
+            'Habilidades principales (separadas por comas, al menos una)',
             icon: Icons.psychology_outlined,
           ),
           validator: FormUtils.validateSkillsSeparatedByCommas,
@@ -354,11 +479,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         TextFormField(
           controller: _bioController,
           decoration: defaultIconDecoration(
-            'Biografía o descripción del perfil',
+            'Biografía o descripción del perfil (min. 50 caracteres)',
             icon: Icons.description_outlined,
           ),
           maxLines: 4,
           validator: FormUtils.validateBio,
+        ),
+        const SizedBox(height: 16.0),
+        _buildFileSelectionField(
+          title: 'Foto de perfil',
+          selectedPath: _selectedCandidatePhotoPath,
+          onSelect: _pickCandidatePhoto,
+          icon: Icons.person,
         ),
       ],
     );
@@ -374,7 +506,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             icon: Icons.email_outlined,
           ),
           keyboardType: TextInputType.emailAddress,
-          validator: FormUtils.validateEmailForSingUp
+          validator: FormUtils.validateEmailForSingUp,
         ),
         const SizedBox(height: 16.0),
         TextFormField(
@@ -412,7 +544,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             'Ubicación o dirección (ciudad/país)',
             icon: Icons.location_on_outlined,
           ),
-          validator: FormUtils.validateAddress,
+          validator:
+              (value) => FormUtils.validateRequired(
+                value,
+                'La ubicación de la empresa',
+              ),
         ),
         const SizedBox(height: 16.0),
         DropdownButtonFormField<String>(
@@ -439,9 +575,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               }).toList(),
           onChanged: (String? newValue) {
             if (newValue != null) {
-              setState(() {
-                _companyIndustry = newValue;
-              });
+              setState(() => _companyIndustry = newValue);
             }
           },
           validator: FormUtils.validateIndustrySelected,
@@ -450,66 +584,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         TextFormField(
           controller: _companyDescriptionController,
           decoration: defaultIconDecoration(
-            'Descripción breve de la empresa',
+            'Descripción breve de la empresa (min. 20 caracteres)',
             icon: Icons.description_outlined,
           ),
           maxLines: 3,
           validator: FormUtils.validateCompanyDescription,
         ),
         const SizedBox(height: 16.0),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.business, color: Colors.grey),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Logo de la empresa',
-                    style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              ElevatedButton.icon(
-                onPressed: _pickCompanyLogo,
-                icon: Icon(
-                  _selectedLogoPath != null
-                      ? Icons.check_circle
-                      : Icons.upload_file,
-                ),
-                label: Text(
-                  _selectedLogoPath != null
-                      ? 'Logo seleccionado: $_selectedLogoPath'
-                      : 'Seleccionar logo de empresa',
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      _selectedLogoPath != null ? Colors.green[50] : null,
-                  foregroundColor:
-                      _selectedLogoPath != null ? Colors.green[700] : null,
-                ),
-              ),
-              if (_selectedLogoPath != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  'Archivo seleccionado: $_selectedLogoPath',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.green[600],
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ],
-            ],
-          ),
+        _buildFileSelectionField(
+          title: 'Logo de la empresa',
+          selectedPath: _selectedLogoPath,
+          onSelect: _pickCompanyLogo,
+          icon: Icons.business,
         ),
       ],
     );
@@ -544,7 +630,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Botón atrás
                           Align(
                             alignment: Alignment.topLeft,
                             child: IconButton(
@@ -560,13 +645,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           _loginHeader(),
                           const SizedBox(height: 30.0),
 
-                          // Conditional form content based on login or signup
                           if (_showLoginForm) ...[
                             TextFormField(
                               controller: _emailController,
-                              decoration: defaultIconDecoration('Correo electrónico'),
+                              decoration: defaultIconDecoration(
+                                'Correo electrónico',
+                              ),
                               style: defaultTextStyle,
-                              validator: FormUtils.validateEmailLogin
+                              validator: FormUtils.validateEmailLogin,
                             ),
                             const SizedBox(height: 16.0),
                             TextFormField(
@@ -575,28 +661,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               obscureText: !_passwordVisible,
                               style: defaultTextStyle,
                               validator: FormUtils.validatePasswordLogin,
-                            ),
-                            const SizedBox(height: 16.0),
-                            Row(
-                              children: [
-                                Checkbox(
-                                  value: _termsAgreed,
-                                  onChanged: (bool? value) {
-                                    setState(() {
-                                      _termsAgreed = value ?? false;
-                                    });
-                                  },
-                                  tristate: false,
-                                ),
-                                const Text('He leído y acepto los '),
-                                GestureDetector(
-                                  onTap: () {},
-                                  child: const Text(
-                                    'Términos de Servicio',
-                                    style: TextStyle(color: Colors.blue),
-                                  ),
-                                ),
-                              ],
                             ),
                             const SizedBox(height: 24.0),
                           ] else if (_selectedUserType == 'Candidato') ...[
@@ -607,7 +671,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             const SizedBox(height: 24.0),
                           ],
 
-                          // Single main button for login or signup
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
@@ -618,439 +681,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     Radius.circular(5),
                                   ),
                                 ),
-                                // Disable button when loading
                                 disabledBackgroundColor: Colors.blueAccent
                                     .withOpacity(0.7),
                               ),
-                              onPressed: _isLoading ? null : () async {
-
-                                if (_formKey.currentState!.validate()) {
-                                  if (!_termsAgreed) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Acepta los términos de servicio para continuar.',
-                                        ),
-                                      ),
-                                    );
-                                    return;
-                                  }
-
-                                  setState(() {
-                                    _isLoading = true; // Start loading
-                                  });
-                                  try {
-                                    _setUserType(
-                                      _selectedUserType == 'Candidato',
-                                    );
-                                    if (_showLoginForm) {
-                                      // LOGIN
-                                      await signOut();
-                                      await login(
-                                        _emailController.text,
-                                        _passwordController.text,
-                                      );
-                                      await fetchUserProfile(ref);
-                                      final candidate = ref.read(
-                                        candidateProfileProvider,
-                                      );
-                                      final company = ref.read(
-                                        companyProfileProvider,
-                                      );
-                                      if (!context.mounted) return;
-                                      if (_selectedUserType == 'Candidato' &&
-                                          candidate != null) {
-                                        Navigator.of(context).pushReplacement(
-                                          FadeThroughPageRoute(
-                                            page: const FindJobsScreen(),
-                                          ),
-                                        );
-                                      } else if (_selectedUserType ==
-                                              'Empresa' &&
-                                          company != null) {
-                                        Navigator.of(context).pushReplacement(
-                                          FadeThroughPageRoute(
-                                            page:
-                                                const EmployerDashboardScreen(),
-                                          ),
-                                        );
-                                      } else {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                              'No se encontró perfil asociado a este usuario.',
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                    } else {
-                                      if (_selectedUserType == 'Candidato') {
-                                        // REGISTRO CANDIDATO
-                                        await signOut();
-                                        final success = await registerCandidate(
-                                          email: _emailController.text,
-                                          password: _passwordController.text,
-                                          name: _fullNameController.text,
-                                          phone: _phoneController.text,
-                                          location: _locationController.text,
-                                          experienceLevel:
-                                              _experienceController.text,
-                                          experience: _experienceResume.text,
-                                          skills:
-                                              _skillsController.text
-                                                  .split(',')
-                                                  .map((e) => e.trim())
-                                                  .where((e) => e.isNotEmpty)
-                                                  .toList(),
-                                          bio: _bioController.text,
-                                          resumeUrl:
-                                              _resumeUrlController
-                                                      .text
-                                                      .isNotEmpty
-                                                  ? _resumeUrlController.text
-                                                  : null,
-                                          education: _educationController.text,
-                                        );
-                                        if (!context.mounted) return;
-                                        if (success) {
-                                          await fetchUserProfile(ref);
-                                          final candidate = ref.read(
-                                            candidateProfileProvider,
-                                          );
-                                          if (candidate != null) {
-                                            Navigator.of(
-                                              context,
-                                            ).pushReplacement(
-                                              FadeThroughPageRoute(
-                                                page: const FindJobsScreen(),
-                                              ),
-                              onPressed:
-                                  _isLoading
-                                      ? null
-                                      : () async {
-                                        if (_formKey.currentState!.validate()) {
-                                          setState(() {
-                                            _isLoading = true; // Start loading
-                                          });
-                                          try {
-                                            _setUserType(
-                                              _selectedUserType == 'Candidato',
-                                            );
-                                            if (_showLoginForm) {
-                                              // LOGIN
-                                              await signOut();
-                                              await login(
-                                                _emailController.text,
-                                                _passwordController.text,
-                                              );
-                                              await fetchUserProfile(ref);
-                                              final candidate = ref.read(
-                                                candidateProfileProvider,
-                                              );
-                                              final company = ref.read(
-                                                companyProfileProvider,
-                                              );
-                                              if (!context.mounted) return;
-                                              if (_selectedUserType ==
-                                                      'Candidato' &&
-                                                  candidate != null) {
-                                                Navigator.of(
-                                                  context,
-                                                ).pushReplacement(
-                                                  FadeThroughPageRoute(
-                                                    page:
-                                                        const FindJobsScreen(),
-                                                  ),
-                                                );
-                                              } else if (_selectedUserType ==
-                                                      'Empresa' &&
-                                                  company != null) {
-                                                Navigator.of(
-                                                  context,
-                                                ).pushReplacement(
-                                                  FadeThroughPageRoute(
-                                                    page:
-                                                        const EmployerDashboardScreen(),
-                                                  ),
-                                                );
-                                              } else {
-                                                ScaffoldMessenger.of(
-                                                  context,
-                                                ).showSnackBar(
-                                                  const SnackBar(
-                                                    content: Text(
-                                                      'No se encontró perfil asociado a este usuario.',
-                                                    ),
-                                                  ),
-                                                );
-                                              }
-                                            } else {
-                                              if (_selectedUserType ==
-                                                  'Candidato') {
-                                                // REGISTRO CANDIDATO
-                                                await signOut();
-                                                final success =
-                                                    await registerCandidate(
-                                                      email:
-                                                          _emailController.text,
-                                                      password:
-                                                          _passwordController
-                                                              .text,
-                                                      name:
-                                                          _fullNameController
-                                                              .text,
-                                                      phone:
-                                                          _phoneController.text,
-                                                      location:
-                                                          _locationController
-                                                              .text,
-                                                      experienceLevel:
-                                                          _experienceController
-                                                              .text,
-                                                      experience:
-                                                          _experienceResume
-                                                              .text,
-                                                      skills:
-                                                          _skillsController.text
-                                                              .split(',')
-                                                              .map(
-                                                                (e) => e.trim(),
-                                                              )
-                                                              .where(
-                                                                (e) =>
-                                                                    e.isNotEmpty,
-                                                              )
-                                                              .toList(),
-                                                      bio: _bioController.text,
-                                                      resumeUrl:
-                                                          _resumeUrlController
-                                                                  .text
-                                                                  .isNotEmpty
-                                                              ? _resumeUrlController
-                                                                  .text
-                                                              : null,
-                                                      education:
-                                                          _educationController
-                                                              .text,
-                                                    );
-                                                if (!context.mounted) return;
-                                                if (success) {
-                                                  await fetchUserProfile(ref);
-                                                  final candidate = ref.read(
-                                                    candidateProfileProvider,
-                                                  );
-                                                  if (candidate != null) {
-                                                    Navigator.of(
-                                                      context,
-                                                    ).pushReplacement(
-                                                      FadeThroughPageRoute(
-                                                        page:
-                                                            const FindJobsScreen(),
-                                                      ),
-                                                    );
-                                                  } else {
-                                                    ScaffoldMessenger.of(
-                                                      context,
-                                                    ).showSnackBar(
-                                                      const SnackBar(
-                                                        content: Text(
-                                                          'No se encontró perfil de candidato tras el registro.',
-                                                        ),
-                                                      ),
-                                                    );
-                                                  }
-                                                } else {
-                                                  ScaffoldMessenger.of(
-                                                    context,
-                                                  ).showSnackBar(
-                                                    const SnackBar(
-                                                      content: Text(
-                                                        'Error al registrar el candidato',
-                                                      ),
-                                                    ),
-                                                  );
-                                                }
-                                              } else {
-                                                // REGISTRO EMPRESA
-                                                String? logoUrl;
-                                                FilePickerResult? result;
-
-                                                if (_selectedLogoPath != null) {
-                                                  // Attempt to get the previously picked file's bytes
-                                                  // This assumes _pickCompanyLogo stored the result or path
-                                                  // For simplicity, we re-pick if path is just a name.
-                                                  // A more robust solution would cache the FileBytes.
-                                                  result = await FilePicker
-                                                      .platform
-                                                      .pickFiles(
-                                                        type: FileType.image,
-                                                        allowMultiple: false,
-                                                        withData: true,
-                                                      );
-
-                                                  if (result != null &&
-                                                      result
-                                                              .files
-                                                              .single
-                                                              .bytes !=
-                                                          null) {
-                                                    // Show dialog while uploading logo
-                                                    if (context.mounted) {
-                                                      showDialog(
-                                                        context: context,
-                                                        barrierDismissible:
-                                                            false,
-                                                        builder:
-                                                            (_) => const Center(
-                                                              child:
-                                                                  CircularProgressIndicator(),
-                                                            ),
-                                                      );
-                                                    }
-                                                    final uploadLogo = ref.read(
-                                                      uploadCompanyLogoProvider,
-                                                    );
-                                                    try {
-                                                      logoUrl =
-                                                          await uploadLogo(
-                                                            result
-                                                                .files
-                                                                .single
-                                                                .bytes!,
-                                                            result
-                                                                .files
-                                                                .single
-                                                                .name,
-                                                          );
-                                                    } catch (e) {
-                                                      if (context.mounted)
-                                                        Navigator.of(
-                                                          context,
-                                                          rootNavigator: true,
-                                                        ).pop(); // Close dialog
-                                                      throw Exception(
-                                                        'Error al subir logo: $e',
-                                                      );
-                                                    }
-                                                    if (context.mounted)
-                                                      Navigator.of(
-                                                        context,
-                                                        rootNavigator: true,
-                                                      ).pop(); // Close dialog
-                                                  }
-                                                }
-
-                                                await registerCompany(
-                                                  email: _emailController.text,
-                                                  password:
-                                                      _passwordController.text,
-                                                  companyName:
-                                                      _companyNameController
-                                                          .text,
-                                                  phone:
-                                                      _companyPhoneController
-                                                          .text,
-                                                  address:
-                                                      _companyLocationController
-                                                          .text,
-                                                  industry: _companyIndustry,
-                                                  description:
-                                                      _companyDescriptionController
-                                                          .text,
-                                                  website: null,
-                                                  logo: logoUrl,
-                                                );
-
-                                                if (!context.mounted) return;
-                                                await fetchUserProfile(ref);
-                                                final company = ref.read(
-                                                  companyProfileProvider,
-                                                );
-
-                                                if (company != null) {
-                                                  Navigator.of(
-                                                    context,
-                                                  ).pushReplacement(
-                                                    FadeThroughPageRoute(
-                                                      page:
-                                                          const EmployerDashboardScreen(),
-                                                    ),
-                                                  );
-                                                } else {
-                                                  ScaffoldMessenger.of(
-                                                    context,
-                                                  ).showSnackBar(
-                                                    const SnackBar(
-                                                      content: Text(
-                                                        'No se encontró perfil de empresa tras el registro.',
-                                                      ),
-                                                    ),
-                                                  );
-                                                }
-                                              }
-                                            }
-                                          } catch (e) {
-                                            if (context.mounted) {
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                SnackBar(
-                                                  content: Text('Error: $e'),
-                                                ),
-                                              );
-                                            }
-                                          } finally {
-                                            if (context.mounted) {
-                                              setState(() {
-                                                _isLoading =
-                                                    false; // Stop loading
-                                              });
-                                            }
-                                          }
-                                        } else {
-                                          // Form is not valid, or user type not selected
-                                          // (The user type dropdown has its own validation implicitly)
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            const SnackBar(
-                                              content: Text(
-                                                'Por favor completa todos los campos requeridos.',
-                                              ),
-                                            ),
-                                          );
-                                        }
-                                      }
-                                    }
-                                  } catch (e) {
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Error: $e')),
-                                      );
-                                    }
-                                  } finally {
-                                    if (context.mounted) {
-                                      setState(() {
-                                        _isLoading = false; // Stop loading
-                                      });
-                                    }
-                                  }
-                                } else {
-                                  // Form is not valid, or user type not selected
-                                  // (The user type dropdown has its own validation implicitly)
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Por favor completa todos los campos requeridos.',
-                                      ),
-                                    ),
-                                  );
-
-                                }
-                              },
-                                      },
+                              onPressed: _isLoading ? null : _handleFormSubmit,
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 20,
@@ -1087,15 +721,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                           ),
                           const SizedBox(height: 24.0),
-                          _signUpOptions(),
+                          _signUpOptions(ref),
                         ],
                       ),
                     ),
                   ),
                 ),
-                // Imagen (derecha)
                 if (isMedium)
-                  RightSingUpImageInformation(isWide: isWide, isMedium: isMedium),
+                  RightSingUpImageInformation(
+                    isWide: isWide,
+                    isMedium: isMedium,
+                  ),
               ],
             ),
           ),
@@ -1104,13 +740,254 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
+  Future<void> _handleFormSubmit() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() => _isLoading = true);
+      try {
+        _setUserType(_selectedUserType == 'Candidato');
+        if (_showLoginForm) {
+          await _handleLogin();
+        } else {
+          if (_selectedUserType == 'Candidato') {
+            await _handleCandidateSignup();
+          } else {
+            await _handleCompanySignup();
+          }
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        }
+      } finally {
+        if (context.mounted) {
+          setState(() => _isLoading = false);
+        }
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Por favor completa todos los campos requeridos.'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleLogin() async {
+    await signOut();
+    await login(_emailController.text, _passwordController.text);
+    await fetchUserProfile(ref);
+
+    final candidate = ref.read(candidateProfileProvider);
+    final company = ref.read(companyProfileProvider);
+
+    if (!context.mounted) return;
+
+    if (_selectedUserType == 'Candidato' && candidate != null) {
+      Navigator.of(
+        context,
+      ).pushReplacement(FadeThroughPageRoute(page: const FindJobsScreen()));
+    } else if (_selectedUserType == 'Empresa' && company != null) {
+      Navigator.of(context).pushReplacement(
+        FadeThroughPageRoute(page: const EmployerDashboardScreen()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No se encontró perfil asociado a este usuario.'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleCandidateSignup() async {
+    await signOut();
+    String? photoUrl; // Variable to store URL if needed locally after upload
+
+    // Register candidate first without the photo URL
+    final success = await registerCandidate(
+      email: _emailController.text,
+      password: _passwordController.text,
+      name: _fullNameController.text,
+      phone: _phoneController.text,
+      location: '${_locationController.text}, ${_countryController.text}',
+      mainPosition: _mainPositionController.text,
+      experience: _experienceResume.text,
+      skills:
+          _skillsController.text
+              .split(',')
+              .map((s) => FormUtils.clearSpaces(s))
+              .where((s) => s.isNotEmpty)
+              .toList(),
+      bio: _bioController.text,
+      education: _educationController.text,
+      photo: null, // Pass null initially, photo will be updated by the provider
+    );
+
+    if (!context.mounted) return;
+
+    if (success) {
+      // If registration is successful and a photo was selected, upload it
+      if (_selectedCandidatePhotoBytes != null &&
+          _selectedCandidatePhotoPath != null) {
+        try {
+          await _uploadFile(
+            bytes: _selectedCandidatePhotoBytes!,
+            filename: _selectedCandidatePhotoPath!,
+            isCandidate: true,
+            onUploaded:
+                (url) => photoUrl = url, // The provider handles DB update
+          );
+        } catch (e) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('Error al subir foto: $e')));
+          }
+          // Decide if you want to proceed without photo or halt
+        }
+      }
+
+      await fetchUserProfile(ref);
+      final candidate = ref.read(candidateProfileProvider);
+      if (candidate != null) {
+        Navigator.of(
+          context,
+        ).pushReplacement(FadeThroughPageRoute(page: const FindJobsScreen()));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'No se encontró perfil de candidato tras el registro.',
+            ),
+          ),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error al registrar el candidato')),
+      );
+    }
+  }
+
+  Future<void> _handleCompanySignup() async {
+    await signOut(); // Ensure clean state if needed
+    String? logoUrl; // Variable to store URL if needed locally after upload
+
+    // Register company first without the logo URL
+    // Assuming registerCompany throws on failure or returns a status
+    bool registrationSuccess = false;
+    try {
+      await registerCompany(
+        email: _emailController.text,
+        password: _passwordController.text,
+        companyName: _companyNameController.text,
+        phone: _companyPhoneController.text,
+        address: _companyLocationController.text,
+        industry: _companyIndustry,
+        description: _companyDescriptionController.text,
+        website: null,
+        logo: null, // Pass null initially, logo will be updated by the provider
+      );
+      registrationSuccess = true;
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al registrar empresa: $e')),
+        );
+      }
+      registrationSuccess = false;
+    }
+
+    if (!context.mounted) return;
+
+    if (registrationSuccess) {
+      // If registration is successful and a logo was selected, upload it
+      if (_selectedLogoPath != null) {
+        // The original logic re-picks the file here.
+        // Ideally, _selectedLogoBytes should be stored like _selectedCandidatePhotoBytes.
+        // For now, following the existing pattern of re-picking:
+        final result = await FilePicker.platform.pickFiles(
+          type: FileType.image,
+          allowMultiple: false,
+          withData: true,
+        );
+
+        if (result != null && result.files.single.bytes != null) {
+          try {
+            await _uploadFile(
+              bytes: result.files.single.bytes!,
+              filename: result.files.single.name,
+              isCandidate: false,
+              onUploaded:
+                  (url) => logoUrl = url, // The provider handles DB update
+            );
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error al subir logo: $e')),
+              );
+            }
+            // Decide if you want to proceed without logo or halt
+          }
+        }
+      }
+
+      await fetchUserProfile(ref);
+      final company = ref.read(companyProfileProvider);
+
+      if (company != null) {
+        Navigator.of(context).pushReplacement(
+          FadeThroughPageRoute(page: const EmployerDashboardScreen()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No se encontró perfil de empresa tras el registro.'),
+          ),
+        );
+      }
+    }
+    // If registrationSuccess is false, an error message should have already been shown.
+  }
+
+  Future<void> _uploadFile({
+    required Uint8List bytes,
+    required String filename,
+    required bool isCandidate,
+    required Function(String url) onUploaded,
+  }) async {
+    if (context.mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    try {
+      final uploadProvider =
+          isCandidate
+              ? ref.read(uploadCandidatePhotoProvider)
+              : ref.read(uploadCompanyLogoProvider);
+
+      final url = await uploadProvider(bytes, filename);
+      onUploaded(url);
+    } catch (e) {
+      if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
+      throw Exception('Error al subir ${isCandidate ? "foto" : "logo"}: $e');
+    }
+
+    if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
+  }
+
   void _showCVAnimationAndNavigate() async {
-    // Check if email and password are filled
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Por favor completa el correo y contraseña para continuar con el CV',
+            'Por favor completa el correo y contraseña para continuar con el CV.',
           ),
           backgroundColor: Colors.red,
         ),
@@ -1118,9 +995,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return;
     }
 
-    setState(() {
-      _isLoading = true; // Start loading for CV upload
-    });
+    setState(() => _isLoading = true);
 
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -1132,7 +1007,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final bytes = result.files.single.bytes!;
       final filename = result.files.single.name;
 
-      // Muestra el diálogo de animación y espera el parsing real
       showDialog(
         context: context,
         barrierColor: Colors.black.withAlpha(220),
@@ -1142,7 +1016,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       try {
         final parser = ref.read(parseCandidateProvider);
-        // Parse CV using the provided email and password
         final candidate = await parser.parseAndSaveCandidate(
           bytes: bytes,
           filename: filename,
@@ -1154,44 +1027,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         final url = await uploadCv(bytes, filename);
         if (mounted) Navigator.of(context, rootNavigator: true).pop();
 
-        // Set the candidate as current user in provider
         ref.read(candidateProfileProvider.notifier).state = candidate.copyWith(
           resumeUrl: url,
         );
         ref.read(isCandidateProvider.notifier).state = true;
 
-        // Navega al perfil
         if (mounted) {
           Navigator.of(
             context,
           ).push(FadeThroughPageRoute(page: const UserProfile()));
         }
       } catch (e) {
-        // Cierra el diálogo si ocurre error
         if (mounted) Navigator.of(context, rootNavigator: true).pop();
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error al procesar el CV: $e')));
       } finally {
-        if (mounted) {
-          setState(() {
-            _isLoading = false; // Stop loading
-          });
-        }
+        if (mounted) setState(() => _isLoading = false);
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No se seleccionó ningún CV')),
       );
-      if (mounted) {
-        setState(() {
-          _isLoading = false; // Stop loading if no CV selected
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  Column _signUpOptions() {
+  Column _signUpOptions(WidgetRef ref) {
     return Column(
       children: [
         const Row(
@@ -1222,49 +1084,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 'Iniciar con CV',
                 style: TextStyle(color: Colors.black87),
               ),
-              // Only enable CV upload when:
-              // 1. In login mode (not signup mode)
-              // 2. User type is Candidate
-              // 3. Not currently loading
-              onPressed: _isLoading || (_selectedUserType == 'Empresa' || !_showLoginForm)
-                  ? null
-                  : _showCVAnimationAndNavigate,
-              // Note: We maintain the disabled logic for company user type
-            ),
-            OutlinedButton.icon(
-              style: ElevatedButton.styleFrom(
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(5)),
-                ),
-              ),
-              icon: const Icon(Icons.mail_outline, color: Colors.red),
-              label: const Text(
-                'Iniciar con Google',
-                style: TextStyle(color: Colors.black87),
-              ),
-              onPressed: () {},
-            ),
-            OutlinedButton.icon(
-              style: ElevatedButton.styleFrom(
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(5)),
-                ),
-              ),
-              icon: const Icon(Icons.upload_file, color: Colors.green),
-              label: const Text(
-                'Iniciar con CV',
-                style: TextStyle(color: Colors.black87),
-              ),
-              // Only enable CV upload when:
-              // 1. In login mode (not signup mode)
-              // 2. User type is Candidate
-              // 3. Not currently loading
               onPressed:
                   _isLoading ||
                           (_selectedUserType == 'Empresa' || !_showLoginForm)
                       ? null
                       : _showCVAnimationAndNavigate,
-              // Note: We maintain the disabled logic for company user type
             ),
           ],
         ),

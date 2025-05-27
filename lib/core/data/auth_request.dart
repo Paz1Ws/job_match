@@ -20,7 +20,7 @@ Future<User> login(String email, String password) async {
       throw Exception('No se pudo autenticar al usuario.');
     }
   } on AuthException catch (e) {
-    print('Error de autenticación: ${e.message}'); 
+    print('Error de autenticación: ${e.message}');
     throw Exception('Error de autenticación: Verifica tus credenciales.');
   } catch (e) {
     // Manejo de otros errores
@@ -77,10 +77,11 @@ Future<bool> registerCandidate({
   required String name,
   required String phone,
   required String location,
-  required String experienceLevel,
   required List<String> skills,
   required String education,
   required String experience,
+  required String mainPosition,
+  String? photo,
 
   String? bio,
   String? resumeUrl,
@@ -97,12 +98,13 @@ Future<bool> registerCandidate({
       name: name,
       phone: phone,
       location: location,
-      experienceLevel: experienceLevel,
       skills: skills,
       bio: bio,
       resumeUrl: resumeUrl,
       education: education,
       experience: experience,
+      mainPosition: mainPosition,
+      photo: photo,
     );
 
     await supabaseClient.from('candidates').insert(candidate.toJson());

@@ -129,7 +129,7 @@ class CvParser {
       location: location,
       resumeUrl: null, // Will be set after upload
       phone: phone,
-      experienceLevel: _determineExperienceLevel(data['employment']),
+      mainPosition: _determineExperienceLevel(data['employment']),
     );
 
     // Save candidate to database
