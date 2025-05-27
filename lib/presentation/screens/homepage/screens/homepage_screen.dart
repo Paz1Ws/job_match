@@ -206,7 +206,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                     repeatForever: true,
                     animatedTexts: [
                       TypewriterAnimatedText(
-                        'Haz match con tu trabajo ideal!',
+                        '¡Haz match con tu trabajo ideal!',
                         speed: const Duration(milliseconds: 100),
                         textAlign: TextAlign.center,
                         textStyle: TextStyle(
@@ -216,7 +216,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                         ),
                       ),
                       TypewriterAnimatedText(
-                        'Haz match con tu colaborador ideal!',
+                        '¡Haz match con tu colaborador ideal!',
                         speed: const Duration(milliseconds: 100),
                         textAlign: TextAlign.center,
 
@@ -242,7 +242,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
           child: FadeIn(
             duration: const Duration(milliseconds: 1200),
             child: Text(
-              'Conectando talento con oportunidad: tu puerta al éxito profesional',
+              'Conectando talento con oportunidad: tu puerta al éxito.',
               style: TextStyle(
                 fontSize: subtitleFontSize,
                 color: Colors.white70,
