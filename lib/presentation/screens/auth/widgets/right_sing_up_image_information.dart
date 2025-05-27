@@ -27,7 +27,7 @@ class RightSingUpImageInformation extends ConsumerWidget {
               clipper: LeftCutTrapezoidClipper(),
               child: Image.asset(
                 'assets/images/login_background.png',
-    
+
                 width: double.infinity,
                 fit: BoxFit.cover,
               ),
@@ -40,16 +40,12 @@ class RightSingUpImageInformation extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const SizedBox(height: 16),
-    
+
                     Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 8.0,
-                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
                       child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
-                        mainAxisAlignment:
-                            MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           AnimatedTextKit(
                             animatedTexts: [
@@ -57,28 +53,19 @@ class RightSingUpImageInformation extends ConsumerWidget {
                                 ref
                                     .watch(companiesCountProvider)
                                     .when(
-                                      data:
-                                          (data) =>
-                                              '+$data empresas',
+                                      data: (data) => '+$data empresas',
                                       error:
-                                          (error, stackTrace) =>
-                                              '0 empresas',
+                                          (error, stackTrace) => '0 empresas',
                                       loading: () => '-',
                                     ),
                                 textStyle: TextStyle(
                                   color: Colors.white,
                                   fontSize:
-                                      isWide
-                                          ? 48.0
-                                          : (isMedium
-                                              ? 32.0
-                                              : 22.0),
+                                      isWide ? 48.0 : (isMedium ? 32.0 : 22.0),
                                   fontWeight: FontWeight.bold,
                                 ),
                                 textAlign: TextAlign.start,
-                                speed: const Duration(
-                                  milliseconds: 100,
-                                ),
+                                speed: const Duration(milliseconds: 100),
                               ),
                             ],
                             totalRepeatCount: 1,
@@ -89,72 +76,56 @@ class RightSingUpImageInformation extends ConsumerWidget {
                             animatedTexts: [
                               TyperAnimatedText(
                                 ref
-                                    .watch(
-                                      candidatesCountProvider,
-                                    )
+                                    .watch(candidatesCountProvider)
                                     .when(
-                                      data:
-                                          (data) =>
-                                              '+$data candidatos',
+                                      data: (data) => '+$data candidatos',
                                       error:
-                                          (error, stackTrace) =>
-                                              '0 candidatos',
+                                          (error, stackTrace) => '0 candidatos',
                                       loading: () => '-',
                                     ),
                                 textStyle: TextStyle(
                                   color: Colors.white,
                                   fontSize:
-                                      isWide
-                                          ? 48.0
-                                          : (isMedium
-                                              ? 32.0
-                                              : 22.0),
+                                      isWide ? 48.0 : (isMedium ? 32.0 : 22.0),
                                   fontWeight: FontWeight.bold,
                                 ),
                                 textAlign: TextAlign.start,
-                                speed: const Duration(
-                                  milliseconds: 100,
-                                ),
+                                speed: const Duration(milliseconds: 100),
                               ),
                             ],
                             totalRepeatCount: 1,
                             displayFullTextOnTap: true,
                             stopPauseOnTap: true,
                           ),
-    
+
                           Text(
                             'Esperando el match perfecto.',
                             textAlign: TextAlign.start,
                             style: TextStyle(
                               color: Colors.white,
                               fontSize:
-                                  isWide
-                                      ? 48.0
-                                      : (isMedium ? 32.0 : 22.0),
+                                  isWide ? 48.0 : (isMedium ? 32.0 : 22.0),
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],
                       ),
                     ),
-    
+
                     SizedBox(height: isWide ? 60 : 24),
-    
+
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Row(
-                        mainAxisAlignment:
-                            MainAxisAlignment.start,
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           InfoCard(
                             title: ref
                                 .watch(jobsCountProvider)
                                 .when(
                                   data: (data) => data.toString(),
-                                  error:
-                                      (error, stackTrace) => '0',
+                                  error: (error, stackTrace) => '0',
                                   loading: () => '-',
                                 ),
                             subtitle: 'Empleos Activos',
@@ -170,8 +141,7 @@ class RightSingUpImageInformation extends ConsumerWidget {
                                 .watch(companiesCountProvider)
                                 .when(
                                   data: (data) => data.toString(),
-                                  error:
-                                      (error, stackTrace) => '0',
+                                  error: (error, stackTrace) => '0',
                                   loading: () => '-',
                                 ),
                             subtitle: 'Empresas',
@@ -185,11 +155,10 @@ class RightSingUpImageInformation extends ConsumerWidget {
                           const Spacer(),
                           InfoCard(
                             title: ref
-                                .watch(recentJobsCountProvider)
+                                .watch(candidatesCountProvider)
                                 .when(
                                   data: (data) => data.toString(),
-                                  error:
-                                      (error, stackTrace) => '0',
+                                  error: (error, stackTrace) => '0',
                                   loading: () => '-',
                                 ),
                             subtitle: 'Nuevos Empleos',

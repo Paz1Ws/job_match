@@ -16,28 +16,19 @@ class PostJobForm extends ConsumerStatefulWidget {
 
 class _PostJobFormState extends ConsumerState<PostJobForm> {
   final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController(
-    text: 'Desarrollador Flutter Senior',
-  );
-  final _descriptionController = TextEditingController(
-    text:
-        'Buscamos un desarrollador Flutter con experiencia para unirse a nuestro equipo innovador. Responsable de crear aplicaciones móviles de alta calidad y rendimiento.',
-  );
-  final _locationController = TextEditingController(
-    text: 'Lima, Perú (Remoto Opcional)',
-  );
+  final _titleController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _locationController = TextEditingController();
   String _jobTypeValue = 'full-time'; // From the DB constraint options
-  final _salaryMinController = TextEditingController(text: '7000');
-  final _salaryMaxController = TextEditingController(text: '10000');
+  final _salaryMinController = TextEditingController();
+  final _salaryMaxController = TextEditingController();
   final _applicationDeadlineController = TextEditingController(
     text: DateFormat(
       'yyyy-MM-dd',
     ).format(DateTime.now().add(const Duration(days: 30))),
   );
   String _statusValue = 'open'; // From the DB constraint options
-  final _requiredSkillsController = TextEditingController(
-    text: 'Flutter, Dart, Firebase, Git, API REST',
-  );
+  final _requiredSkillsController = TextEditingController();
   final _maxApplicationsController = TextEditingController(text: '100');
 
   bool _isLoading = false;
