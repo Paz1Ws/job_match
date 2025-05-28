@@ -139,7 +139,8 @@ class _EmployerDashboardScreenState
                     children: [
                       CircleAvatar(
                         radius: isMobile ? 40 : 60,
-                        backgroundColor: Colors.blueGrey.shade100, // Fallback background
+                        backgroundColor:
+                            Colors.blueGrey.shade100, // Fallback background
                         backgroundImage:
                             company?.logo != null && company!.logo!.isNotEmpty
                                 ? NetworkImage(company.logo!)

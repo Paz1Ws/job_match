@@ -217,6 +217,7 @@ class CompanyProfileHeader extends ConsumerWidget {
                             delay: Duration(milliseconds: 100 * index),
                             child: RelatedJobCard(
                               job: Job(
+                                id: job.id ?? '',
                                 logoAsset:
                                     company.logo ??
                                     'assets/images/job_match.jpg',

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:job_match/config/secrets/supabase_secrets.dart';
+import 'package:job_match/core/data/supabase_http_requests.dart';
 import 'package:job_match/presentation/screens/splash/splash_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'; // Import new screen
 
@@ -26,6 +27,7 @@ class JobMatchApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final r = fetchMatchResult('1', '2');
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: const SplashScreen(),

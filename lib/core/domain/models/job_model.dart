@@ -13,7 +13,7 @@ class Job {
   final int matchPercentage;
 
   Job({
-    this.id = '*',
+    required this.id,
     required this.logoAsset,
     required this.companyName,
     required this.location,

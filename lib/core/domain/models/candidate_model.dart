@@ -15,6 +15,7 @@ class Candidate {
   Candidate({
     required this.userId,
     this.name,
+
     this.experience,
     this.education,
     this.skills,

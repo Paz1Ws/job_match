@@ -404,6 +404,8 @@ class JobDetailScreen extends ConsumerWidget {
                               padding: const EdgeInsets.only(bottom: 15.0),
                               child: RelatedJobCard(
                                 job: Job(
+                                  id: job.id ?? '',
+
                                   logoAsset:
                                       'assets/images/job_match.jpg', // Default
                                   companyName:

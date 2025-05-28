@@ -225,6 +225,7 @@ class ProfileDetailHeader extends ConsumerWidget {
                             delay: Duration(milliseconds: 100 * index),
                             child: RelatedJobCard(
                               job: Job(
+                                id: job['id'] ?? '',
                                 logoAsset:
                                     'assets/images/job_match.jpg', // Example
                                 companyName: job['company_name'] ?? 'Empresa',

@@ -19,7 +19,7 @@ class _PostJobFormState extends ConsumerState<PostJobForm> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _locationController = TextEditingController();
-  String _jobTypeValue = 'full-time'; // From the DB constraint options
+  String _jobTypeValue = 'full-time'; 
   final _salaryMinController = TextEditingController();
   final _salaryMaxController = TextEditingController();
   final _applicationDeadlineController = TextEditingController(
