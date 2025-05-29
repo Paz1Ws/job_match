@@ -10,16 +10,25 @@ import 'package:job_match/core/data/supabase_http_requests.dart';
 import 'package:intl/intl.dart';
 import 'package:job_match/core/data/cv_parsing.dart'
     show generateRandomMatchPercentage; // Added import
+import 'package:job_match/core/data/job_match.dart'; // Import for matchResultProvider
+import 'package:job_match/core/domain/models/match_result_model.dart'; // Import MatchResult model
+import 'package:job_match/presentation/widgets/jobs/match_explanation_card.dart'; // Import the new card
+import 'package:job_match/core/data/auth_request.dart'; // For candidateProfileProvider
 
 class JobDetailScreen extends ConsumerWidget {
   final Job job;
-  final String fit;
+  final int? fitScore; // Optional: can be pre-passed from SimpleJobCard
+  final MatchResult? matchResult; // Optional: can be pre-passed
 
-  const JobDetailScreen({super.key, required this.job, required this.fit});
+  const JobDetailScreen({
+    super.key,
+    required this.job,
+    this.fitScore,
+    this.matchResult,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Use job data with fallbacks for null values
     final String jobTitle =
         job.title.isNotEmpty ? job.title : 'Puesto sin título';
     final String companyName =
@@ -30,7 +39,32 @@ class JobDetailScreen extends ConsumerWidget {
     final String jobSalary =
         job.salary.isNotEmpty ? job.salary : 'Salario no especificado';
 
-    // Fetch related jobs data
+    final candidateId = ref.watch(candidateProfileProvider)?.userId;
+    final AsyncValue<MatchResult?> matchResultAsync =
+        (candidateId != null && candidateId.isNotEmpty && job.id.isNotEmpty)
+            ? ref.watch(
+              matchResultProvider(
+                MatchRequestParams(
+                  candidateId: candidateId,
+                  jobOfferId: job.id,
+                ),
+              ),
+            )
+            : AsyncData(
+              matchResult,
+            ); // Use pre-passed if available and no live fetch
+
+    final currentMatchResult = matchResultAsync.asData?.value;
+    final currentFitScore = currentMatchResult?.fitScore ?? fitScore ?? 0;
+    final bool isLoadingMatch = matchResultAsync.isLoading;
+
+    final Color fitColor =
+        currentFitScore >= 75
+            ? Colors.green.shade700
+            : currentFitScore >= 50
+            ? Colors.orange.shade700
+            : Colors.red.shade700;
+
     final relatedJobsAsync = ref.watch(jobsProvider);
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FA),
@@ -68,74 +102,99 @@ class JobDetailScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Company Logo and Title
+                    // Company Logo and Title Row
                     Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          width: 70,
-                          height: 70,
-                          decoration: BoxDecoration(
-                            color: job.logoBackgroundColor,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child:
-                              job.logoAsset.startsWith('assets/')
-                                  ? ClipRRect(
-                                    borderRadius: BorderRadius.circular(10),
-                                    child: Image.asset(
-                                      job.logoAsset,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  )
-                                  : job.logoAsset.startsWith('http')
-                                  ? ClipRRect(
-                                    borderRadius: BorderRadius.circular(10),
-                                    child: Image.network(
-                                      job.logoAsset,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  )
-                                  : const Icon(
-                                    Icons.business,
-                                    color: Colors.white,
-                                    size: 40,
-                                  ),
-                        ),
-                        const SizedBox(width: 15),
+                        // Left part: Logo and Company Info
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          flex: 3,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              Text(
-                                companyName,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
+                              Container(
+                                width: 70,
+                                height: 70,
+                                decoration: BoxDecoration(
+                                  color: job.logoBackgroundColor,
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
+                                child:
+                                    job.logoAsset.startsWith('assets/')
+                                        ? ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                          child: Image.asset(
+                                            job.logoAsset,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        )
+                                        : job.logoAsset.startsWith('http')
+                                        ? ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                          child: Image.network(
+                                            job.logoAsset,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        )
+                                        : const Icon(
+                                          Icons.business,
+                                          color: Colors.white,
+                                          size: 40,
+                                        ),
                               ),
-                              const SizedBox(height: 5),
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.location_on,
-                                    color: Colors.grey,
-                                    size: 16,
-                                  ),
-                                  const SizedBox(width: 5),
-                                  Text(
-                                    jobLocation,
-                                    style: const TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 14,
+                              const SizedBox(width: 15),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      companyName,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(height: 5),
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.location_on,
+                                          color: Colors.grey,
+                                          size: 16,
+                                        ),
+                                        const SizedBox(width: 5),
+                                        Expanded(
+                                          child: Text(
+                                            jobLocation,
+                                            style: const TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: 14,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 2,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
                         ),
                       ],
+                    ),
+
+                    // Add Match Explanation Card here (below company info)
+                    const SizedBox(height: kSpacing12),
+                    MatchExplanationCard(
+                      fitScore: currentFitScore,
+                      matchResult: currentMatchResult,
+                      isLoading: isLoadingMatch,
                     ),
 
                     const SizedBox(height: 25),
@@ -158,7 +217,11 @@ class JobDetailScreen extends ConsumerWidget {
                       children: [
                         _buildTag(jobType),
                         _buildTag(jobSalary),
-                        _buildTag('$fit% Match'),
+                        _buildTag(
+                          '$currentFitScore% Match',
+                          color: fitColor.withOpacity(0.1),
+                          textColor: fitColor,
+                        ),
                       ],
                     ),
 
@@ -378,7 +441,11 @@ class JobDetailScreen extends ConsumerWidget {
                       // Filter out current job and limit to relevant related jobs
                       final relatedJobs =
                           jobs
-                              .where((j) => j['title'].toString().isNotEmpty)
+                              .where(
+                                (j) =>
+                                    j['title'].toString().isNotEmpty &&
+                                    j['id'] != job.id,
+                              ) // Also filter out the current job
                               .take(3)
                               .toList();
 
@@ -397,37 +464,44 @@ class JobDetailScreen extends ConsumerWidget {
                         shrinkWrap: true,
                         itemCount: relatedJobs.length,
                         itemBuilder: (context, index) {
-                          final relatedJob = relatedJobs[index];
+                          final relatedJobData =
+                              relatedJobs[index]; // This is a Map<String, dynamic>
                           return FadeInUp(
                             delay: Duration(milliseconds: 200 * index),
                             child: Padding(
                               padding: const EdgeInsets.only(bottom: 15.0),
                               child: RelatedJobCard(
                                 job: Job(
-                                  id: job.id ?? '',
+                                  // Ensure 'id' from relatedJobData is used and is a non-empty string.
+                                  // If 'id' can be null or is not a string, add appropriate handling.
+                                  // Assuming 'id' is the primary key from your 'jobs' table.
+                                  id: relatedJobData['id']?.toString() ?? '',
 
                                   logoAsset:
                                       'assets/images/job_match.jpg', // Default
                                   companyName:
-                                      relatedJob['company_name'] ?? 'Empresa',
+                                      relatedJobData['company_name'] ??
+                                      'Empresa',
                                   location:
-                                      relatedJob['location'] ?? 'Lima, Perú',
+                                      relatedJobData['location'] ??
+                                      'Lima, Perú',
                                   title:
-                                      relatedJob['title'] ??
+                                      relatedJobData['title'] ??
                                       'Puesto sin título',
                                   type:
-                                      relatedJob['job_type'] ??
+                                      relatedJobData['job_type'] ??
                                       'Tiempo Completo',
                                   salary:
-                                      relatedJob['salary_min'] != null &&
-                                              relatedJob['salary_max'] != null
-                                          ? 'S/${relatedJob['salary_min']} - S/${relatedJob['salary_max']}'
+                                      relatedJobData['salary_min'] != null &&
+                                              relatedJobData['salary_max'] !=
+                                                  null
+                                          ? 'S/${relatedJobData['salary_min']} - S/${relatedJobData['salary_max']}'
                                           : 'Salario no especificado',
                                   isFeatured:
-                                      relatedJob['is_featured'] ?? false,
+                                      relatedJobData['is_featured'] ?? false,
                                   logoBackgroundColor: Colors.blue.shade100,
                                   matchPercentage:
-                                      generateRandomMatchPercentage(), // Updated
+                                      generateRandomMatchPercentage(), // This is for RelatedJobCard's own display
                                 ),
                               ),
                             ),
@@ -463,17 +537,22 @@ class JobDetailScreen extends ConsumerWidget {
   }
 
   // Helper methods
-  Widget _buildTag(String text) {
+  Widget _buildTag(String text, {Color? color, Color? textColor}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.1),
+        color: color ?? Colors.blue.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.blue.withOpacity(0.3)),
+        border: Border.all(
+          color: (textColor ?? Colors.blue.shade800).withOpacity(0.3),
+        ),
       ),
       child: Text(
         text,
-        style: TextStyle(color: Colors.blue.shade800, fontSize: 13),
+        style: TextStyle(
+          color: textColor ?? Colors.blue.shade800,
+          fontSize: 13,
+        ),
       ),
     );
   }

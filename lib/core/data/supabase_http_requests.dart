@@ -372,31 +372,3 @@ final uploadCandidatePhotoProvider = Provider((ref) {
 
   return uploadPhoto;
 });
-
-Future<void> fetchMatchResult(String candidateId, String jobOfferId) async {
-  final dio = Dio();
-  final url = 'https://zdvibikloongkbsesogk.supabase.co/functions/v1/job-match';
-
-  try {
-    final response = await dio.post(
-      url,
-      options: Options(headers: {'Content-Type': 'application/json'}),
-      data: jsonEncode({
-        'candidateId': '1512e46d-62c5-4c3d-a4c8-e9cdceeb9699',
-        'jobOfferId': '5f43dfbd-4874-475d-b3f5-331b794c89ea',
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      final result =
-          response.data is String ? jsonDecode(response.data) : response.data;
-      print('Compatibilidad: ${result["fit_score"]}');
-      print('Explicación: ${result["explanation"]}');
-    } else {
-      print('Error al llamar la función: ${response.statusCode}');
-      print('Respuesta: ${response.data}');
-    }
-  } catch (e) {
-    print('Error al llamar la función: $e');
-  }
-}

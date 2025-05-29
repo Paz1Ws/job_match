@@ -27,7 +27,6 @@ class JobMatchApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final r = fetchMatchResult('1', '2');
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: const SplashScreen(),

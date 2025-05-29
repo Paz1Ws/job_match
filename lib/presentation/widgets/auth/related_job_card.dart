@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:job_match/config/util/animations.dart';
-import 'package:job_match/core/data/cv_parsing.dart';
+import 'package:job_match/core/data/auth_request.dart'; // For candidateProfileProvider
 import 'package:job_match/core/domain/models/job_model.dart';
 import 'package:job_match/presentation/screens/jobs/job_detail_screen.dart';
 import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:job_match/core/data/job_match.dart'; // For matchResultProvider
 
 class RelatedJobCard extends ConsumerWidget {
   final Job job;
@@ -15,8 +16,27 @@ class RelatedJobCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final fit = generateRandomMatchPercentage().toString();
-    final bool isCandidate = ref.watch(isCandidateProvider);
+    final isCandidate = ref.watch(isCandidateProvider);
+    final candidateId = ref.watch(candidateProfileProvider)?.userId;
+
+    // Fetch match result only if candidateId and job.id are valid
+    final matchResultAsync =
+        (candidateId != null && candidateId.isNotEmpty && job.id.isNotEmpty)
+            ? ref.watch(
+                matchResultProvider(
+                  MatchRequestParams(candidateId: candidateId, jobOfferId: job.id),
+                ),
+              )
+            : null;
+
+    final int fitPercentage = matchResultAsync?.asData?.value?.fitScore ?? 0;
+    final bool isLoadingMatch = matchResultAsync?.isLoading ?? false;
+
+    final Color fitColor = fitPercentage >= 75
+        ? Colors.green.shade700
+        : fitPercentage >= 50
+            ? Colors.orange.shade700
+            : Colors.red.shade700;
 
     return FadeInUp(
       duration: const Duration(milliseconds: 600),
@@ -25,11 +45,9 @@ class RelatedJobCard extends ConsumerWidget {
           GestureDetector(
             onTap: () {
               if (isCandidate) {
-                Navigator.of(context).push(
-                  ParallaxSlidePageRoute(
-                    page: JobDetailScreen(job: job, fit: fit),
-                  ),
-                );
+                Navigator.of(
+                  context,
+                ).push(ParallaxSlidePageRoute(page: JobDetailScreen(job: job)));
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -170,21 +188,34 @@ class RelatedJobCard extends ConsumerWidget {
                               vertical: kSpacing4 / 2,
                             ),
                             decoration: BoxDecoration(
+                              color: fitColor.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(kRadius8),
+                              border: Border.all(color: fitColor.withOpacity(0.3)),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(
-                                  Icons.analytics_outlined,
-                                  size: kIconSize14,
-                                ),
+                                isLoadingMatch
+                                    ? SizedBox(
+                                        width: 12,
+                                        height: 12,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 1.5,
+                                          color: Colors.grey.shade400,
+                                        ),
+                                      )
+                                    : Icon(
+                                        Icons.insights_outlined, // Changed from analytics_outlined
+                                        size: kIconSize14,
+                                        color: fitColor,
+                                      ),
                                 const SizedBox(width: kSpacing4),
                                 Text(
-                                  '$fit Fit',
+                                  isLoadingMatch ? '--% Fit' : '$fitPercentage% Fit',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 11.0,
+                                    color: fitColor,
                                   ),
                                 ),
                               ],
