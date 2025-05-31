@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:job_match/core/domain/models/company_model.dart';
 import 'package:job_match/core/domain/models/job_model.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:job_match/presentation/screens/jobs/job_apply_dialog.dart';
@@ -18,13 +19,15 @@ import 'package:job_match/core/data/auth_request.dart'; // For candidateProfileP
 class JobDetailScreen extends ConsumerWidget {
   final Job job;
   final int? fitScore; // Optional: can be pre-passed from SimpleJobCard
-  final MatchResult? matchResult; // Optional: can be pre-passed
+  final MatchResult? matchResult;
+  final Company? company; // Optional: can be pre-passed from SimpleJobCard
 
   const JobDetailScreen({
     super.key,
     required this.job,
     this.fitScore,
     this.matchResult,
+    this.company,
   });
 
   @override
@@ -37,7 +40,7 @@ class JobDetailScreen extends ConsumerWidget {
         job.location.isNotEmpty ? job.location : 'Lima, Perú';
     final String jobType = job.type.isNotEmpty ? job.type : 'Tiempo Completo';
     final String jobSalary =
-        job.salary.isNotEmpty ? job.salary : 'Salario no especificado';
+        job.salaryMin.isNotEmpty ? job.salaryMin : 'Salario no especificado';
 
     final candidateId = ref.watch(candidateProfileProvider)?.userId;
     final AsyncValue<MatchResult?> matchResultAsync =
@@ -72,24 +75,6 @@ class JobDetailScreen extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.blue),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.share),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Compartir trabajo')),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.bookmark_border),
-            onPressed: () {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('Trabajo guardado')));
-            },
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -120,27 +105,28 @@ class JobDetailScreen extends ConsumerWidget {
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child:
-                                    job.logoAsset.startsWith('assets/')
-                                        ? ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
-                                          child: Image.asset(
-                                            job.logoAsset,
-                                            fit: BoxFit.cover,
-                                          ),
-                                        )
-                                        : job.logoAsset.startsWith('http')
+                                    (job.companyId != null &&
+                                            job.companyId!.isNotEmpty)
                                         ? ClipRRect(
                                           borderRadius: BorderRadius.circular(
                                             10,
                                           ),
                                           child: Image.network(
-                                            job.logoAsset,
+                                            company != null &&
+                                                    company!.logo != null
+                                                ? company!.logo!
+                                                : '',
                                             fit: BoxFit.cover,
+                                            errorBuilder:
+                                                (context, error, stackTrace) =>
+                                                    Icon(
+                                                      Icons.business,
+                                                      color: Colors.white,
+                                                      size: 40,
+                                                    ),
                                           ),
                                         )
-                                        : const Icon(
+                                        : Icon(
                                           Icons.business,
                                           color: Colors.white,
                                           size: 40,
@@ -442,10 +428,8 @@ class JobDetailScreen extends ConsumerWidget {
                       final relatedJobs =
                           jobs
                               .where(
-                                (j) =>
-                                    j['title'].toString().isNotEmpty &&
-                                    j['id'] != job.id,
-                              ) // Also filter out the current job
+                                (j) => j.id != job.id,
+                              ) // Filter out the current job
                               .take(3)
                               .toList();
 
@@ -458,51 +442,20 @@ class JobDetailScreen extends ConsumerWidget {
                         );
                       }
 
-                      // Use existing RelatedJobCard but with real data
+                      // Use Job model instead of raw Map data
                       return ListView.builder(
                         physics: const NeverScrollableScrollPhysics(),
                         shrinkWrap: true,
                         itemCount: relatedJobs.length,
                         itemBuilder: (context, index) {
-                          final relatedJobData =
-                              relatedJobs[index]; // This is a Map<String, dynamic>
+                          final relatedJob =
+                              relatedJobs[index]; // This is already a Job model
                           return FadeInUp(
                             delay: Duration(milliseconds: 200 * index),
                             child: Padding(
                               padding: const EdgeInsets.only(bottom: 15.0),
                               child: RelatedJobCard(
-                                job: Job(
-                                  // Ensure 'id' from relatedJobData is used and is a non-empty string.
-                                  // If 'id' can be null or is not a string, add appropriate handling.
-                                  // Assuming 'id' is the primary key from your 'jobs' table.
-                                  id: relatedJobData['id']?.toString() ?? '',
-
-                                  logoAsset:
-                                      'assets/images/job_match.jpg', // Default
-                                  companyName:
-                                      relatedJobData['company_name'] ??
-                                      'Empresa',
-                                  location:
-                                      relatedJobData['location'] ??
-                                      'Lima, Perú',
-                                  title:
-                                      relatedJobData['title'] ??
-                                      'Puesto sin título',
-                                  type:
-                                      relatedJobData['job_type'] ??
-                                      'Tiempo Completo',
-                                  salary:
-                                      relatedJobData['salary_min'] != null &&
-                                              relatedJobData['salary_max'] !=
-                                                  null
-                                          ? 'S/${relatedJobData['salary_min']} - S/${relatedJobData['salary_max']}'
-                                          : 'Salario no especificado',
-                                  isFeatured:
-                                      relatedJobData['is_featured'] ?? false,
-                                  logoBackgroundColor: Colors.blue.shade100,
-                                  matchPercentage:
-                                      generateRandomMatchPercentage(), // This is for RelatedJobCard's own display
-                                ),
+                                job: relatedJob, // Pass the Job model directly
                               ),
                             ),
                           );

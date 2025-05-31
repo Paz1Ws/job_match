@@ -5,19 +5,31 @@ import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:job_match/config/util/animations.dart';
 import 'package:job_match/core/data/auth_request.dart';
 import 'package:job_match/core/domain/models/job_model.dart';
+import 'package:job_match/core/domain/models/company_model.dart'; // Add this import
 import 'package:job_match/presentation/screens/jobs/job_detail_screen.dart';
-import 'package:job_match/core/data/job_match.dart'; // Import for matchResultProvider
+import 'package:job_match/presentation/screens/company/company_job_detail_screen.dart';
+import 'package:job_match/core/data/job_match.dart';
+import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
 
 class SimpleJobCard extends ConsumerWidget {
   final Job job;
+  final Company? company; // Add company parameter
 
-  const SimpleJobCard({super.key, required this.job});
+  const SimpleJobCard({super.key, required this.job, this.company});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final candidateId = ref.watch(candidateProfileProvider)?.userId;
+    // Check if user is a candidate or a company
+    final isCandidate = ref.watch(isCandidateProvider);
+
+    // Only fetch match result for candidates
+    final candidateId =
+        isCandidate ? ref.watch(candidateProfileProvider)?.userId : null;
     final matchResultAsync =
-        (candidateId != null && candidateId.isNotEmpty && job.id.isNotEmpty)
+        (isCandidate &&
+                candidateId != null &&
+                candidateId.isNotEmpty &&
+                job.id.isNotEmpty)
             ? ref.watch(
               matchResultProvider(
                 MatchRequestParams(
@@ -28,9 +40,7 @@ class SimpleJobCard extends ConsumerWidget {
             )
             : null;
 
-    final int fitPercentage =
-        matchResultAsync?.asData?.value?.fitScore ??
-        0; // Default to 0 if no data
+    final int fitPercentage = matchResultAsync?.asData?.value?.fitScore ?? 0;
     final bool isLoadingMatch = matchResultAsync?.isLoading ?? false;
 
     final Color fitColor =
@@ -54,15 +64,25 @@ class SimpleJobCard extends ConsumerWidget {
             child: InkWell(
               borderRadius: BorderRadius.circular(kRadius12),
               onTap: () {
-                Navigator.of(context).push(
-                  ParallaxSlidePageRoute(
-                    page: JobDetailScreen(
-                      job: job,
-                      fitScore: fitPercentage,
-                      matchResult: matchResultAsync?.asData?.value,
+                // Use different detail screen based on user type
+                if (isCandidate) {
+                  Navigator.of(context).push(
+                    ParallaxSlidePageRoute(
+                      page: JobDetailScreen(
+                        job: job,
+                        fitScore: fitPercentage,
+                        matchResult: matchResultAsync?.asData?.value,
+                      ),
                     ),
-                  ),
-                );
+                  );
+                } else {
+                  // For companies, use the company job detail screen
+                  Navigator.of(context).push(
+                    ParallaxSlidePageRoute(
+                      page: CompanyJobDetailScreen(job: job),
+                    ),
+                  );
+                }
               },
               child: Padding(
                 padding: const EdgeInsets.all(kPadding16),
@@ -77,20 +97,20 @@ class SimpleJobCard extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(kRadius8),
                       ),
                       child:
-                          job.logoAsset.startsWith('assets/')
-                              ? ClipRRect(
-                                borderRadius: BorderRadius.circular(kRadius8),
-                                child: Image.asset(
-                                  job.logoAsset,
-                                  fit: BoxFit.contain,
-                                ),
-                              )
-                              : job.logoAsset.startsWith('http')
+                          company != null &&
+                                  company!.logo != null &&
+                                  company!.logo!.isNotEmpty
                               ? ClipRRect(
                                 borderRadius: BorderRadius.circular(kRadius8),
                                 child: Image.network(
-                                  job.logoAsset,
-                                  fit: BoxFit.contain,
+                                  company!.logo!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder:
+                                      (context, error, stackTrace) => Icon(
+                                        Icons.business,
+                                        color: Colors.grey.shade600,
+                                        size: kIconSize24,
+                                      ),
                                 ),
                               )
                               : Icon(
@@ -163,69 +183,75 @@ class SimpleJobCard extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        isLoadingMatch
-                            ? SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.grey.shade400,
-                              ),
-                            )
-                            : Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: kPadding8,
-                                vertical: kSpacing4 / 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: fitColor.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(kRadius4),
-                                border: Border.all(
-                                  color: fitColor.withOpacity(0.3),
+                        // Only show fit percentage for candidates
+                        if (isCandidate)
+                          isLoadingMatch
+                              ? SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.grey.shade400,
                                 ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.insights,
-                                    color: fitColor,
-                                    size: 12,
+                              )
+                              : Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: kPadding8,
+                                  vertical: kSpacing4 / 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: fitColor.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(kRadius4),
+                                  border: Border.all(
+                                    color: fitColor.withOpacity(0.3),
                                   ),
-                                  const SizedBox(width: kSpacing4),
-                                  Text(
-                                    '$fitPercentage% Fit',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 11.0,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.insights,
                                       color: fitColor,
+                                      size: 12,
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                        if (job.isFeatured) ...[
-                          const SizedBox(height: kSpacing8),
+                                    const SizedBox(width: kSpacing4),
+                                    Text(
+                                      '$fitPercentage% Fit',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 11.0,
+                                        color: fitColor,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                        else
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: kPadding8,
                               vertical: kSpacing4 / 2,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.orange.shade50,
+                              color: _getStatusColor(
+                                job.status,
+                              ).withOpacity(0.1),
                               borderRadius: BorderRadius.circular(kRadius4),
-                              border: Border.all(color: Colors.orange.shade200),
+                              border: Border.all(
+                                color: _getStatusColor(
+                                  job.status,
+                                ).withOpacity(0.3),
+                              ),
                             ),
                             child: Text(
-                              'Destacado',
+                              _getDisplayStatus(job.status),
                               style: TextStyle(
-                                color: Colors.orange.shade700,
-                                fontSize: 10.0,
+                                color: _getStatusColor(job.status),
+                                fontSize: 11.0,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
                           ),
-                        ],
                       ],
                     ),
                   ],
@@ -236,5 +262,33 @@ class SimpleJobCard extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  // Helper method to determine color based on job status
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'open':
+        return Colors.green.shade700;
+      case 'closed':
+        return Colors.red.shade700;
+      case 'paused':
+        return Colors.blue.shade700;
+      default:
+        return Colors.grey.shade700;
+    }
+  }
+
+  // Helper method to translate status to Spanish for display
+  String _getDisplayStatus(String status) {
+    switch (status.toLowerCase()) {
+      case 'open':
+        return 'Abierto';
+      case 'closed':
+        return 'Cerrado';
+      case 'paused':
+        return 'Pausado';
+      default:
+        return status; // Return original if unknown
+    }
   }
 }

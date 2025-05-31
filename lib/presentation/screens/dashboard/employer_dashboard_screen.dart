@@ -254,6 +254,7 @@ class _EmployerDashboardScreenState
                     MaterialPageRoute(
                       builder:
                           (context) => CompanyJobsScreen(
+                            company: company!,
                             companyId: company?.userId ?? '',
                           ),
                     ),
@@ -295,6 +296,7 @@ class _EmployerDashboardScreenState
                         MaterialPageRoute(
                           builder:
                               (context) => CompanyJobsScreen(
+                                company: company!,
                                 companyId: company?.userId ?? '',
                               ),
                         ),
@@ -391,6 +393,7 @@ class _EmployerDashboardScreenState
                     MaterialPageRoute(
                       builder:
                           (context) => CompanyJobsScreen(
+                            company: company!,
                             companyId: company?.userId ?? '',
                           ),
                     ),
@@ -430,6 +433,7 @@ class _EmployerDashboardScreenState
                         MaterialPageRoute(
                           builder:
                               (context) => CompanyJobsScreen(
+                                company: company!,
                                 companyId: company?.userId ?? '',
                               ),
                         ),

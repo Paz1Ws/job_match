@@ -218,9 +218,10 @@ class CompanyProfileHeader extends ConsumerWidget {
                             child: RelatedJobCard(
                               job: Job(
                                 id: job.id ?? '',
-                                logoAsset:
-                                    company.logo ??
-                                    'assets/images/job_match.jpg',
+                                description:
+                                    job.description ?? 'Sin descripción',
+
+                               
                                 companyName: company.companyName ?? 'Company',
                                 location:
                                     job.location ??
@@ -228,11 +229,12 @@ class CompanyProfileHeader extends ConsumerWidget {
                                     'No disponible',
                                 title: job.title ?? 'Puesto sin título',
                                 type: job.type ?? 'Tiempo Completo',
-                                salary: job.salary,
-                                isFeatured: job.isFeatured ?? false,
+                                salaryMin: job.salaryMin,
+                                salaryMax: job.salaryMax,
                                 logoBackgroundColor: Colors.blue.shade100,
                                 matchPercentage:
                                     generateRandomMatchPercentage(),
+                                modality: job.modality,
                               ),
                             ),
                           );

@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:job_match/core/data/supabase_http_requests.dart';
+import 'package:job_match/core/domain/models/company_model.dart';
 import 'package:job_match/presentation/widgets/homepage/find_job/simple_job_card.dart';
 import 'package:animate_do/animate_do.dart';
 
 class CompanyJobsScreen extends ConsumerStatefulWidget {
   final String companyId;
-
-  const CompanyJobsScreen({super.key, required this.companyId});
+  final Company company;
+  const CompanyJobsScreen({
+    super.key,
+    required this.companyId,
+    required this.company,
+  });
 
   @override
   ConsumerState<CompanyJobsScreen> createState() => _CompanyJobsScreenState();
@@ -127,6 +132,7 @@ class _CompanyJobsScreenState extends ConsumerState<CompanyJobsScreen> {
                           padding: const EdgeInsets.only(bottom: 16),
                           child: SimpleJobCard(
                             job: job,
+                            company: widget.company,
                             // onTap: () {
                             //   Navigator.of(context).push(
                             //     MaterialPageRoute(

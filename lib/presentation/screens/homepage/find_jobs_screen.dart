@@ -312,7 +312,6 @@ Widget _buildTopBar(BuildContext context, WidgetRef ref) {
   final isCandidate = ref.watch(isCandidateProvider);
   final bool isLoggedIn = candidate != null || company != null;
   final size = MediaQuery.sizeOf(context);
-  final isMobile = size.width < 700;
 
   ImageProvider? userImageProvider;
   Widget? fallbackIcon;

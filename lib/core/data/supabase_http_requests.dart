@@ -6,7 +6,9 @@ import 'package:job_match/core/domain/models/candidate_model.dart';
 import 'package:job_match/core/domain/models/job_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:dio/dio.dart'; // Add this import for Dio
-import 'dart:convert'; // Needed for jsonEncode/jsonDecode
+import 'dart:convert';
+
+import 'package:uuid/uuid.dart'; // Needed for jsonEncode/jsonDecode
 
 // Supabase client provider
 final supabaseProvider = Provider<SupabaseClient>((ref) {
@@ -31,15 +33,13 @@ final companiesProvider =
     });
 
 // 2.3. Jobs
-final jobsProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((
-  ref,
-) async {
+final jobsProvider = FutureProvider.autoDispose<List<Job>>((ref) async {
   final supabase = ref.read(supabaseProvider);
   final res = await supabase
       .from('jobs')
       .select('*')
       .order('created_at', ascending: false);
-  return res;
+  return res.map((e) => Job.fromMap(e)).toList();
 });
 
 final jobsProviderWithCompanyName =
@@ -60,6 +60,21 @@ final applicationsProvider =
       final res = await supabase
           .from('applications')
           .select('*')
+          .order('applied_at', ascending: false);
+      return res;
+    });
+
+// Applications for a specific job
+final applicationsByJobIdProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>((
+      ref,
+      jobId,
+    ) async {
+      final supabase = ref.read(supabaseProvider);
+      final res = await supabase
+          .from('applications')
+          .select('*')
+          .eq('job_id', jobId)
           .order('applied_at', ascending: false);
       return res;
     });
@@ -146,50 +161,41 @@ final updateCompanyProvider = Provider((ref) {
 
 /// 3. Crear una vacante (POST /jobs)
 /// Permite a una empresa publicar una nueva vacante.
-final createJobProvider = Provider<
-  Future<Map<String, dynamic>> Function(Map<String, dynamic>)
->((ref) {
-  final supabase = ref.read(supabaseProvider);
-  return (Map<String, dynamic> jobData) async {
+final createJobProvider = Provider<Future<void> Function(Map<String, dynamic>)>(
+  (ref) => (Map<String, dynamic> jobData) async {
+    final supabase = ref.read(supabaseProvider);
     try {
-      final List<Map<String, dynamic>> insertedData =
-          await supabase.from('jobs').insert(jobData).select();
-
-      if (insertedData.isEmpty) {
-        throw Exception(
-          'Job creation seemingly succeeded, but no data was returned. Review RLS policies on the "jobs" table.',
-        );
-      }
-
-      return insertedData.first;
-    } on PostgrestException catch (e) {
-      print(
-        'PostgrestException during job creation: ${e.message} (Code: ${e.code}, Details: ${e.details})',
-      );
-      throw Exception(
-        'Database error: "${e.message}". This is likely caused by a server-side trigger (e.g., the "notify_new_job()" function) or an RLS policy on the "jobs" table that incorrectly references a non-existent "profiles" table. Please review your database schema and triggers.',
-      );
+      await supabase.from('jobs').insert(jobData);
     } catch (e) {
-      // Catch-all for other types of errors.
-      print('Unexpected error during job creation: $e');
-      throw Exception(
-        'An unexpected error occurred while creating the job: $e',
-      );
+      print('Error creating job: $e');
+      rethrow;
     }
-  };
-});
+  },
+);
 
-/// 4. Actualizar una vacante (PUT /jobs/{id})
-/// Permite a una empresa modificar los detalles de una vacante existente.
-final updateJobProvider = Provider((ref) {
+/// Provider for updating an existing job
+final updateJobProvider = FutureProvider.family<void, UpdateJobParams>((
+  ref,
+  params,
+) async {
   final supabase = ref.read(supabaseProvider);
-  return (int jobId, Map<String, dynamic> updates) async {
-    final response =
-        await supabase.from('jobs').update(updates).eq('id', jobId).select();
 
-    return response;
-  };
+  try {
+    await supabase.from('jobs').update(params.jobData).eq('id', params.jobId);
+    print('Job updated successfully: ${params.jobId}');
+  } catch (e) {
+    print('Error updating job: $e');
+    rethrow;
+  }
 });
+
+/// Class to hold parameters for updating a job
+class UpdateJobParams {
+  final String jobId;
+  final Map<String, dynamic> jobData;
+
+  UpdateJobParams({required this.jobId, required this.jobData});
+}
 
 /// 5. Postular a una vacante (POST /applications)
 /// Permite a un usuario autenticado postularse a una vacante.
@@ -286,15 +292,30 @@ final jobsByCompanyIdProvider = FutureProvider.family<List<Job>, String>((
   if (companyId.isEmpty) return [];
 
   try {
+    // Ensure companyId is treated as a string, not parsed as a number
+    // When comparing with 'eq', Supabase expects the type to match the column type
     final response = await supabase
         .from('jobs')
-        .select('*')
-        .eq('company_id', companyId)
+        .select(
+          '*, users (*, companies (*))',
+        ) // Include companies relation data if needed
+        .eq(
+          'company_id',
+          companyId.toString(),
+        ) // Explicitly use toString to ensure string comparison
         .order('created_at', ascending: false);
 
+    print('Jobs response for company $companyId: ${response.length} jobs');
+
     return response.map((job) => Job.fromMap(job)).toList();
+  } on FormatException catch (e) {
+    // Log the error or handle it appropriately
+    print('Invalid company ID format: $e');
+    return [];
   } catch (e) {
+    // Log the error or handle it appropriately
     print('Error fetching company jobs: $e');
+    print('Failed company ID: $companyId (${companyId.runtimeType})');
     return [];
   }
 });
@@ -371,4 +392,41 @@ final uploadCandidatePhotoProvider = Provider((ref) {
   }
 
   return uploadPhoto;
+});
+
+// Provider for deleting a job
+final deleteJobProvider = FutureProvider.family<bool, String>((
+  ref,
+  jobId,
+) async {
+  final supabase = ref.read(supabaseProvider);
+  try {
+    await supabase.from('jobs').delete().eq('id', jobId);
+    return true;
+  } catch (e) {
+    print('Error deleting job: $e');
+    return false;
+  }
+});
+
+// Provider for fetching a candidate by user ID
+final candidateByUserIdProvider = FutureProvider.family<Candidate?, String>((
+  ref,
+  userId,
+) async {
+  if (userId.isEmpty) return null;
+
+  final supabase = ref.read(supabaseProvider);
+  try {
+    final data =
+        await supabase
+            .from('candidates')
+            .select()
+            .eq('user_id', userId)
+            .single();
+    return Candidate.fromJson(data);
+  } catch (e) {
+    print('Error fetching candidate $userId: $e');
+    return null;
+  }
 });

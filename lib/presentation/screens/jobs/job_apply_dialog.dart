@@ -59,28 +59,7 @@ class _JobApplyDialogState extends State<JobApplyDialog> {
                 ],
               ),
               const SizedBox(height: 24),
-              const Text(
-                'Selecciona tu CV',
-                style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15),
-              ),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 12,
-                  ),
-                ),
-                value: selectedResume,
-                hint: const Text('Selecciona...'),
-                items:
-                    ['CV_JobMatch.pdf', 'CV_2024.pdf', 'CV_Ejemplo.pdf']
-                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                        .toList(),
-                onChanged: (value) => setState(() => selectedResume = value),
-              ),
-              const SizedBox(height: 24),
+
               const Text(
                 'Carta de Presentación',
                 style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15),

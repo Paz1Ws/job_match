@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
 import 'package:animate_do/animate_do.dart';
 import 'package:job_match/core/data/auth_request.dart';
 import 'package:job_match/core/domain/models/candidate_model.dart';
 import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
-import 'package:job_match/core/domain/models/applied_job_model.dart';
-import 'package:job_match/core/domain/models/job_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:job_match/core/data/supabase_http_requests.dart';
 import 'package:job_match/core/data/mock_data.dart';
 import 'package:job_match/presentation/widgets/simulation/notification_overlay.dart';
-import 'package:job_match/presentation/widgets/simulation/job_card_with_fit.dart';
 import 'package:job_match/presentation/widgets/simulation/chatbot_widget.dart';
 import 'package:job_match/presentation/screens/simulation/micro_course_screen.dart';
 
@@ -622,48 +618,6 @@ class _CandidateDashboardScreenState
             ),
           ),
           const SizedBox(height: kSpacing20),
-          FadeInUp(
-            delay: const Duration(milliseconds: 300),
-            duration: const Duration(milliseconds: 700),
-            child: Text(
-              'Trabajos Recomendados',
-              style: TextStyle(
-                fontSize: isMobile ? 18 : 20,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF222B45),
-              ),
-            ),
-          ),
-          const SizedBox(height: kSpacing12),
-
-          // FadeInUp(
-          //   delay: const Duration(milliseconds: 400),
-          //   duration: const Duration(milliseconds: 700),
-          //   child: JobCardWithFit(
-          //     title: 'Especialista en Comunicaciones',
-          //     company: 'JobMatch Recruiting',
-          //     location: 'Lima, Perú',
-          //     timeAgo: 'hace 2 horas',
-          //     fitPercentage: 92,
-          //     fitReasons: [
-          //       '+50% por experiencia en PR',
-          //       '+42% por Storytelling',
-          //     ],
-          //   ),
-          // ),
-          // FadeInUp(
-          //   delay: const Duration(milliseconds: 500),
-          //   duration: const Duration(milliseconds: 700),
-          //   child: JobCardWithFit(
-          //     title: 'Content Manager',
-          //     company: 'Digital Solutions',
-          //     location: 'Lima, Perú',
-          //     timeAgo: 'hace 1 día',
-          //     fitPercentage: 78,
-          //     fitReasons: ['+50% por comunicación', '+28% por estrategia'],
-          //   ),
-          // ),
-          const SizedBox(height: kSpacing30 + kSpacing4),
         ],
       ),
     );

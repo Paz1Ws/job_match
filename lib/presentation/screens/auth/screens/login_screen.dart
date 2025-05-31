@@ -18,6 +18,10 @@ import 'package:job_match/presentation/screens/homepage/find_jobs_screen.dart';
 import 'package:job_match/presentation/screens/dashboard/employer_dashboard_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+final typeOfUserProvider = StateProvider<String>((ref) {
+  return 'Candidato';
+});
+
 class LoginScreen extends ConsumerStatefulWidget {
   final String userType;
 
@@ -261,6 +265,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         }).toList(),
                     onChanged: (String? newValue) {
                       _prefillForm(newValue);
+                      ref.read(typeOfUserProvider.notifier).state = 'Empresa';
                     },
                   ),
                 ),

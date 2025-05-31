@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:job_match/config/util/animations.dart';
-import 'package:job_match/core/data/auth_request.dart'; // For candidateProfileProvider
+import 'package:job_match/core/data/auth_request.dart';
 import 'package:job_match/core/domain/models/job_model.dart';
+import 'package:job_match/core/domain/models/company_model.dart'; // Add this import
 import 'package:job_match/presentation/screens/jobs/job_detail_screen.dart';
 import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
 import 'package:animate_do/animate_do.dart';
@@ -11,8 +12,9 @@ import 'package:job_match/core/data/job_match.dart'; // For matchResultProvider
 
 class RelatedJobCard extends ConsumerWidget {
   final Job job;
+  final Company? company; // Add company parameter
 
-  const RelatedJobCard({super.key, required this.job});
+  const RelatedJobCard({super.key, required this.job, this.company});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -23,18 +25,22 @@ class RelatedJobCard extends ConsumerWidget {
     final matchResultAsync =
         (candidateId != null && candidateId.isNotEmpty && job.id.isNotEmpty)
             ? ref.watch(
-                matchResultProvider(
-                  MatchRequestParams(candidateId: candidateId, jobOfferId: job.id),
+              matchResultProvider(
+                MatchRequestParams(
+                  candidateId: candidateId,
+                  jobOfferId: job.id,
                 ),
-              )
+              ),
+            )
             : null;
 
     final int fitPercentage = matchResultAsync?.asData?.value?.fitScore ?? 0;
     final bool isLoadingMatch = matchResultAsync?.isLoading ?? false;
 
-    final Color fitColor = fitPercentage >= 75
-        ? Colors.green.shade700
-        : fitPercentage >= 50
+    final Color fitColor =
+        fitPercentage >= 75
+            ? Colors.green.shade700
+            : fitPercentage >= 50
             ? Colors.orange.shade700
             : Colors.red.shade700;
 
@@ -45,9 +51,11 @@ class RelatedJobCard extends ConsumerWidget {
           GestureDetector(
             onTap: () {
               if (isCandidate) {
-                Navigator.of(
-                  context,
-                ).push(ParallaxSlidePageRoute(page: JobDetailScreen(job: job)));
+                Navigator.of(context).push(
+                  ParallaxSlidePageRoute(
+                    page: JobDetailScreen(job: job, company: company),
+                  ),
+                );
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -93,14 +101,22 @@ class RelatedJobCard extends ConsumerWidget {
                             ),
                           ),
                           child:
-                              job.logoAsset.startsWith('assets/')
+                              company != null &&
+                                      company!.logo != null &&
+                                      company!.logo!.isNotEmpty
                                   ? ClipRRect(
                                     borderRadius: BorderRadius.circular(
-                                      kRadius8 + kRadius4 / 2,
+                                      kRadius8,
                                     ),
-                                    child: Image.asset(
-                                      job.logoAsset,
+                                    child: Image.network(
+                                      company!.logo!,
                                       fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) => Icon(
+                                            Icons.business,
+                                            color: Colors.white,
+                                            size: kIconSize24 + kSpacing4 / 2,
+                                          ),
                                     ),
                                   )
                                   : Icon(
@@ -155,33 +171,6 @@ class RelatedJobCard extends ConsumerWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          if (job.isFeatured)
-                            FadeIn(
-                              delay: const Duration(milliseconds: 200),
-                              duration: const Duration(milliseconds: 400),
-                              child: Container(
-                                margin: const EdgeInsets.only(
-                                  bottom: kSpacing4,
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: kPadding8,
-                                  vertical: kSpacing4 / 2 + kSpacing4 / 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFFE6EC),
-                                  borderRadius: BorderRadius.circular(kRadius4),
-                                ),
-                                child: const Text(
-                                  'Destacado',
-                                  style: TextStyle(
-                                    color: Color(0xFFFD346E),
-                                    fontSize: 10.0,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 0.2,
-                                  ),
-                                ),
-                              ),
-                            ),
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: kPadding8,
@@ -190,28 +179,33 @@ class RelatedJobCard extends ConsumerWidget {
                             decoration: BoxDecoration(
                               color: fitColor.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(kRadius8),
-                              border: Border.all(color: fitColor.withOpacity(0.3)),
+                              border: Border.all(
+                                color: fitColor.withOpacity(0.3),
+                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 isLoadingMatch
                                     ? SizedBox(
-                                        width: 12,
-                                        height: 12,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 1.5,
-                                          color: Colors.grey.shade400,
-                                        ),
-                                      )
-                                    : Icon(
-                                        Icons.insights_outlined, // Changed from analytics_outlined
-                                        size: kIconSize14,
-                                        color: fitColor,
+                                      width: 12,
+                                      height: 12,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 1.5,
+                                        color: Colors.grey.shade400,
                                       ),
+                                    )
+                                    : Icon(
+                                      Icons
+                                          .insights_outlined, // Changed from analytics_outlined
+                                      size: kIconSize14,
+                                      color: fitColor,
+                                    ),
                                 const SizedBox(width: kSpacing4),
                                 Text(
-                                  isLoadingMatch ? '--% Fit' : '$fitPercentage% Fit',
+                                  isLoadingMatch
+                                      ? '--% Fit'
+                                      : '$fitPercentage% Fit',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 11.0,
@@ -244,7 +238,7 @@ class RelatedJobCard extends ConsumerWidget {
                   FadeInUp(
                     duration: const Duration(milliseconds: 500),
                     child: Text(
-                      '${job.type} • ${job.salary}',
+                      '${job.type} • ${job.salaryMin}',
                       style: const TextStyle(
                         color: Color(0xFFB1B5C3),
                         fontSize: 13.0,

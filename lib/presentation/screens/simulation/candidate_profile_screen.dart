@@ -317,21 +317,6 @@ class _CandidateProfileScreenState extends State<CandidateProfileScreen> {
                 ],
               ),
             ),
-            ElevatedButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('CV descargado: CV_Julio_Cesar_Nima.pdf'),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.download),
-              label: const Text('Descargar CV'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green.shade600,
-                foregroundColor: Colors.white,
-              ),
-            ),
           ],
         ),
       ),

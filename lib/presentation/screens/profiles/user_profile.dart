@@ -5,15 +5,13 @@ import 'package:job_match/config/util/animations.dart';
 import 'package:job_match/core/data/auth_request.dart';
 import 'package:job_match/core/domain/models/candidate_model.dart';
 import 'package:job_match/core/data/supabase_http_requests.dart';
+import 'package:job_match/presentation/screens/auth/screens/login_screen.dart';
 import 'package:job_match/presentation/screens/dashboard/candidate_dashboard_screen.dart';
 import 'package:job_match/presentation/screens/homepage/find_jobs_screen.dart';
 import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
 import 'package:job_match/presentation/widgets/auth/profile_display_elements.dart';
 import 'package:job_match/presentation/widgets/auth/related_job_card.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
-import 'package:job_match/core/domain/models/job_model.dart';
-import 'package:job_match/core/data/cv_parsing.dart'
-    show generateRandomMatchPercentage;
 import 'package:url_launcher/url_launcher_string.dart';
 
 class UserProfile extends ConsumerStatefulWidget {
@@ -68,6 +66,7 @@ class ProfileDetailHeader extends ConsumerWidget {
   final Candidate candidate;
   final bool isExternalProfile;
   final bool isMobile;
+
   const ProfileDetailHeader({
     super.key,
     required this.candidate,
@@ -83,6 +82,7 @@ class ProfileDetailHeader extends ConsumerWidget {
     final double pageHorizontalPadding =
         (isMobile ? 12.0 : kPadding28) + kSpacing4;
     final jobsAsync = ref.watch(jobsProvider);
+    final isCandidate = ref.watch(candidateProfileProvider);
 
     return Container(
       color: const Color(0xFFF7F8FA),
@@ -160,96 +160,90 @@ class ProfileDetailHeader extends ConsumerWidget {
           const SizedBox(
             height: kPadding20 + kSpacing4,
           ), // Added spacing after profile details
-          // "Trabajos Recomendados" title
-          FadeInUp(
-            duration: const Duration(milliseconds: 700),
-            child: Padding(
-              padding: EdgeInsets.only(
-                top: kPadding20,
-                bottom: kPadding16,
-                left: pageHorizontalPadding + kPadding8,
-                right: pageHorizontalPadding,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Trabajos Recomendados',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20.0,
-                      color: Color(0xFF222B45),
+          if (isCandidate != null) ...[
+            FadeInUp(
+              duration: const Duration(milliseconds: 700),
+              child: Padding(
+                padding: EdgeInsets.only(
+                  top: kPadding20,
+                  bottom: kPadding16,
+                  left: pageHorizontalPadding + kPadding8,
+                  right: pageHorizontalPadding,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Trabajos Recomendados',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20.0,
+                        color: Color(0xFF222B45),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-          // "Trabajos Relacionados" grid
-          FadeInUp(
-            delay: const Duration(milliseconds: 200),
-            duration: const Duration(milliseconds: 700),
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: pageHorizontalPadding),
-              child: jobsAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, stack) => Center(child: Text('Error: $error')),
-                data: (jobs) {
-                  int crossAxisCount = 3;
-                  return LayoutBuilder(
-                    builder: (context, constraints) {
-                      double cardWidth =
-                          (constraints.maxWidth -
-                              (crossAxisCount - 1) * (kSpacing12 + kSpacing4)) /
-                          crossAxisCount;
-                      double cardHeight = 180;
-                      if (screenSize.width < 900) crossAxisCount = 2;
-                      if (screenSize.width < 600) crossAxisCount = 1;
-                      cardWidth =
-                          (constraints.maxWidth -
-                              (crossAxisCount - 1) * (kSpacing12 + kSpacing4)) /
-                          crossAxisCount;
-                      return GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: crossAxisCount,
-                          crossAxisSpacing: kSpacing12 + kSpacing4,
-                          mainAxisSpacing: kSpacing12 + kSpacing4,
-                          childAspectRatio: cardWidth / cardHeight,
-                        ),
-                        itemCount: jobs.length,
-                        itemBuilder: (context, index) {
-                          final job = jobs[index];
-                          return FadeInUp(
-                            delay: Duration(milliseconds: 100 * index),
-                            child: RelatedJobCard(
-                              job: Job(
-                                id: job['id'] ?? '',
-                                logoAsset:
-                                    'assets/images/job_match.jpg', // Example
-                                companyName: job['company_name'] ?? 'Empresa',
-                                location: job['location'] ?? 'Lima, Perú',
-                                title: job['title'] ?? '',
-                                type: job['job_type'] ?? 'Tiempo Completo',
-                                salary: job['salary_range'] ?? 'S/5000',
-                                isFeatured: job['is_featured'] ?? false,
-                                logoBackgroundColor:
-                                    Colors.blue.shade100, // Example
-                                matchPercentage:
-                                    generateRandomMatchPercentage(), // Example
+            // "Trabajos Relacionados" grid
+            FadeInUp(
+              delay: const Duration(milliseconds: 200),
+              duration: const Duration(milliseconds: 700),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: pageHorizontalPadding,
+                ),
+                child: jobsAsync.when(
+                  loading:
+                      () => const Center(child: CircularProgressIndicator()),
+                  error: (error, stack) => Center(child: Text('Error: $error')),
+                  data: (jobs) {
+                    int crossAxisCount = 3;
+                    return LayoutBuilder(
+                      builder: (context, constraints) {
+                        double cardWidth =
+                            (constraints.maxWidth -
+                                (crossAxisCount - 1) *
+                                    (kSpacing12 + kSpacing4)) /
+                            crossAxisCount;
+                        double cardHeight = 180;
+                        if (screenSize.width < 900) crossAxisCount = 2;
+                        if (screenSize.width < 600) crossAxisCount = 1;
+                        cardWidth =
+                            (constraints.maxWidth -
+                                (crossAxisCount - 1) *
+                                    (kSpacing12 + kSpacing4)) /
+                            crossAxisCount;
+                        return GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: crossAxisCount,
+                                crossAxisSpacing: kSpacing12 + kSpacing4,
+                                mainAxisSpacing: kSpacing12 + kSpacing4,
+                                childAspectRatio: cardWidth / cardHeight,
                               ),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  );
-                },
+                          itemCount: jobs.length,
+                          itemBuilder: (context, index) {
+                            final job =
+                                jobs[index]; // This is already a Job model
+                            return FadeInUp(
+                              delay: Duration(milliseconds: 100 * index),
+                              child: RelatedJobCard(
+                                job: job, // Pass the Job model directly
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: kPadding20 + kSpacing4),
+            const SizedBox(height: kPadding20 + kSpacing4),
+          ],
         ],
       ),
     );
@@ -455,6 +449,7 @@ class ProfileDetailHeader extends ConsumerWidget {
   }
 
   Widget _buildDesktopHeader(BuildContext context, WidgetRef ref) {
+    final isCandidate = ref.watch(candidateProfileProvider);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -567,35 +562,38 @@ class ProfileDetailHeader extends ConsumerWidget {
           ),
         ),
         const SizedBox(width: kSpacing20),
-        SizedBox(
-          height: kRadius40 + kSpacing4,
-          child: Material(
-            color: Colors.transparent,
-            child: ElevatedButton.icon(
-              icon: const Icon(Icons.arrow_forward, size: kIconSize20),
-              label: const Text('Dashboard', style: TextStyle(fontSize: 15)),
-              onPressed: () {
-                Navigator.of(context).push(
-                  FadeThroughPageRoute(page: const CandidateDashboardScreen()),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF3366FF),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: kPadding20 + kSpacing4,
-                  vertical: 0,
+        if (isCandidate != null)
+          SizedBox(
+            height: kRadius40 + kSpacing4,
+            child: Material(
+              color: Colors.transparent,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.arrow_forward, size: kIconSize20),
+                label: const Text('Dashboard', style: TextStyle(fontSize: 15)),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    FadeThroughPageRoute(
+                      page: const CandidateDashboardScreen(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF3366FF),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: kPadding20 + kSpacing4,
+                    vertical: 0,
+                  ),
+                  textStyle: const TextStyle(fontSize: 15.0),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(kRadius8),
+                  ),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  minimumSize: Size.zero,
                 ),
-                textStyle: const TextStyle(fontSize: 15.0),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(kRadius8),
-                ),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                minimumSize: Size.zero,
               ),
             ),
           ),
-        ),
       ],
     );
   }
