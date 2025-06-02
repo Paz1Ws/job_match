@@ -161,40 +161,77 @@ final candidateProfileProvider = StateProvider<Candidate?>((ref) => null);
 final companyProfileProvider = StateProvider<Company?>((ref) => null);
 
 Future<void> fetchUserProfile(WidgetRef ref) async {
-  final user = supabaseClient.auth.currentUser;
-  if (user == null) throw Exception('Usuario no autenticado');
+  try {
+    final user = supabaseClient.auth.currentUser;
+    if (user == null) throw Exception('Usuario no autenticado');
 
-  final userId = user.id;
+    final userId = user.id;
 
-  // Intenta obtener primero el perfil como candidato
-  final candidateResponse =
-      await supabaseClient
-          .from('candidates')
-          .select()
-          .eq('user_id', userId)
-          .maybeSingle();
+    // Intenta obtener primero el perfil como candidato
+    final candidateResponse =
+        await supabaseClient
+            .from('candidates')
+            .select()
+            .eq('user_id', userId)
+            .maybeSingle();
 
-  if (candidateResponse != null) {
-    final candidate = Candidate.fromJson(candidateResponse);
-    ref.read(candidateProfileProvider.notifier).state = candidate;
-    ref.read(companyProfileProvider.notifier).state = null;
-    return;
+    if (candidateResponse != null) {
+      final candidate = Candidate.fromJson(candidateResponse);
+      ref.read(candidateProfileProvider.notifier).state = candidate;
+      ref.read(companyProfileProvider.notifier).state = null;
+      return;
+    }
+
+    // Si no es candidato, intenta obtener como empresa
+    final companyResponse =
+        await supabaseClient
+            .from('companies')
+            .select()
+            .eq('user_id', userId)
+            .maybeSingle();
+
+    if (companyResponse != null) {
+      final company = Company.fromJson(companyResponse);
+      ref.read(companyProfileProvider.notifier).state = company;
+      ref.read(candidateProfileProvider.notifier).state = null;
+      return;
+    }
+
+    throw Exception('No se encontró perfil de usuario');
+  } catch (e) {
+    print('Error fetching user profile: $e');
+
+    rethrow;
   }
+}
 
-  // Si no es candidato, intenta obtener como empresa
-  final companyResponse =
-      await supabaseClient
-          .from('companies')
-          .select()
-          .eq('user_id', userId)
-          .maybeSingle();
+Future<void> resetPasswordForEmail(String email, {String? redirectTo}) async {
+  final supabase = Supabase.instance.client;
 
-  if (companyResponse != null) {
-    final company = Company.fromJson(companyResponse);
-    ref.read(companyProfileProvider.notifier).state = company;
-    ref.read(candidateProfileProvider.notifier).state = null;
-    return;
+  try {
+    await supabase.auth.resetPasswordForEmail(email);
+  } catch (e) {
+    print('Error resetting password: $e');
+    rethrow;
   }
+}
 
-  throw Exception('No se encontró perfil de usuario');
+void setupAuthStateListener({required void Function() onPasswordRecovery}) {
+  Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+    final AuthChangeEvent event = data.event;
+    if (event == AuthChangeEvent.passwordRecovery) {
+      onPasswordRecovery();
+    }
+  });
+}
+
+Future<void> updatePassword(String newPassword) async {
+  final supabase = Supabase.instance.client;
+
+  try {
+    await supabase.auth.updateUser(UserAttributes(password: newPassword));
+  } catch (e) {
+    print('Error updating password: $e');
+    rethrow;
+  }
 }

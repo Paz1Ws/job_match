@@ -24,7 +24,10 @@ class JobMatchService {
     try {
       final response = await _dio.post(
         url,
-        options: Options(headers: {'Content-Type': 'application/json'}),
+        options: Options(
+          headers: {'Content-Type': 'application/json'},
+          validateStatus: (status) => true,
+        ),
         data: jsonEncode({
           'candidateId': candidateId,
           'jobOfferId': jobOfferId,
@@ -32,24 +35,18 @@ class JobMatchService {
       );
 
       if (response.statusCode == 200) {
-        // Extract the explanation value which contains the markdown-wrapped JSON
         var rawData = response.data;
         String jsonData;
 
-        // Handle nested response structure based on your specific format
         if (rawData is Map && rawData.containsKey('explanation')) {
-          // The explanation field contains the markdown-wrapped JSON
           String markdown = rawData['explanation'] as String;
           jsonData = _cleanMarkdown(markdown);
         } else if (response.toString().contains('```json')) {
-          // Alternative approach if data is directly in the response string
           jsonData = _cleanMarkdown(response.toString());
         } else {
-          // Fallback to using the data directly if it's already in the right format
           return MatchResult.fromJson(rawData);
         }
 
-        // Parse the cleaned JSON string
         try {
           final parsedData = jsonDecode(jsonData) as Map<String, dynamic>;
           print('Compatibilidad: ${parsedData["fit_score"]}');

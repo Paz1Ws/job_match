@@ -133,13 +133,6 @@ class _CompanyJobsScreenState extends ConsumerState<CompanyJobsScreen> {
                           child: SimpleJobCard(
                             job: job,
                             company: widget.company,
-                            // onTap: () {
-                            //   Navigator.of(context).push(
-                            //     MaterialPageRoute(
-                            //       builder: (context) => JobDetailScreen(job: job),
-                            //     ),
-                            //   );
-                            // },
                           ),
                         ),
                       );

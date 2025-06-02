@@ -8,12 +8,13 @@ import 'package:job_match/core/data/supabase_http_requests.dart';
 import 'package:job_match/core/data/cv_parsing.dart'
     show generateRandomMatchPercentage; // Added import
 import 'package:job_match/core/domain/models/company_model.dart';
-import 'package:job_match/presentation/screens/dashboard/employer_dashboard_screen.dart';
+import 'package:job_match/presentation/screens/dashboard/company_dashboard_screen.dart';
 import 'package:job_match/presentation/screens/homepage/screens/homepage_screen.dart';
 import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
 import 'package:job_match/presentation/widgets/auth/profile_display_elements.dart';
 import 'package:job_match/presentation/widgets/auth/related_job_card.dart';
 import 'package:job_match/core/domain/models/job_model.dart';
+import 'package:job_match/presentation/widgets/homepage/find_job/simple_job_card.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class CompanyProfileScreen extends ConsumerWidget {
@@ -206,36 +207,19 @@ class CompanyProfileHeader extends ConsumerWidget {
                         physics: const NeverScrollableScrollPhysics(),
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: crossAxisCount,
+                          childAspectRatio: cardWidth / cardHeight,
                           crossAxisSpacing: kSpacing12 + kSpacing4,
                           mainAxisSpacing: kSpacing12 + kSpacing4,
-                          childAspectRatio: cardWidth / cardHeight,
                         ),
                         itemCount: jobs.length,
                         itemBuilder: (context, index) {
                           final job = jobs[index];
                           return FadeInUp(
-                            delay: Duration(milliseconds: 100 * index),
-                            child: RelatedJobCard(
-                              job: Job(
-                                id: job.id ?? '',
-                                description:
-                                    job.description ?? 'Sin descripción',
-
-                               
-                                companyName: company.companyName ?? 'Company',
-                                location:
-                                    job.location ??
-                                    company.address ??
-                                    'No disponible',
-                                title: job.title ?? 'Puesto sin título',
-                                type: job.type ?? 'Tiempo Completo',
-                                salaryMin: job.salaryMin,
-                                salaryMax: job.salaryMax,
-                                logoBackgroundColor: Colors.blue.shade100,
-                                matchPercentage:
-                                    generateRandomMatchPercentage(),
-                                modality: job.modality,
-                              ),
+                            delay: Duration(milliseconds: 150 * index + 300),
+                            duration: const Duration(milliseconds: 500),
+                            child: SimpleJobCard(
+                              job: job,
+                              company: company, // Pass the company object
                             ),
                           );
                         },
@@ -481,25 +465,6 @@ class CompanyProfileHeader extends ConsumerWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Container(
-              width: kRadius40 + kSpacing4,
-              height: kRadius40 + kSpacing4,
-              decoration: BoxDecoration(
-                color: Colors.lightBlue[100],
-                borderRadius: BorderRadius.circular(kRadius8),
-              ),
-              child: IconButton(
-                icon: const Icon(
-                  Icons.bookmark_border,
-                  color: Colors.blue,
-                  size: kIconSize24 + kSpacing4,
-                ),
-                onPressed: () {},
-                tooltip: 'Guardar',
-                iconSize: kIconSize24 + kSpacing4,
-              ),
-            ),
-            const SizedBox(width: kSpacing12 + kSpacing4 / 2),
             SizedBox(
               height: kRadius40 + kSpacing4,
               child: Material(

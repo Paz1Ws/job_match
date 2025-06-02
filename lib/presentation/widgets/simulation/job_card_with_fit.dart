@@ -150,7 +150,9 @@ class JobCardWithFit extends StatelessWidget {
                   if (value == 'apply') {
                     showDialog(
                       context: context,
-                      builder: (context) => JobApplyDialog(jobTitle: title, jobId: id),
+                      builder:
+                          (context) =>
+                              JobApplyDialog(jobTitle: title, jobId: id),
                     );
                   }
                 },
@@ -163,16 +165,6 @@ class JobCardWithFit extends StatelessWidget {
                             Icon(Icons.check_circle_outline, size: 18),
                             SizedBox(width: 8),
                             Text('Aplicar'),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'save',
-                        child: Row(
-                          children: [
-                            Icon(Icons.bookmark_border, size: 18),
-                            SizedBox(width: 8),
-                            Text('Guardar'),
                           ],
                         ),
                       ),

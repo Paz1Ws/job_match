@@ -96,22 +96,14 @@ class AppIdentityBar extends ConsumerWidget {
             onTap:
                 onProfileTap ??
                 () {
-                  if (isLoggedIn) {
-                    if (isCandidate) {
-                      Navigator.of(
-                        context,
-                      ).push(FadeThroughPageRoute(page: const UserProfile()));
-                    } else {
-                      Navigator.of(context).push(
-                        FadeThroughPageRoute(
-                          page: const CompanyProfileScreen(),
-                        ),
-                      );
-                    }
-                  } else {
+                  if (isCandidate) {
                     Navigator.of(
                       context,
-                    ).push(FadeThroughPageRoute(page: const LoginScreen()));
+                    ).push(FadeThroughPageRoute(page: const UserProfile()));
+                  } else {
+                    Navigator.of(context).push(
+                      FadeThroughPageRoute(page: const CompanyProfileScreen()),
+                    );
                   }
                 },
             child: CircleAvatar(

@@ -10,6 +10,8 @@ import 'package:job_match/core/data/mock_data.dart';
 import 'package:job_match/presentation/widgets/simulation/notification_overlay.dart';
 import 'package:job_match/presentation/widgets/simulation/chatbot_widget.dart';
 import 'package:job_match/presentation/screens/simulation/micro_course_screen.dart';
+import 'package:job_match/presentation/widgets/common/profile_photo_picker.dart';
+import 'package:file_picker/file_picker.dart';
 
 class CandidateDashboardScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic>? candidateData;
@@ -155,10 +157,7 @@ class _CandidateDashboardScreenState
       appBar:
           isMobile
               ? AppBar(
-                title: AppIdentityBar(
-                  height: kToolbarHeight,
-                  onProfileTap: () {},
-                ),
+                title: AppIdentityBar(height: kToolbarHeight),
                 automaticallyImplyLeading: false,
                 elevation: 1,
                 backgroundColor: Colors.white,
@@ -426,21 +425,12 @@ class _CandidateDashboardScreenState
                     tooltip: 'Atrás',
                   ),
                 if (!isMobile) const SizedBox(width: kSpacing8),
-                CircleAvatar(
-                  radius: isMobile ? 20 : 24,
-                  backgroundImage:
-                      candidate.photo != null && candidate.photo!.isNotEmpty
-                          ? NetworkImage(candidate.photo!)
-                          : null,
-                  backgroundColor: Colors.grey.shade300,
-                  child:
-                      candidate.photo != null && candidate.photo!.isNotEmpty
-                          ? null
-                          : Icon(
-                            Icons.person,
-                            color: Colors.white,
-                            size: isMobile ? 20 : 24,
-                          ),
+                ProfilePhotoPicker(
+                  currentPhotoUrl: candidate.photo,
+                  isCompany: false,
+                  onPhotoUpdated: () {
+                    ref.invalidate(candidateProfileProvider);
+                  },
                 ),
                 const SizedBox(width: kSpacing12),
                 Text(

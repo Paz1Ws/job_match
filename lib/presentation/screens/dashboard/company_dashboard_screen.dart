@@ -9,6 +9,7 @@ import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
 import 'package:job_match/presentation/widgets/dashboard/employer/post_job_form.dart';
 import 'package:job_match/presentation/screens/employer/find_employees_screen.dart';
 import 'package:job_match/presentation/screens/employer/company_jobs_screen.dart';
+import 'package:job_match/presentation/widgets/common/profile_photo_picker.dart';
 
 class EmployerDashboardScreen extends ConsumerStatefulWidget {
   const EmployerDashboardScreen({super.key});
@@ -137,22 +138,12 @@ class _EmployerDashboardScreenState
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      CircleAvatar(
-                        radius: isMobile ? 40 : 60,
-                        backgroundColor:
-                            Colors.blueGrey.shade100, // Fallback background
-                        backgroundImage:
-                            company?.logo != null && company!.logo!.isNotEmpty
-                                ? NetworkImage(company.logo!)
-                                : null,
-                        child:
-                            (company?.logo == null || company!.logo!.isEmpty)
-                                ? Icon(
-                                  Icons.business,
-                                  size: isMobile ? 40 : 60,
-                                  color: Colors.blueGrey.shade700,
-                                )
-                                : null,
+                      ProfilePhotoPicker(
+                        currentPhotoUrl: company?.logo,
+                        isCompany: true,
+                        onPhotoUpdated: () {
+                          setState(() {});
+                        },
                       ),
                       const SizedBox(height: 20),
                       Text(
@@ -255,7 +246,7 @@ class _EmployerDashboardScreenState
                       builder:
                           (context) => CompanyJobsScreen(
                             company: company!,
-                            companyId: company?.userId ?? '',
+                            companyId: company.userId ?? '',
                           ),
                     ),
                   );
@@ -297,7 +288,7 @@ class _EmployerDashboardScreenState
                           builder:
                               (context) => CompanyJobsScreen(
                                 company: company!,
-                                companyId: company?.userId ?? '',
+                                companyId: company.userId ?? '',
                               ),
                         ),
                       );
@@ -394,7 +385,7 @@ class _EmployerDashboardScreenState
                       builder:
                           (context) => CompanyJobsScreen(
                             company: company!,
-                            companyId: company?.userId ?? '',
+                            companyId: company.userId ?? '',
                           ),
                     ),
                   );
@@ -434,7 +425,7 @@ class _EmployerDashboardScreenState
                           builder:
                               (context) => CompanyJobsScreen(
                                 company: company!,
-                                companyId: company?.userId ?? '',
+                                companyId: company.userId ?? '',
                               ),
                         ),
                       );

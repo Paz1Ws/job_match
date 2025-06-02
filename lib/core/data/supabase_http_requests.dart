@@ -3,14 +3,10 @@ import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:job_match/core/data/auth_request.dart';
 import 'package:job_match/core/domain/models/candidate_model.dart';
+import 'package:job_match/core/domain/models/company_model.dart';
 import 'package:job_match/core/domain/models/job_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:dio/dio.dart'; // Add this import for Dio
-import 'dart:convert';
 
-import 'package:uuid/uuid.dart'; // Needed for jsonEncode/jsonDecode
-
-// Supabase client provider
 final supabaseProvider = Provider<SupabaseClient>((ref) {
   return Supabase.instance.client;
 });
@@ -336,7 +332,9 @@ final uploadCompanyLogoProvider = Provider((ref) {
           .uploadBinary(
             storagePath,
             bytes,
-            fileOptions: const FileOptions(upsert: false),
+            fileOptions: const FileOptions(
+              upsert: true,
+            ), // Changed to allow overwrite
           );
 
       final publicUrl = supabase.storage
@@ -373,7 +371,7 @@ final uploadCandidatePhotoProvider = Provider((ref) {
           .uploadBinary(
             storagePath,
             bytes,
-            fileOptions: const FileOptions(upsert: false),
+            fileOptions: const FileOptions(upsert: true),
           );
 
       final publicUrl = supabase.storage
@@ -430,3 +428,37 @@ final candidateByUserIdProvider = FutureProvider.family<Candidate?, String>((
     return null;
   }
 });
+
+// Refresca el perfil de candidato desde la base de datos y actualiza el provider
+Future<void> refreshCandidateProfile(WidgetRef ref) async {
+  final supabase = ref.read(supabaseProvider);
+  final userId = supabase.auth.currentUser?.id;
+  if (userId == null) return;
+  final data =
+      await supabase
+          .from('candidates')
+          .select()
+          .eq('user_id', userId)
+          .maybeSingle();
+  if (data != null) {
+    ref.read(candidateProfileProvider.notifier).state = Candidate.fromJson(
+      data,
+    );
+  }
+}
+
+// Refresca el perfil de empresa desde la base de datos y actualiza el provider
+Future<void> refreshCompanyProfile(WidgetRef ref) async {
+  final supabase = ref.read(supabaseProvider);
+  final userId = supabase.auth.currentUser?.id;
+  if (userId == null) return;
+  final data =
+      await supabase
+          .from('companies')
+          .select()
+          .eq('user_id', userId)
+          .maybeSingle();
+  if (data != null) {
+    ref.read(companyProfileProvider.notifier).state = Company.fromJson(data);
+  }
+}

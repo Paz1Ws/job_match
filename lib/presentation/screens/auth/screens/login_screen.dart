@@ -9,13 +9,14 @@ import 'package:job_match/core/data/auth_request.dart';
 import 'package:job_match/core/data/cv_parsing.dart';
 import 'package:job_match/core/data/google_sign_in.dart';
 import 'package:job_match/core/data/supabase_http_requests.dart';
+import 'package:job_match/presentation/screens/auth/screens/reset_password_screen.dart';
 import 'package:job_match/presentation/screens/auth/widgets/cv_lottie_dialog.dart';
 import 'package:job_match/presentation/screens/auth/widgets/right_sing_up_image_information.dart';
 import 'package:job_match/presentation/screens/auth/widgets/testimonial_carousel.dart';
 import 'package:job_match/presentation/screens/profiles/user_profile.dart';
 import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
 import 'package:job_match/presentation/screens/homepage/find_jobs_screen.dart';
-import 'package:job_match/presentation/screens/dashboard/employer_dashboard_screen.dart';
+import 'package:job_match/presentation/screens/dashboard/company_dashboard_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 final typeOfUserProvider = StateProvider<String>((ref) {
@@ -24,8 +25,13 @@ final typeOfUserProvider = StateProvider<String>((ref) {
 
 class LoginScreen extends ConsumerStatefulWidget {
   final String userType;
+  final String? prefillEmail; // Add this parameter
 
-  const LoginScreen({super.key, this.userType = 'Candidato'});
+  const LoginScreen({
+    super.key,
+    this.userType = 'Candidato',
+    this.prefillEmail, // Accept email to pre-fill
+  });
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -71,8 +77,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void initState() {
     super.initState();
     _selectedUserType = widget.userType;
-    _emailController = TextEditingController();
+    _emailController = TextEditingController(text: widget.prefillEmail ?? '');
     _passwordController = TextEditingController();
+
+    // Add auth state listener for password recovery
+    setupAuthStateListener(
+      onPasswordRecovery: () {
+        // When user comes from password recovery link, show new password dialog
+        _showNewPasswordDialog();
+      },
+    );
   }
 
   @override
@@ -667,6 +681,147 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               style: defaultTextStyle,
                               validator: FormUtils.validatePasswordLogin,
                             ),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                  top: 8.0,
+                                  right: 4.0,
+                                ),
+                                child: GestureDetector(
+                                  onTap: () async {
+                                    String email = _emailController.text;
+                                    await showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        final TextEditingController
+                                        emailController = TextEditingController(
+                                          text: email,
+                                        );
+                                        return AlertDialog(
+                                          title: const Text(
+                                            'Recuperar Contraseña',
+                                          ),
+                                          content: TextField(
+                                            controller: emailController,
+                                            keyboardType:
+                                                TextInputType.emailAddress,
+                                            decoration: const InputDecoration(
+                                              labelText: 'Correo electrónico',
+                                              border: OutlineInputBorder(),
+                                            ),
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed:
+                                                  () =>
+                                                      Navigator.of(
+                                                        context,
+                                                      ).pop(),
+                                              child: const Text('Cancelar'),
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: () async {
+                                                final enteredEmail =
+                                                    emailController.text.trim();
+                                                if (enteredEmail.isEmpty) {
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    const SnackBar(
+                                                      content: Text(
+                                                        'Ingresa tu correo para recuperar la contraseña.',
+                                                      ),
+                                                    ),
+                                                  );
+                                                  return;
+                                                }
+                                                try {
+                                                  await resetPasswordForEmail(
+                                                    enteredEmail,
+                                                  );
+                                                  Navigator.of(
+                                                    context,
+                                                  ).pop(); // Cierra el modal de email
+
+                                                  await showDialog(
+                                                    context: context,
+                                                    builder:
+                                                        (
+                                                          context,
+                                                        ) => AlertDialog(
+                                                          title: const Text(
+                                                            'Correo enviado',
+                                                          ),
+                                                          content: const Text(
+                                                            'Enviamos un código de verificación a tu correo electrónico. '
+                                                            'Continua para establecer una nueva contraseña.',
+                                                          ),
+                                                          actions: [
+                                                            ElevatedButton(
+                                                              onPressed: () {
+                                                                // Primero cierra este diálogo
+                                                                Navigator.of(
+                                                                  context,
+                                                                ).pop();
+
+                                                                // Luego navega a ResetPasswordScreen para ingresar el código
+                                                                Navigator.of(
+                                                                  context,
+                                                                  rootNavigator:
+                                                                      true,
+                                                                ).push(
+                                                                  MaterialPageRoute(
+                                                                    builder:
+                                                                        (
+                                                                          context,
+                                                                        ) => ResetPasswordScreen(
+                                                                          accessToken:
+                                                                              null,
+                                                                          email:
+                                                                              emailController.text, // Pass the email
+                                                                        ),
+                                                                  ),
+                                                                );
+                                                              },
+                                                              child: const Text(
+                                                                'Aceptar',
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                  );
+                                                } catch (e) {
+                                                  Navigator.of(context).pop();
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        'Error: $e',
+                                                      ),
+                                                    ),
+                                                  );
+                                                }
+                                              },
+                                              child: const Text('Enviar'),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  },
+                                  child: const Text(
+                                    '¿Recuperar Contraseña?',
+                                    style: TextStyle(
+                                      color: Colors.blue,
+                                      fontSize: 14,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
                             const SizedBox(height: 24.0),
                           ] else if (_selectedUserType == 'Candidato') ...[
                             _buildCandidateSignupForm(),
@@ -877,11 +1032,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _handleCompanySignup() async {
-    await signOut(); // Ensure clean state if needed
-    String? logoUrl; // Variable to store URL if needed locally after upload
-
-    // Register company first without the logo URL
-    // Assuming registerCompany throws on failure or returns a status
+    await signOut();
     bool registrationSuccess = false;
     try {
       await registerCompany(
@@ -925,8 +1076,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               bytes: result.files.single.bytes!,
               filename: result.files.single.name,
               isCandidate: false,
-              onUploaded:
-                  (url) => logoUrl = url, // The provider handles DB update
+              onUploaded: (url) {},
             );
           } catch (e) {
             if (context.mounted) {
@@ -1100,6 +1250,90 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         const SizedBox(height: 32.0),
         TestimonialCarousel(),
       ],
+    );
+  }
+
+  // Add this new method for the new password dialog
+  void _showNewPasswordDialog() {
+    final newPasswordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Crear nueva contraseña'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Ingresa tu nueva contraseña para completar el proceso de recuperación.',
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: newPasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Nueva contraseña',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: confirmPasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Confirmar contraseña',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () async {
+                if (newPasswordController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Ingresa una nueva contraseña'),
+                    ),
+                  );
+                  return;
+                }
+
+                if (newPasswordController.text !=
+                    confirmPasswordController.text) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Las contraseñas no coinciden'),
+                    ),
+                  );
+                  return;
+                }
+
+                try {
+                  await updatePassword(newPasswordController.text);
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Contraseña actualizada correctamente. Ya puedes iniciar sesión.',
+                      ),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                }
+              },
+              child: const Text('Guardar'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
