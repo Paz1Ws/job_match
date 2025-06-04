@@ -9,13 +9,14 @@ class ResetPasswordScreen extends ConsumerStatefulWidget {
   final String? email; // Add email parameter
 
   const ResetPasswordScreen({
-    super.key, 
+    super.key,
     required this.accessToken,
     this.email, // Accept email from calling screen
   });
 
   @override
-  ConsumerState<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
+  ConsumerState<ResetPasswordScreen> createState() =>
+      _ResetPasswordScreenState();
 }
 
 class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
@@ -39,7 +40,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     super.initState();
     // Initialize email controller with provided email if available
     _emailController = TextEditingController(text: widget.email ?? '');
-    
+
     // If access token is provided, we can skip the OTP verification step
     if (widget.accessToken != null) {
       _otpVerified = true;
@@ -125,7 +126,8 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
 
   Future<void> _submitNewPassword() async {
     // First validate inputs
-    if (_passwordController.text.isEmpty || _confirmPasswordController.text.isEmpty) {
+    if (_passwordController.text.isEmpty ||
+        _confirmPasswordController.text.isEmpty) {
       setState(() {
         _message = 'Por favor completa ambos campos';
         _isSuccess = false;
@@ -166,15 +168,14 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
         if (mounted) {
           Navigator.of(context).pushReplacement(
             FadeThroughPageRoute(
-              page: LoginScreen(
-                prefillEmail: _emailController.text,
-              ),
+              page: LoginScreen(prefillEmail: _emailController.text),
             ),
           );
         }
       } else {
         setState(() {
-          _message = 'No se pudo actualizar la contraseña. Por favor, intenta nuevamente.';
+          _message =
+              'No se pudo actualizar la contraseña. Por favor, intenta nuevamente.';
           _isSuccess = false;
           _isLoading = false;
         });
@@ -262,7 +263,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
         keyboardType: TextInputType.number,
         maxLength: 6,
       ),
-      
+
       const SizedBox(height: 8.0),
 
       // Message area

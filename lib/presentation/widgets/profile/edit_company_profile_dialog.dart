@@ -143,7 +143,11 @@ class _EditCompanyProfileDialogState
       actionsPadding: const EdgeInsets.fromLTRB(24.0, 12.0, 24.0, 24.0),
       title: const Text(
         'Editar Perfil de Empresa',
-        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Colors.orange),
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 22,
+          color: Colors.orange,
+        ),
       ),
       content: SizedBox(
         width: screenWidth * (screenWidth > 600 ? 0.5 : 0.9),
@@ -220,23 +224,25 @@ class _EditCompanyProfileDialogState
           ),
         ),
         ElevatedButton.icon(
-          icon: _isLoading
-              ? Container()
-              : const Icon(
-                Icons.save_alt_outlined,
-                size: 20,
-                color: Colors.white,
-              ),
-          label: _isLoading
-              ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              )
-              : const Text('Guardar Cambios'),
+          icon:
+              _isLoading
+                  ? Container()
+                  : const Icon(
+                    Icons.save_alt_outlined,
+                    size: 20,
+                    color: Colors.white,
+                  ),
+          label:
+              _isLoading
+                  ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                  : const Text('Guardar Cambios'),
           onPressed: _isLoading ? null : _saveProfile,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.orange,

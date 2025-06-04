@@ -90,7 +90,7 @@ class _ProfilePhotoPickerState extends ConsumerState<ProfilePhotoPicker> {
   Widget build(BuildContext context) {
     // Use the effective URL which could be either the updated one or the original one
     final currentUrl = effectivePhotoUrl;
-    
+
     return GestureDetector(
       onTap: _isUploading ? null : _pickAndUploadPhoto,
       child: Stack(
@@ -98,17 +98,19 @@ class _ProfilePhotoPickerState extends ConsumerState<ProfilePhotoPicker> {
         children: [
           CircleAvatar(
             radius: widget.radius,
-            backgroundImage: currentUrl != null && currentUrl.isNotEmpty
-                ? NetworkImage(currentUrl)
-                : null,
+            backgroundImage:
+                currentUrl != null && currentUrl.isNotEmpty
+                    ? NetworkImage(currentUrl)
+                    : null,
             backgroundColor: Colors.grey.shade200,
-            child: (currentUrl == null || currentUrl.isEmpty)
-                ? Icon(
-                    widget.isCompany ? Icons.business : Icons.person,
-                    size: widget.radius,
-                    color: Colors.grey.shade400,
-                  )
-                : null,
+            child:
+                (currentUrl == null || currentUrl.isEmpty)
+                    ? Icon(
+                      widget.isCompany ? Icons.business : Icons.person,
+                      size: widget.radius,
+                      color: Colors.grey.shade400,
+                    )
+                    : null,
           ),
           Positioned(
             bottom: 0,
