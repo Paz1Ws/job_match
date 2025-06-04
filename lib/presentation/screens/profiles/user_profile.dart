@@ -14,6 +14,8 @@ import 'package:job_match/presentation/widgets/auth/profile_display_elements.dar
 import 'package:job_match/presentation/widgets/auth/related_job_card.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'package:job_match/presentation/widgets/common/profile_photo_picker.dart';
+import 'package:job_match/presentation/widgets/profile/edit_candidate_profile_dialog.dart';
 
 class UserProfile extends ConsumerStatefulWidget {
   final Candidate? candidateData;
@@ -83,7 +85,10 @@ class ProfileDetailHeader extends ConsumerWidget {
     final double pageHorizontalPadding =
         (isMobile ? 12.0 : kPadding28) + kSpacing4;
     final jobsAsync = ref.watch(jobsProvider);
-    final isCandidate = ref.watch(candidateProfileProvider);
+    final currentAuthCandidate = ref.watch(candidateProfileProvider);
+    final bool isOwnProfile =
+        !isExternalProfile ||
+        (currentAuthCandidate?.userId == candidate.userId);
 
     return Container(
       color: const Color(0xFFF7F8FA),
@@ -100,7 +105,7 @@ class ProfileDetailHeader extends ConsumerWidget {
                   height: bannerHeight,
                   width: double.infinity,
                   child: Image.asset(
-                    'assets/images/jobmatch_background.jpg',
+                    'assets/images/find_jobs_background.jpg',
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -136,8 +141,8 @@ class ProfileDetailHeader extends ConsumerWidget {
                       ),
                       child:
                           isMobile
-                              ? _buildMobileHeader(context, ref)
-                              : _buildDesktopHeader(context, ref),
+                              ? _buildMobileHeader(context, ref, isOwnProfile)
+                              : _buildDesktopHeader(context, ref, isOwnProfile),
                     ),
                   ),
                 ),
@@ -161,7 +166,7 @@ class ProfileDetailHeader extends ConsumerWidget {
           const SizedBox(
             height: kPadding20 + kSpacing4,
           ), // Added spacing after profile details
-          if (isCandidate != null) ...[
+          if (currentAuthCandidate != null) ...[
             FadeInUp(
               duration: const Duration(milliseconds: 700),
               child: Padding(
@@ -250,7 +255,11 @@ class ProfileDetailHeader extends ConsumerWidget {
     );
   }
 
-  Widget _buildMobileHeader(BuildContext context, WidgetRef ref) {
+  Widget _buildMobileHeader(
+    BuildContext context,
+    WidgetRef ref,
+    bool isOwnProfile,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
@@ -264,22 +273,30 @@ class ProfileDetailHeader extends ConsumerWidget {
               Center(
                 child: BounceInDown(
                   duration: const Duration(milliseconds: 900),
-                  child: CircleAvatar(
-                    radius: kRadius20 + kRadius12,
-                    backgroundColor: Colors.grey.shade200,
-                    backgroundImage:
-                        candidate.photo != null && candidate.photo!.isNotEmpty
-                            ? NetworkImage(candidate.photo!)
-                            : null,
-                    child:
-                        candidate.photo == null || candidate.photo!.isEmpty
-                            ? Icon(
-                              Icons.person,
-                              size: kRadius20 + kRadius12,
-                              color: Colors.grey.shade400,
-                            )
-                            : null,
-                  ),
+                  child:
+                      isOwnProfile && !isExternalProfile
+                          ? ProfilePhotoPicker(
+                            currentPhotoUrl: candidate.photo,
+                            onPhotoUpdated: () => refreshCandidateProfile(ref),
+                          )
+                          : CircleAvatar(
+                            radius: kRadius20 + kRadius12,
+                            backgroundColor: Colors.grey.shade200,
+                            backgroundImage:
+                                candidate.photo != null &&
+                                        candidate.photo!.isNotEmpty
+                                    ? NetworkImage(candidate.photo!)
+                                    : null,
+                            child:
+                                candidate.photo == null ||
+                                        candidate.photo!.isEmpty
+                                    ? Icon(
+                                      Icons.person,
+                                      size: kRadius20 + kRadius12,
+                                      color: Colors.grey.shade400,
+                                    )
+                                    : null,
+                          ),
                 ),
               ),
               const SizedBox(height: kSpacing8),
@@ -375,6 +392,43 @@ class ProfileDetailHeader extends ConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            if (isOwnProfile && !isExternalProfile) ...[
+              SizedBox(
+                height: kRadius40 + kSpacing4,
+                child: Material(
+                  color: Colors.transparent,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.edit, size: kIconSize20 - 2),
+                    label: const Text(
+                      'Editar Perfil',
+                      style: TextStyle(fontSize: 13),
+                    ),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder:
+                            (_) => EditCandidateProfileDialog(
+                              candidate: candidate,
+                            ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.teal,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: kPadding16,
+                        vertical: 0,
+                      ),
+                      textStyle: const TextStyle(fontSize: 13.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(kRadius8),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+            ],
             SizedBox(
               height: kRadius40 + kSpacing4,
               child: Material(
@@ -449,8 +503,12 @@ class ProfileDetailHeader extends ConsumerWidget {
     );
   }
 
-  Widget _buildDesktopHeader(BuildContext context, WidgetRef ref) {
-    final isCandidate = ref.watch(candidateProfileProvider);
+  Widget _buildDesktopHeader(
+    BuildContext context,
+    WidgetRef ref,
+    bool isOwnProfile,
+  ) {
+    final currentAuthCandidate = ref.watch(candidateProfileProvider);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -461,22 +519,28 @@ class ProfileDetailHeader extends ConsumerWidget {
         ),
         BounceInDown(
           duration: const Duration(milliseconds: 900),
-          child: CircleAvatar(
-            radius: kRadius20 + kRadius12,
-            backgroundColor: Colors.grey.shade200,
-            backgroundImage:
-                candidate.photo != null && candidate.photo!.isNotEmpty
-                    ? NetworkImage(candidate.photo!)
-                    : null,
-            child:
-                candidate.photo == null || candidate.photo!.isEmpty
-                    ? Icon(
-                      Icons.person,
-                      size: kRadius20 + kRadius12,
-                      color: Colors.grey.shade400,
-                    )
-                    : null,
-          ),
+          child:
+              isOwnProfile && !isExternalProfile
+                  ? ProfilePhotoPicker(
+                    currentPhotoUrl: candidate.photo,
+                    onPhotoUpdated: () => refreshCandidateProfile(ref),
+                  )
+                  : CircleAvatar(
+                    radius: kRadius20 + kRadius12,
+                    backgroundColor: Colors.grey.shade200,
+                    backgroundImage:
+                        candidate.photo != null && candidate.photo!.isNotEmpty
+                            ? NetworkImage(candidate.photo!)
+                            : null,
+                    child:
+                        candidate.photo == null || candidate.photo!.isEmpty
+                            ? Icon(
+                              Icons.person,
+                              size: kRadius20 + kRadius12,
+                              color: Colors.grey.shade400,
+                            )
+                            : null,
+                  ),
         ),
         const SizedBox(width: kSpacing20),
         Expanded(
@@ -563,7 +627,46 @@ class ProfileDetailHeader extends ConsumerWidget {
           ),
         ),
         const SizedBox(width: kSpacing20),
-        if (isCandidate != null)
+        if (isOwnProfile &&
+            !isExternalProfile &&
+            currentAuthCandidate != null) ...[
+          SizedBox(
+            height: kRadius40 + kSpacing4,
+            child: Material(
+              color: Colors.transparent,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.edit, size: kIconSize20 - 2),
+                label: const Text(
+                  'Editar Perfil',
+                  style: TextStyle(fontSize: 14),
+                ),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder:
+                        (_) => EditCandidateProfileDialog(
+                          candidate: currentAuthCandidate,
+                        ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.teal,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: kPadding16,
+                    vertical: 0,
+                  ),
+                  textStyle: const TextStyle(fontSize: 14.0),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(kRadius8),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
+        if (currentAuthCandidate != null)
           SizedBox(
             height: kRadius40 + kSpacing4,
             child: Material(

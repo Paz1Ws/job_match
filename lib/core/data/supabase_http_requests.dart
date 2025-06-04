@@ -139,7 +139,7 @@ final createCompanyProvider = Provider((ref) {
 /// Permite a un usuario autenticado modificar los detalles de su empresa.
 final updateCompanyProvider = Provider((ref) {
   final supabase = ref.read(supabaseProvider);
-  return (int companyId, Map<String, dynamic> updates) async {
+  return (Map<String, dynamic> updates) async {
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) throw Exception('Usuario no autenticado');
 
@@ -147,7 +147,6 @@ final updateCompanyProvider = Provider((ref) {
         await supabase
             .from('companies')
             .update(updates)
-            .eq('id', companyId)
             .eq('user_id', userId)
             .select();
 
@@ -430,35 +429,48 @@ final candidateByUserIdProvider = FutureProvider.family<Candidate?, String>((
 });
 
 // Refresca el perfil de candidato desde la base de datos y actualiza el provider
+// Refresca el perfil de candidato desde la base de datos y actualiza el provider
 Future<void> refreshCandidateProfile(WidgetRef ref) async {
-  final supabase = ref.read(supabaseProvider);
-  final userId = supabase.auth.currentUser?.id;
-  if (userId == null) return;
-  final data =
-      await supabase
-          .from('candidates')
-          .select()
-          .eq('user_id', userId)
-          .maybeSingle();
-  if (data != null) {
-    ref.read(candidateProfileProvider.notifier).state = Candidate.fromJson(
-      data,
-    );
+  try {
+    final supabase = ref.read(supabaseProvider);
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) return;
+
+    final data =
+        await supabase
+            .from('candidates')
+            .select()
+            .eq('user_id', userId)
+            .maybeSingle();
+
+    if (data != null) {
+      ref.read(candidateProfileProvider.notifier).state = Candidate.fromJson(
+        data,
+      );
+    }
+  } catch (e) {
+    print('Error refreshing candidate profile: $e');
   }
 }
 
 // Refresca el perfil de empresa desde la base de datos y actualiza el provider
 Future<void> refreshCompanyProfile(WidgetRef ref) async {
-  final supabase = ref.read(supabaseProvider);
-  final userId = supabase.auth.currentUser?.id;
-  if (userId == null) return;
-  final data =
-      await supabase
-          .from('companies')
-          .select()
-          .eq('user_id', userId)
-          .maybeSingle();
-  if (data != null) {
-    ref.read(companyProfileProvider.notifier).state = Company.fromJson(data);
+  try {
+    final supabase = ref.read(supabaseProvider);
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) return;
+
+    final data =
+        await supabase
+            .from('companies')
+            .select()
+            .eq('user_id', userId)
+            .maybeSingle();
+
+    if (data != null) {
+      ref.read(companyProfileProvider.notifier).state = Company.fromJson(data);
+    }
+  } catch (e) {
+    print('Error refreshing company profile: $e');
   }
 }

@@ -38,6 +38,5 @@ flutter:
     - assets/images/mcatalan.png
     - assets/images/work.png
     - assets/images/users/
-    - assets/images/jobmatch_background.jpg
     - assets/animations/cv_lottie.json
     - assets/images/find_jobs_background.jpg

@@ -9,8 +9,6 @@ import 'package:job_match/presentation/widgets/auth/profile_display_elements.dar
 import 'package:job_match/presentation/widgets/auth/related_job_card.dart';
 import 'package:job_match/core/data/supabase_http_requests.dart';
 import 'package:intl/intl.dart';
-import 'package:job_match/core/data/cv_parsing.dart'
-    show generateRandomMatchPercentage; // Added import
 import 'package:job_match/core/data/job_match.dart'; // Import for matchResultProvider
 import 'package:job_match/core/domain/models/match_result_model.dart'; // Import MatchResult model
 import 'package:job_match/presentation/widgets/jobs/match_explanation_card.dart'; // Import the new card
@@ -32,6 +30,7 @@ class JobDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Use real job data from model
     final String jobTitle =
         job.title.isNotEmpty ? job.title : 'Puesto sin título';
     final String companyName =
@@ -39,8 +38,20 @@ class JobDetailScreen extends ConsumerWidget {
     final String jobLocation =
         job.location.isNotEmpty ? job.location : 'Lima, Perú';
     final String jobType = job.type.isNotEmpty ? job.type : 'Tiempo Completo';
+    final String jobSalaryMin =
+        job.salaryMin.isNotEmpty ? job.salaryMin : 'No especificado';
+    final String jobSalaryMax =
+        job.salaryMax.isNotEmpty ? job.salaryMax : 'No especificado';
     final String jobSalary =
-        job.salaryMin.isNotEmpty ? job.salaryMin : 'Salario no especificado';
+        jobSalaryMin == jobSalaryMax
+            ? jobSalaryMin
+            : '$jobSalaryMin - $jobSalaryMax';
+    final String jobModality =
+        job.modality.isNotEmpty ? job.modality : 'Presencial';
+    final String jobDescription =
+        job.description.isNotEmpty
+            ? job.description
+            : 'Descripción del trabajo no disponible.';
 
     final candidateId = ref.watch(candidateProfileProvider)?.userId;
     final AsyncValue<MatchResult?> matchResultAsync =
@@ -226,24 +237,20 @@ class JobDetailScreen extends ConsumerWidget {
             FadeInUp(
               duration: const Duration(milliseconds: 400),
               child: DefaultTabController(
-                length: 3,
+                length: 2, // Changed from 3 to 2 (removed Company tab)
                 child: Column(
                   children: [
                     const TabBar(
                       labelColor: Colors.blue,
                       unselectedLabelColor: Colors.grey,
-                      tabs: [
-                        Tab(text: 'Descripción'),
-                        Tab(text: 'Empresa'),
-                        Tab(text: 'Detalles'),
-                      ],
+                      tabs: [Tab(text: 'Descripción'), Tab(text: 'Detalles')],
                     ),
                     const SizedBox(height: 20),
                     SizedBox(
                       height: 300,
                       child: TabBarView(
                         children: [
-                          // Description Tab
+                          // Description Tab - Using real job description
                           Padding(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 20.0,
@@ -261,95 +268,31 @@ class JobDetailScreen extends ConsumerWidget {
                                   ),
                                   const SizedBox(height: 15),
                                   Text(
-                                    // Use a default description if not available
-                                    'Esta empresa está buscando profesionales talentosos para unirse a su equipo. '
-                                    'El candidato ideal debe tener habilidades de comunicación efectivas, capacidad para '
-                                    'trabajar en equipo y resolver problemas de manera creativa.',
+                                    jobDescription,
                                     style: const TextStyle(
                                       color: Colors.black87,
                                       height: 1.5,
                                     ),
                                   ),
                                   const SizedBox(height: 20),
-                                  const Text(
-                                    'Responsabilidades',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
+                                  if (job.requiredSkills != null &&
+                                      job.requiredSkills!.isNotEmpty) ...[
+                                    const Text(
+                                      'Habilidades Requeridas',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  _buildBulletPoints([
-                                    'Desarrollar y mantener aplicaciones de software',
-                                    'Colaborar con equipos multidisciplinarios',
-                                    'Implementar soluciones tecnológicas innovadoras',
-                                    'Participar en reuniones de planificación y revisión',
-                                  ]),
-                                  const SizedBox(height: 20),
-                                  const Text(
-                                    'Requisitos',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  _buildBulletPoints([
-                                    'Experiencia de 2+ años en desarrollo de software',
-                                    'Conocimiento sólido de arquitecturas modernas',
-                                    'Habilidades de comunicación efectiva',
-                                    'Capacidad para trabajar en equipo',
-                                  ]),
+                                    const SizedBox(height: 10),
+                                    _buildBulletPoints(job.requiredSkills!),
+                                  ],
                                 ],
                               ),
                             ),
                           ),
 
-                          // Company Tab
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20.0,
-                            ),
-                            child: SingleChildScrollView(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Sobre la Empresa',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 15),
-                                  Text(
-                                    'Información sobre $companyName y su cultura, valores y misión empresarial. Esta empresa se dedica a proporcionar soluciones innovadoras en su sector.',
-                                    style: const TextStyle(
-                                      color: Colors.black87,
-                                      height: 1.5,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 20),
-                                  const Text(
-                                    'Cultura de la Empresa',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  _buildBulletPoints([
-                                    'Ambiente colaborativo y diverso',
-                                    'Enfoque en innovación y crecimiento',
-                                    'Valoramos el equilibrio trabajo-vida personal',
-                                    'Oportunidades de desarrollo profesional',
-                                  ]),
-                                ],
-                              ),
-                            ),
-                          ),
-
-                          // Details Tab
+                          // Details Tab - Using real job details
                           Padding(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 20.0,
@@ -367,32 +310,24 @@ class JobDetailScreen extends ConsumerWidget {
                                   ),
                                   const SizedBox(height: 15),
                                   _buildDetailItem('Tipo de empleo', jobType),
+                                  _buildDetailItem('Modalidad', jobModality),
                                   _buildDetailItem('Ubicación', jobLocation),
                                   _buildDetailItem('Salario', jobSalary),
-                                  _buildDetailItem(
-                                    'Fecha de Publicación',
-                                    _formatDate(
-                                      DateTime.now().subtract(
-                                        const Duration(days: 3),
-                                      ),
+                                  if (job.createdAt != null)
+                                    _buildDetailItem(
+                                      'Fecha de Publicación',
+                                      _formatDate(job.createdAt!),
                                     ),
-                                  ),
-                                  _buildDetailItem(
-                                    'Fecha límite',
-                                    _formatDate(
-                                      DateTime.now().add(
-                                        const Duration(days: 27),
-                                      ),
+                                  if (job.applicationDeadline != null)
+                                    _buildDetailItem(
+                                      'Fecha límite',
+                                      _formatDate(job.applicationDeadline!),
                                     ),
-                                  ),
-                                  _buildDetailItem(
-                                    'Experiencia requerida',
-                                    '2-5 años',
-                                  ),
-                                  _buildDetailItem(
-                                    'Educación requerida',
-                                    'Grado universitario',
-                                  ),
+                                  if (job.maxApplications != null)
+                                    _buildDetailItem(
+                                      'Máximo de aplicaciones',
+                                      job.maxApplications.toString(),
+                                    ),
                                 ],
                               ),
                             ),

@@ -16,6 +16,8 @@ import 'package:job_match/presentation/widgets/auth/related_job_card.dart';
 import 'package:job_match/core/domain/models/job_model.dart';
 import 'package:job_match/presentation/widgets/homepage/find_job/simple_job_card.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:job_match/presentation/widgets/common/profile_photo_picker.dart';
+import 'package:job_match/presentation/widgets/profile/edit_company_profile_dialog.dart';
 
 class CompanyProfileScreen extends ConsumerWidget {
   const CompanyProfileScreen({super.key});
@@ -63,6 +65,8 @@ class CompanyProfileHeader extends ConsumerWidget {
 
     // Use real company jobs from Supabase
     final jobsAsync = ref.watch(jobsByCompanyIdProvider(company.userId));
+    final currentAuthCompany = ref.watch(companyProfileProvider);
+    final bool isOwnProfile = currentAuthCompany?.userId == company.userId;
 
     return Container(
       color: const Color(0xFFF7F8FA),
@@ -79,7 +83,7 @@ class CompanyProfileHeader extends ConsumerWidget {
                   height: bannerHeight,
                   width: double.infinity,
                   child: Image.asset(
-                    'assets/images/jobmatch_background.jpg',
+                    'assets/images/find_jobs_background.jpg',
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -116,8 +120,8 @@ class CompanyProfileHeader extends ConsumerWidget {
                       ),
                       child:
                           isMobile
-                              ? _buildMobileHeader(context)
-                              : _buildDesktopHeader(context),
+                              ? _buildMobileHeader(context, ref, isOwnProfile)
+                              : _buildDesktopHeader(context, ref, isOwnProfile),
                     ),
                   ),
                 ),
@@ -236,7 +240,11 @@ class CompanyProfileHeader extends ConsumerWidget {
     );
   }
 
-  Widget _buildMobileHeader(BuildContext context) {
+  Widget _buildMobileHeader(
+    BuildContext context,
+    WidgetRef ref,
+    bool isOwnProfile,
+  ) {
     return Column(
       crossAxisAlignment:
           CrossAxisAlignment
@@ -252,23 +260,33 @@ class CompanyProfileHeader extends ConsumerWidget {
               Center(
                 child: BounceInDown(
                   duration: const Duration(milliseconds: 900),
-                  child: CircleAvatar(
-                    radius: kRadius20 + kRadius12,
-                    backgroundImage:
-                        company.logo != null && company.logo!.isNotEmpty
-                            ? NetworkImage(company.logo!)
-                            : const AssetImage('assets/images/job_match.jpg')
-                                as ImageProvider,
-                    backgroundColor: Colors.grey.shade200, // Fallback color
-                    child:
-                        company.logo != null && company.logo!.isNotEmpty
-                            ? null
-                            : Icon(
-                              Icons.business,
-                              size: kRadius20 + kRadius12,
-                              color: Colors.grey.shade400,
-                            ),
-                  ),
+                  child:
+                      isOwnProfile
+                          ? ProfilePhotoPicker(
+                            currentPhotoUrl: company.logo,
+                            isCompany: true,
+                            onPhotoUpdated: () => refreshCompanyProfile(ref),
+                          )
+                          : CircleAvatar(
+                            radius: kRadius20 + kRadius12,
+                            backgroundImage:
+                                company.logo != null && company.logo!.isNotEmpty
+                                    ? NetworkImage(company.logo!)
+                                    : const AssetImage(
+                                          'assets/images/job_match.jpg',
+                                        )
+                                        as ImageProvider,
+                            backgroundColor:
+                                Colors.grey.shade200, // Fallback color
+                            child:
+                                company.logo != null && company.logo!.isNotEmpty
+                                    ? null
+                                    : Icon(
+                                      Icons.business,
+                                      size: kRadius20 + kRadius12,
+                                      color: Colors.grey.shade400,
+                                    ),
+                          ),
                 ),
               ),
               const SizedBox(height: kSpacing8),
@@ -335,34 +353,78 @@ class CompanyProfileHeader extends ConsumerWidget {
         ),
         const SizedBox(height: 16),
         // Navigation buttons - centered
-        Center(
-          child: SizedBox(
-            height: kRadius40 + kSpacing4,
-            child: Material(
-              color: Colors.transparent,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.arrow_forward, size: kIconSize20),
-                label: const Text('Dashboard', style: TextStyle(fontSize: 14)),
-                onPressed: () {
-                  Navigator.of(context).push(
-                    FadeThroughPageRoute(page: const EmployerDashboardScreen()),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF3366FF),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: kPadding16,
-                    vertical: 0,
+        Row(
+          // Changed to Row for multiple buttons
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (isOwnProfile) ...[
+              SizedBox(
+                height: kRadius40 + kSpacing4,
+                child: Material(
+                  color: Colors.transparent,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.edit, size: kIconSize20 - 2),
+                    label: const Text(
+                      'Editar Perfil',
+                      style: TextStyle(fontSize: 13),
+                    ),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder:
+                            (_) => EditCompanyProfileDialog(company: company),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.teal,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: kPadding16,
+                        vertical: 0,
+                      ),
+                      textStyle: const TextStyle(fontSize: 13.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(kRadius8),
+                      ),
+                    ),
                   ),
-                  textStyle: const TextStyle(fontSize: 14.0),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(kRadius8),
+                ),
+              ),
+              const SizedBox(width: 8), // Spacing between buttons
+            ],
+            SizedBox(
+              height: kRadius40 + kSpacing4,
+              child: Material(
+                color: Colors.transparent,
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.arrow_forward, size: kIconSize20),
+                  label: const Text(
+                    'Dashboard',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      FadeThroughPageRoute(
+                        page: const EmployerDashboardScreen(),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF3366FF),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: kPadding16,
+                      vertical: 0,
+                    ),
+                    textStyle: const TextStyle(fontSize: 14.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(kRadius8),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
         const SizedBox(height: 20),
         _buildProfileDetails(context, isMobile: true),
@@ -370,7 +432,11 @@ class CompanyProfileHeader extends ConsumerWidget {
     );
   }
 
-  Widget _buildDesktopHeader(BuildContext context) {
+  Widget _buildDesktopHeader(
+    BuildContext context,
+    WidgetRef ref,
+    bool isOwnProfile,
+  ) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -381,23 +447,30 @@ class CompanyProfileHeader extends ConsumerWidget {
         ),
         BounceInDown(
           duration: const Duration(milliseconds: 900),
-          child: CircleAvatar(
-            radius: kRadius20 + kRadius12,
-            backgroundImage:
-                company.logo != null && company.logo!.isNotEmpty
-                    ? NetworkImage(company.logo!)
-                    : const AssetImage('assets/images/job_match.jpg')
-                        as ImageProvider,
-            backgroundColor: Colors.grey.shade200, // Fallback color
-            child:
-                company.logo != null && company.logo!.isNotEmpty
-                    ? null
-                    : Icon(
-                      Icons.business,
-                      size: kRadius20 + kRadius12,
-                      color: Colors.grey.shade400,
-                    ),
-          ),
+          child:
+              isOwnProfile
+                  ? ProfilePhotoPicker(
+                    currentPhotoUrl: company.logo,
+                    isCompany: true,
+                    onPhotoUpdated: () => refreshCompanyProfile(ref),
+                  )
+                  : CircleAvatar(
+                    radius: kRadius20 + kRadius12,
+                    backgroundImage:
+                        company.logo != null && company.logo!.isNotEmpty
+                            ? NetworkImage(company.logo!)
+                            : const AssetImage('assets/images/job_match.jpg')
+                                as ImageProvider,
+                    backgroundColor: Colors.grey.shade200, // Fallback color
+                    child:
+                        company.logo != null && company.logo!.isNotEmpty
+                            ? null
+                            : Icon(
+                              Icons.business,
+                              size: kRadius20 + kRadius12,
+                              color: Colors.grey.shade400,
+                            ),
+                  ),
         ),
         const SizedBox(width: kSpacing20),
         Expanded(
@@ -465,6 +538,41 @@ class CompanyProfileHeader extends ConsumerWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
+            if (isOwnProfile) ...[
+              SizedBox(
+                height: kRadius40 + kSpacing4,
+                child: Material(
+                  color: Colors.transparent,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.edit, size: kIconSize20 - 2),
+                    label: const Text(
+                      'Editar Perfil',
+                      style: TextStyle(fontSize: 14),
+                    ),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder:
+                            (_) => EditCompanyProfileDialog(company: company),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.teal,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: kPadding16,
+                        vertical: 0,
+                      ),
+                      textStyle: const TextStyle(fontSize: 14.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(kRadius8),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8), // Spacing between buttons
+            ],
             SizedBox(
               height: kRadius40 + kSpacing4,
               child: Material(

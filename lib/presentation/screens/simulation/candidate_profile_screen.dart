@@ -418,7 +418,7 @@ class _CandidateProfileScreenState extends State<CandidateProfileScreen> {
                     ),
                   );
                 },
-                icon: const Icon(Icons.save),
+                icon: const Icon(Icons.save, color: Colors.white,),
                 label: const Text('Guardar Cambios'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(

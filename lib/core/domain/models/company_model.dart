@@ -1,4 +1,5 @@
 class Company {
+  final int? id; // Primary key from the 'companies' table
   final String userId;
   final String? companyName;
   final String? description;
@@ -9,6 +10,7 @@ class Company {
   final String? industry;
 
   Company({
+    this.id, // Added id
     required this.userId,
     this.companyName,
     this.description,
@@ -20,6 +22,7 @@ class Company {
   });
 
   factory Company.fromJson(Map<String, dynamic> json) => Company(
+    id: json['id'] as int?, // Added id parsing
     userId: json['user_id'] as String,
     companyName: json['company_name'] as String?,
     description: json['description'] as String?,
@@ -31,6 +34,7 @@ class Company {
   );
 
   Map<String, dynamic> toJson() => {
+    // id is typically not sent in toJson for updates, but user_id is used
     'user_id': userId,
     if (companyName != null) 'company_name': companyName,
     if (description != null) 'description': description,

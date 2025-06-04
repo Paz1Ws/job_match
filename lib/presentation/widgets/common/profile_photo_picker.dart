@@ -8,12 +8,14 @@ class ProfilePhotoPicker extends ConsumerStatefulWidget {
   final String? currentPhotoUrl;
   final bool isCompany;
   final VoidCallback? onPhotoUpdated;
+  final double radius; // Add radius parameter
 
   const ProfilePhotoPicker({
     super.key,
     this.currentPhotoUrl,
     this.isCompany = false,
     this.onPhotoUpdated,
+    this.radius = 40.0, // Default radius
   });
 
   @override
@@ -22,6 +24,9 @@ class ProfilePhotoPicker extends ConsumerStatefulWidget {
 
 class _ProfilePhotoPickerState extends ConsumerState<ProfilePhotoPicker> {
   bool _isUploading = false;
+  String? _updatedPhotoUrl;
+
+  String? get effectivePhotoUrl => _updatedPhotoUrl ?? widget.currentPhotoUrl;
 
   Future<void> _pickAndUploadPhoto() async {
     try {
@@ -37,17 +42,21 @@ class _ProfilePhotoPickerState extends ConsumerState<ProfilePhotoPicker> {
         final fileBytes = result.files.single.bytes!;
         final fileName = result.files.single.name;
 
+        String uploadedUrl = "";
         if (widget.isCompany) {
           final uploadLogo = ref.read(uploadCompanyLogoProvider);
-          await uploadLogo(fileBytes, fileName);
-          // Refresca desde la base de datos
+          uploadedUrl = await uploadLogo(fileBytes, fileName);
           await refreshCompanyProfile(ref);
         } else {
           final uploadPhoto = ref.read(uploadCandidatePhotoProvider);
-          await uploadPhoto(fileBytes, fileName);
-          // Refresca desde la base de datos
+          uploadedUrl = await uploadPhoto(fileBytes, fileName);
           await refreshCandidateProfile(ref);
         }
+
+        setState(() {
+          _isUploading = false;
+          _updatedPhotoUrl = uploadedUrl; // Store the uploaded URL locally
+        });
 
         widget.onPhotoUpdated?.call();
 
@@ -66,6 +75,7 @@ class _ProfilePhotoPickerState extends ConsumerState<ProfilePhotoPicker> {
       }
     } catch (e) {
       if (mounted) {
+        setState(() => _isUploading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error al subir la imagen: $e'),
@@ -73,68 +83,68 @@ class _ProfilePhotoPickerState extends ConsumerState<ProfilePhotoPicker> {
           ),
         );
       }
-    } finally {
-      if (mounted) {
-        setState(() => _isUploading = false);
-      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Use the effective URL which could be either the updated one or the original one
+    final currentUrl = effectivePhotoUrl;
+    
     return GestureDetector(
       onTap: _isUploading ? null : _pickAndUploadPhoto,
       child: Stack(
+        alignment: Alignment.center,
         children: [
           CircleAvatar(
-            radius: 24,
-            backgroundImage:
-                widget.currentPhotoUrl != null &&
-                        widget.currentPhotoUrl!.isNotEmpty
-                    ? NetworkImage(widget.currentPhotoUrl!)
-                    : null,
-            backgroundColor: Colors.grey.shade300,
-            child:
-                widget.currentPhotoUrl != null &&
-                        widget.currentPhotoUrl!.isNotEmpty
-                    ? null
-                    : Icon(
-                      widget.isCompany ? Icons.business : Icons.person,
-                      color: Colors.white,
-                      size: 24,
-                    ),
+            radius: widget.radius,
+            backgroundImage: currentUrl != null && currentUrl.isNotEmpty
+                ? NetworkImage(currentUrl)
+                : null,
+            backgroundColor: Colors.grey.shade200,
+            child: (currentUrl == null || currentUrl.isEmpty)
+                ? Icon(
+                    widget.isCompany ? Icons.business : Icons.person,
+                    size: widget.radius,
+                    color: Colors.grey.shade400,
+                  )
+                : null,
+          ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.6),
+                shape: BoxShape.circle,
+              ),
+              padding: const EdgeInsets.all(4),
+              child: Icon(
+                Icons.camera_alt,
+                color: Colors.white,
+                size: widget.radius * 0.4,
+              ),
+            ),
           ),
           if (_isUploading)
-            const Positioned.fill(
-              child: CircleAvatar(
-                radius: 24,
-                backgroundColor: Colors.black54,
+            Container(
+              width: widget.radius * 2,
+              height: widget.radius * 2,
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.5),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
                 child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
+                  width: widget.radius * 0.8,
+                  height: widget.radius * 0.8,
+                  child: const CircularProgressIndicator(
+                    strokeWidth: 3,
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 ),
               ),
             ),
-          Positioned(
-            bottom: 0,
-            right: 0,
-            child: Container(
-              padding: const EdgeInsets.all(2),
-              decoration: const BoxDecoration(
-                color: Colors.blue,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.camera_alt,
-                size: 12,
-                color: Colors.white,
-              ),
-            ),
-          ),
         ],
       ),
     );
