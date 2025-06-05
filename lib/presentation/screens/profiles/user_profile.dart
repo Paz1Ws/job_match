@@ -13,6 +13,7 @@ import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
 import 'package:job_match/presentation/widgets/auth/profile_display_elements.dart';
 import 'package:job_match/presentation/widgets/auth/related_job_card.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:job_match/presentation/widgets/common/profile_photo_picker.dart';
 import 'package:job_match/presentation/widgets/profile/edit_candidate_profile_dialog.dart';
@@ -832,12 +833,11 @@ class ProfileDetailHeader extends ConsumerWidget {
                               const SizedBox(height: kSpacing4),
                               InkWell(
                                 onTap: () async {
-                                  // Aquí se podría implementar la lógica para abrir el PDF
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Abriendo CV...'),
-                                    ),
+                                  launchUrl(
+                                    Uri.parse(candidate.resumeUrl! ?? ''),
+                                    mode: LaunchMode.externalApplication,
                                   );
+                                 
                                 },
                                 child: Text(
                                   'Ver CV',
@@ -851,21 +851,7 @@ class ProfileDetailHeader extends ConsumerWidget {
                             ],
                           ),
                         ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.download_outlined,
-                            color: Colors.blue,
-                          ),
-                          onPressed: () {
-                            // Aquí se implementaría la descarga
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Descargando CV...'),
-                              ),
-                            );
-                          },
-                          tooltip: 'Descargar CV',
-                        ),
+                       
                       ],
                     ),
                   ),

@@ -40,3 +40,5 @@ flutter:
     - assets/images/users/
     - assets/animations/cv_lottie.json
     - assets/images/find_jobs_background.jpg
+    - assets/images/presentation_coworkers.webp
+    - assets/images/crossed_arms_coworkers.png

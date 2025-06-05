@@ -795,7 +795,7 @@ class _CandidateDashboardScreenState
                               ),
                             ),
                             const Text(
-                              '14 Junio, 2024',
+                              '14 Junio, 2025',
                               style: TextStyle(fontWeight: FontWeight.w500),
                             ),
                           ],

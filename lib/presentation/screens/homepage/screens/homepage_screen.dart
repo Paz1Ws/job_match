@@ -9,6 +9,11 @@ import 'package:job_match/presentation/widgets/homepage/partner_icon.dart';
 import 'package:job_match/presentation/widgets/homepage/stat_item.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
+import 'package:job_match/presentation/widgets/homepage/company_presentation_section.dart';
+import 'package:job_match/presentation/widgets/homepage/cta_section.dart';
+import 'package:job_match/presentation/widgets/homepage/testimonials_section.dart';
+import 'package:job_match/presentation/widgets/homepage/footer_section.dart';
+import 'package:job_match/presentation/widgets/homepage/contact_section.dart';
 
 class HomepageScreen extends StatefulWidget {
   const HomepageScreen({super.key});
@@ -31,6 +36,8 @@ class _HomepageScreenState extends State<HomepageScreen> {
     initialPage: 1000,
   );
   int _currentPage = 1000;
+
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -56,6 +63,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
   @override
   void dispose() {
     _carouselController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -65,46 +73,73 @@ class _HomepageScreenState extends State<HomepageScreen> {
       builder: (context, constraints) {
         final size = MediaQuery.sizeOf(context);
         return Scaffold(
-          body: Stack(
-            fit: StackFit.expand,
-            children: [
-              Positioned.fill(
-                child: Image.asset(
-                  'assets/images/homepage_background.png',
-                  fit: BoxFit.cover,
+          body: SingleChildScrollView(
+            controller: _scrollController,
+            child: Column(
+              children: [
+                // Original hero section
+                SizedBox(
+                  height: size.height,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Positioned.fill(
+                        child: Image.asset(
+                          'assets/images/homepage_background.png',
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Positioned.fill(
+                        child: Container(color: Colors.black.withOpacity(0.6)),
+                      ),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          FadeInDown(
+                            duration: const Duration(milliseconds: 800),
+                            child: _buildTopBar(context, constraints, size),
+                          ),
+                          const Spacer(),
+                          FadeIn(
+                            duration: const Duration(milliseconds: 900),
+                            child: Center(
+                              child: _buildHeroSection(
+                                context,
+                                constraints,
+                                size,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 40),
+                          FadeInUp(
+                            duration: const Duration(milliseconds: 900),
+                            child: _buildStatsSection(constraints, size),
+                          ),
+                          const Spacer(),
+                          FadeInUpBig(
+                            duration: const Duration(milliseconds: 1000),
+                            child: _buildPartnersSection(constraints, size),
+                          ),
+                          const SizedBox(height: 40),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              Positioned.fill(
-                child: Container(color: Colors.black.withOpacity(0.6)),
-              ),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  FadeInDown(
-                    duration: const Duration(milliseconds: 800),
-                    child: _buildTopBar(context, constraints, size),
-                  ),
-                  const Spacer(),
-                  FadeIn(
-                    duration: const Duration(milliseconds: 900),
-                    child: Center(
-                      child: _buildHeroSection(context, constraints, size),
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-                  FadeInUp(
-                    duration: const Duration(milliseconds: 900),
-                    child: _buildStatsSection(constraints, size),
-                  ),
-                  const Spacer(),
-                  FadeInUpBig(
-                    duration: const Duration(milliseconds: 1000),
-                    child: _buildPartnersSection(constraints, size),
-                  ),
-                  const SizedBox(height: 40),
-                ],
-              ),
-            ],
+                // Company presentation section
+                _buildCompanyPresentationSection(constraints, size),
+                // CTA section
+                _buildFutureSection(constraints, size),
+                // New testimonials section
+                _buildTestimonialsSection(constraints, size),
+                SizedBox(height: 40),
+                _buildContactSection(constraints, size),
+                // Footer section
+                SizedBox(height: 80),
+
+                _buildFooterSection(constraints, size),
+              ],
+            ),
           ),
         );
       },
@@ -333,7 +368,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
         children: [
           const Icon(Icons.publish, color: Colors.white),
           const SizedBox(width: 8),
-          const Text("Soy Empresa", style: TextStyle(color: Colors.white)),
+          const Text("Busco Talento", style: TextStyle(color: Colors.white)),
         ],
       ),
       onPressed:
@@ -545,5 +580,28 @@ class _HomepageScreenState extends State<HomepageScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildCompanyPresentationSection(
+    BoxConstraints constraints,
+    Size size,
+  ) {
+    return CompanyPresentationSection(constraints: constraints, size: size);
+  }
+
+  Widget _buildFutureSection(BoxConstraints constraints, Size size) {
+    return CTASection(constraints: constraints, size: size);
+  }
+
+  Widget _buildTestimonialsSection(BoxConstraints constraints, Size size) {
+    return TestimonialsSection(constraints: constraints, size: size);
+  }
+
+  Widget _buildContactSection(BoxConstraints constraints, Size size) {
+    return ContactSection(constraints: constraints, size: size);
+  }
+
+  Widget _buildFooterSection(BoxConstraints constraints, Size size) {
+    return FooterSection(constraints: constraints, size: size);
   }
 }

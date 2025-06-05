@@ -481,8 +481,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             'Experiencia laboral (breve resumen, min. 50 caracteres)',
             icon: Icons.work_history_outlined,
           ),
-          maxLines: 3,
-          validator: FormUtils.validateWorkExperience,
+          maxLines: 5,
         ),
         const SizedBox(height: 16.0),
         TextFormField(

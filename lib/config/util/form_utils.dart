@@ -74,7 +74,7 @@ class FormUtils {
     value = clearSpaces(value ?? '');
     if (value.isEmpty) return 'El número de teléfono es obligatorio.';
     if (!_peruPhoneRegExp.hasMatch(value)) {
-      return 'Introduce un número peruano válido (9 dígitos, empieza con 9).';
+      return 'Introduce un número válido (9 dígitos).';
     }
     return null;
   }
@@ -118,15 +118,6 @@ class FormUtils {
     return null;
   }
 
-  static String? validateWorkExperience(String? value) {
-    value = clearSpaces(value ?? '');
-    if (value.isEmpty)
-      return 'El resumen de experiencia laboral es obligatorio.';
-    if (value.length < 50)
-      return 'El resumen de experiencia laboral debe tener al menos 50 caracteres.';
-    return null;
-  }
-
   static String? validateSkillsSeparatedByCommas(String? value) {
     value = clearSpaces(value ?? '');
     if (value.isEmpty) return 'Debes ingresar al menos una habilidad.';
@@ -139,8 +130,8 @@ class FormUtils {
   static String? validateBio(String? value) {
     value = clearSpaces(value ?? '');
     if (value.isEmpty) return 'La biografía es obligatoria.';
-    if (value.length < 50)
-      return 'La biografía debe tener al menos 50 caracteres.';
+    if (value.length < 10)
+      return 'La biografía debe tener al menos 10 caracteres.';
     return null;
   }
 
@@ -162,8 +153,8 @@ class FormUtils {
   static String? validateCompanyDescription(String? value) {
     value = clearSpaces(value ?? '');
     if (value.isEmpty) return 'La descripción de la empresa es obligatoria.';
-    if (value.length < 100)
-      return 'La descripción debe tener al menos 100 caracteres.';
+    if (value.length < 10)
+      return 'La descripción debe tener al menos 10 caracteres.';
     return null;
   }
 

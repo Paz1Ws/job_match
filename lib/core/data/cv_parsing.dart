@@ -85,11 +85,8 @@ class CvParser {
     final education =
         (data['education'] != null)
             ? ((data['education'] as List?)
-                ?.map(
-                  (e) =>
-                      (e['institution'] ?? 'Educational institution')
-                          .toString(),
-                )
+                ?.map((e) => _formatEducationEntry(e))
+                .where((entry) => entry.isNotEmpty)
                 .join('\n'))
             : 'No formal education listed';
     final skills =
@@ -233,6 +230,83 @@ class CvParser {
     } else {
       return 'Junior';
     }
+  }
+
+  // Helper method to format education entries properly
+  String _formatEducationEntry(dynamic educationEntry) {
+    if (educationEntry == null) return '';
+
+    // If it's a string, just return it
+    if (educationEntry is String) {
+      return educationEntry.isNotEmpty
+          ? educationEntry
+          : 'Educational institution';
+    }
+
+    // If it's not a map, fallback to string
+    if (educationEntry is! Map<String, dynamic>) {
+      return educationEntry.toString().isNotEmpty
+          ? educationEntry.toString()
+          : 'Educational institution';
+    }
+
+    final entry = educationEntry;
+    String institutionName = '';
+    String degree = '';
+    String location = '';
+
+    // Extract institution name
+    if (entry['organization'] != null) {
+      if (entry['organization'] is String) {
+        institutionName = entry['organization'].toString();
+      } else if (entry['organization'] is Map<String, dynamic>) {
+        final org = entry['organization'] as Map<String, dynamic>;
+        institutionName = org['name']?.toString() ?? '';
+      }
+    } else if (entry['institution'] != null) {
+      institutionName = entry['institution'].toString();
+    } else {
+      for (final key in ['school', 'university', 'college', 'name']) {
+        if (entry[key] != null && entry[key].toString().isNotEmpty) {
+          institutionName = entry[key].toString();
+          break;
+        }
+      }
+    }
+
+    // Extract degree/program information (avoid printing the whole map)
+    // Prefer 'accreditation', then 'degree', then 'education', then 'program', then 'inputStr'
+    for (final key in [
+      'accreditation',
+      'degree',
+      'education',
+      'program',
+      'inputStr',
+    ]) {
+      final value = entry[key];
+      if (value != null && value is String && value.trim().isNotEmpty) {
+        degree = value.trim();
+        break;
+      }
+    }
+
+    // Extract location if available
+    if (entry['location'] != null) {
+      final formattedLocation = _formatLocation(entry['location']);
+      if (formattedLocation != 'No especificado') {
+        location = formattedLocation;
+      }
+    }
+
+    // Build the formatted string
+    List<String> parts = [];
+    if (degree.isNotEmpty) parts.add(degree);
+    if (institutionName.isNotEmpty) parts.add(institutionName);
+    if (location.isNotEmpty) parts.add(location);
+
+    if (parts.isEmpty) return 'Educational institution';
+
+    return parts.join(' - ');
   }
 }
 

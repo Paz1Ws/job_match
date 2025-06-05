@@ -21,37 +21,37 @@ class _TestimonialCarouselState extends State<TestimonialCarousel> {
     TestimonialData(
       stars: 5,
       text:
-          'La búsqueda de proveedores de nuestro sistema web fue clave después de obtener el fondo Mipymes Digitales, además hicieron un gran diagnóstico digital inicial.',
-      logo: 'assets/images/mcatalan.png',
-      name: 'MCatalan',
-    ),
-    TestimonialData(
-      stars: 5,
-      text:
-          'Buscamos la asesoría de IncaValley para obtener el fondo de Startup Perú, entendieron rápidamente nuestros objetivos de crecimiento en Latam y fue una gran experiencia el postular con expertos en formulación.',
-      logo: 'assets/images/fresnos.png',
-      name: 'Fresnos',
-    ),
-    TestimonialData(
-      stars: 5,
-      text:
-          'Gracias al equipo de consultores se pudo moldear la propuesta de innovación considerando variables que sumaron al proyecto y al Diagnóstico Empresarial.',
+          'JobMatch nos ayudó a encontrar ingenieros especializados en proyectos eléctricos y mecánicos. Su plataforma facilitó mucho nuestro proceso de selección.',
       logo: 'assets/images/carze.png',
       name: 'Carze',
     ),
     TestimonialData(
       stars: 5,
       text:
-          'El acompañamiento y la experiencia del equipo fue fundamental para lograr nuestros objetivos de innovación.',
-      logo: 'assets/images/efecto_eureka.png',
-      name: 'Efecto Eureka',
+          'Gracias a JobMatch pudimos incorporar médicos especialistas y personal de enfermería altamente calificado. La calidad de los candidatos superó nuestras expectativas.',
+      logo: 'assets/images/fresnos.png',
+      name: 'Clínica Los Fresnos',
     ),
     TestimonialData(
       stars: 5,
       text:
-          'El soporte y la dedicación del equipo nos permitió crecer y mejorar nuestros procesos.',
+          'JobMatch nos conectó con conductores especializados en materiales peligrosos y operadores de maquinaria pesada de primer nivel para nuestros 45 años de experiencia.',
+      logo: 'assets/images/mcatalan.png',
+      name: 'Transportes M. Catalán',
+    ),
+    TestimonialData(
+      stars: 5,
+      text:
+          'Encontramos técnicos especializados en construcción civil, mecánica eléctrica y redes de comunicación. JobMatch entiende nuestras necesidades técnicas específicas.',
       logo: 'assets/images/dicesa.png',
-      name: 'Dicesa',
+      name: 'DICESA',
+    ),
+    TestimonialData(
+      stars: 5,
+      text:
+          'La plataforma nos permitió contactar con profesionales que realmente comprenden los desafíos de la innovación y el desarrollo empresarial en Latinoamérica.',
+      logo: 'assets/images/efecto_eureka.png',
+      name: 'Efecto Eureka',
     ),
   ];
 
