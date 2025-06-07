@@ -228,33 +228,9 @@ class _FindEmployeesScreenState extends ConsumerState<FindEmployeesScreen> {
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8.0,
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Filtro arriba de la lista de empleados en mobile
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 4.0,
-                                    vertical: 8.0,
-                                  ),
-                                  child: ElevatedButton.icon(
-                                    onPressed:
-                                        () =>
-                                            scaffoldKey.currentState
-                                                ?.openDrawer(),
-                                    icon: const Icon(Icons.filter_list),
-                                    label: const Text('Filtrar candidatos'),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.blueAccent,
-                                      foregroundColor: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                                FadeInRight(
-                                  duration: const Duration(milliseconds: 700),
-                                  child: _buildEmployeeListView(),
-                                ),
-                              ],
+                            child: FadeInRight(
+                              duration: const Duration(milliseconds: 700),
+                              child: _buildEmployeeListView(),
                             ),
                           )
                           // En desktop, mantenemos el layout con filtro visible + lista
@@ -450,11 +426,9 @@ class _FindEmployeesScreenState extends ConsumerState<FindEmployeesScreen> {
       margin: const EdgeInsets.only(bottom: 16),
       child: InkWell(
         onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => UserProfile(candidateData: candidate),
-            ),
-          );
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (context) => UserProfile()));
         },
         child: Padding(
           padding: EdgeInsets.all(isMobile ? 12 : 16),

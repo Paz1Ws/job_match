@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:job_match/core/data/jobs_listener.dart';
 import 'package:job_match/core/domain/models/company_model.dart';
 import 'package:job_match/core/domain/models/job_model.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
@@ -78,6 +79,12 @@ class JobDetailScreen extends ConsumerWidget {
             : currentFitScore >= 50
             ? Colors.orange.shade700
             : Colors.red.shade700;
+
+    // Check if job is available for application
+    final bool isJobAvailable = JobUtils.isJobApplicationAvailable(job);
+    final bool isJobClosed = job.status.toLowerCase() == 'closed';
+    final bool isJobPaused = job.status.toLowerCase() == 'paused';
+    final bool isJobExpired = JobUtils.isJobExpired(job);
 
     final relatedJobsAsync = ref.watch(jobsProvider);
     return Scaffold(
@@ -219,13 +226,25 @@ class JobDetailScreen extends ConsumerWidget {
                           color: fitColor.withOpacity(0.1),
                           textColor: fitColor,
                         ),
+                        // Add job status tag
+                        _buildTag(
+                          _getDisplayStatus(job.status),
+                          color: _getStatusColor(job.status).withOpacity(0.1),
+                          textColor: _getStatusColor(job.status),
+                        ),
                       ],
                     ),
 
                     const SizedBox(height: 30),
 
-                    // Apply Button
-                    _buildApplyButton(context),
+                    // Apply Button or Status Message
+                    _buildApplySection(
+                      context,
+                      isJobAvailable,
+                      isJobClosed,
+                      isJobPaused,
+                      isJobExpired,
+                    ),
 
                     const SizedBox(height: 30),
                   ],
@@ -406,22 +425,216 @@ class JobDetailScreen extends ConsumerWidget {
       ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: ElevatedButton(
-          onPressed: () => _showApplyDialog(context),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          child: const Text(
-            'APLICAR AHORA',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
+        child: _buildBottomApplyButton(
+          context,
+          isJobAvailable,
+          isJobClosed,
+          isJobPaused,
+          isJobExpired,
         ),
       ),
     );
+  }
+
+  // New method to build the apply section with status messages
+  Widget _buildApplySection(
+    BuildContext context,
+    bool isJobAvailable,
+    bool isJobClosed,
+    bool isJobPaused,
+    bool isJobExpired,
+  ) {
+    if (isJobAvailable) {
+      return _buildApplyButton(context);
+    } else {
+      // Show status message instead of apply button
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: _getStatusMessageColor(
+            isJobClosed,
+            isJobPaused,
+            isJobExpired,
+          ).withOpacity(0.1),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: _getStatusMessageColor(
+              isJobClosed,
+              isJobPaused,
+              isJobExpired,
+            ).withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              _getStatusIcon(isJobClosed, isJobPaused, isJobExpired),
+              color: _getStatusMessageColor(
+                isJobClosed,
+                isJobPaused,
+                isJobExpired,
+              ),
+              size: 32,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _getStatusMessage(isJobClosed, isJobPaused, isJobExpired),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: _getStatusMessageColor(
+                  isJobClosed,
+                  isJobPaused,
+                  isJobExpired,
+                ),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              _getStatusDescription(isJobClosed, isJobPaused, isJobExpired),
+              style: TextStyle(
+                fontSize: 14,
+                color: _getStatusMessageColor(
+                  isJobClosed,
+                  isJobPaused,
+                  isJobExpired,
+                ).withOpacity(0.8),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  // New method for bottom navigation bar button
+  Widget _buildBottomApplyButton(
+    BuildContext context,
+    bool isJobAvailable,
+    bool isJobClosed,
+    bool isJobPaused,
+    bool isJobExpired,
+  ) {
+    if (isJobAvailable) {
+      return ElevatedButton(
+        onPressed: () => _showApplyDialog(context),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.blue,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+        child: const Text(
+          'APLICAR AHORA',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      );
+    } else {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade300,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(
+          _getStatusMessage(
+            isJobClosed,
+            isJobPaused,
+            isJobExpired,
+          ).toUpperCase(),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey.shade600,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+  }
+
+  // Helper methods for status messages
+  Color _getStatusMessageColor(
+    bool isJobClosed,
+    bool isJobPaused,
+    bool isJobExpired,
+  ) {
+    if (isJobClosed) return Colors.red;
+    if (isJobPaused) return Colors.orange;
+    if (isJobExpired) return Colors.amber;
+    return Colors.grey;
+  }
+
+  IconData _getStatusIcon(
+    bool isJobClosed,
+    bool isJobPaused,
+    bool isJobExpired,
+  ) {
+    if (isJobClosed) return Icons.cancel_outlined;
+    if (isJobPaused) return Icons.pause_circle_outlined;
+    if (isJobExpired) return Icons.schedule_outlined;
+    return Icons.info_outlined;
+  }
+
+  String _getStatusMessage(
+    bool isJobClosed,
+    bool isJobPaused,
+    bool isJobExpired,
+  ) {
+    if (isJobClosed) return 'Trabajo Cerrado';
+    if (isJobPaused) return 'Trabajo Pausado';
+    if (isJobExpired) return 'Fecha Límite Vencida';
+    return 'No Disponible';
+  }
+
+  String _getStatusDescription(
+    bool isJobClosed,
+    bool isJobPaused,
+    bool isJobExpired,
+  ) {
+    if (isJobClosed)
+      return 'Esta oferta de trabajo ha sido cerrada por la empresa y ya no acepta aplicaciones.';
+    if (isJobPaused)
+      return 'Esta oferta está temporalmente pausada. Las aplicaciones pueden reanudarse pronto.';
+    if (isJobExpired)
+      return 'La fecha límite para aplicar a este trabajo ha vencido.';
+    return 'Esta oferta no está disponible para aplicaciones en este momento.';
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'open':
+        return Colors.green;
+      case 'closed':
+        return Colors.red;
+      case 'paused':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _getDisplayStatus(String status) {
+    switch (status.toLowerCase()) {
+      case 'open':
+        return 'Abierto';
+      case 'closed':
+        return 'Cerrado';
+      case 'paused':
+        return 'Pausado';
+      default:
+        return status;
+    }
   }
 
   // Helper methods
@@ -527,9 +740,21 @@ class JobDetailScreen extends ConsumerWidget {
   }
 
   void _showApplyDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => JobApplyDialog(jobTitle: job.title, jobId: job.id),
-    );
+    // Only show dialog if job is available
+    if (JobUtils.isJobApplicationAvailable(job)) {
+      showDialog(
+        context: context,
+        builder:
+            (context) => JobApplyDialog(jobTitle: job.title, jobId: job.id),
+      );
+    } else {
+      // Show a snackbar with the reason why application is not available
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(JobUtils.getJobUnavailabilityReason(job)),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }

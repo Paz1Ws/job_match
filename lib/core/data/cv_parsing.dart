@@ -105,7 +105,7 @@ class CvParser {
         data['phone_numbers'] != null &&
                 (data['phone_numbers'] as List).isNotEmpty
             ? data['phone_numbers'][0]?.toString() ?? '974023810'
-            : '${900000000 + Random().nextInt(99999999)}';
+            : '';
 
     // Create new user with provided email and password
     final User user = await signUpWithEmailAndPassword(

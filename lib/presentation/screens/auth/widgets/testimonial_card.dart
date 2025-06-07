@@ -67,26 +67,7 @@ class TestimonialCard extends StatelessWidget {
                 builder: (context, constraints) {
                   // Si el ancho es pequeño, apila logo y nombre
                   if (constraints.maxWidth < 180) {
-                    return Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Image.asset(data.logo, height: logoSize),
-                        Spacer(),
-
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            data.name,
-                            style: TextStyle(
-                              decoration: TextDecoration.underline,
-                              fontWeight: FontWeight.bold,
-                              fontSize: nameFontSize,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
+                    Image.asset(data.logo, height: logoSize);
                   }
                   // Si hay espacio, muestra en fila
                   return Row(

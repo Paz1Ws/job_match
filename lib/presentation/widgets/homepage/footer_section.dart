@@ -48,8 +48,6 @@ class FooterSection extends StatelessWidget {
         _buildCompanySection(),
         const SizedBox(height: 32),
         _buildJobCategoriesSection(),
-        const SizedBox(height: 32),
-        _buildNewsletterSection(isMobile: true),
       ],
     );
   }
@@ -63,8 +61,6 @@ class FooterSection extends StatelessWidget {
         Expanded(flex: 1, child: _buildCompanySection()),
         const SizedBox(width: 40),
         Expanded(flex: 1, child: _buildJobCategoriesSection()),
-        const SizedBox(width: 40),
-        Expanded(flex: 2, child: _buildNewsletterSection(isMobile: false)),
       ],
     );
   }
@@ -153,77 +149,6 @@ class FooterSection extends StatelessWidget {
         _buildFooterLink('Educación'),
         const SizedBox(height: 12),
         _buildFooterLink('Servicios Financieros'),
-      ],
-    );
-  }
-
-  Widget _buildNewsletterSection({required bool isMobile}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Newsletter',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          'Mantente al día con las últimas oportunidades laborales y consejos profesionales.',
-          style: TextStyle(
-            color: Colors.grey.shade400,
-            fontSize: 14,
-            height: 1.5,
-          ),
-        ),
-        const SizedBox(height: 20),
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.shade600),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: 'Correo electrónico',
-                    hintStyle: TextStyle(color: Colors.grey.shade500),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                  ),
-                ),
-              ),
-              Container(
-                margin: const EdgeInsets.all(4),
-                child: ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                  child: const Text(
-                    'Suscribirse',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
       ],
     );
   }

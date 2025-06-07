@@ -41,7 +41,7 @@ class FooterFindJobs extends StatelessWidget {
       _buildLogoAndDescriptionColumn(context),
       _buildCompanyLinksColumn(),
       _buildJobCategoriesColumn(),
-      _buildNewsletterSubscriptionColumn(),
+      // _buildNewsletterSubscriptionColumn(),
     ];
 
     return columnContents.asMap().entries.map((entry) {
@@ -65,7 +65,6 @@ class FooterFindJobs extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
 
       children: [
-        // JobMatchWidget(),
         const SizedBox(height: 16.0),
         const SizedBox(
           width: 250.0,

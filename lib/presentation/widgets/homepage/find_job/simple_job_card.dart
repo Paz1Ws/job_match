@@ -1,21 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:animate_do/animate_do.dart';
 import 'package:job_match/config/constants/layer_constants.dart';
 import 'package:job_match/config/util/animations.dart';
 import 'package:job_match/core/data/auth_request.dart';
 import 'package:job_match/core/domain/models/job_model.dart';
-import 'package:job_match/core/domain/models/company_model.dart'; // Add this import
+import 'package:job_match/core/domain/models/company_model.dart';
 import 'package:job_match/presentation/screens/jobs/job_detail_screen.dart';
 import 'package:job_match/presentation/screens/company/company_job_detail_screen.dart';
 import 'package:job_match/core/data/job_match.dart';
+import 'package:job_match/core/data/jobs_listener.dart';
 import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
+import 'package:job_match/presentation/screens/homepage/find_jobs_screen.dart';
 
 class SimpleJobCard extends ConsumerWidget {
   final Job job;
-  final Company? company; // Add company parameter
+  final Company? company;
+  final bool skipAnimation;
 
-  const SimpleJobCard({super.key, required this.job, this.company});
+  const SimpleJobCard({
+    super.key,
+    required this.job,
+    this.company,
+    this.skipAnimation = false,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -50,204 +57,307 @@ class SimpleJobCard extends ConsumerWidget {
             ? Colors.orange.shade700
             : Colors.red.shade700;
 
-    return FadeInUp(
-      duration: const Duration(milliseconds: 600),
-      child: Stack(
-        children: [
-          Card(
-            elevation: 1.5,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(kRadius12),
-              side: BorderSide(color: Colors.grey.shade200, width: 0.8),
-            ),
-            margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+    // Check if job is available for application
+    final bool isAvailable = JobUtils.isJobApplicationAvailable(job);
+
+    // Check if job is expired (passed deadline)
+    final bool isExpired = JobUtils.isJobExpired(job);
+
+    // Main widget content without animation wrapper
+    Widget cardContent = Stack(
+      children: [
+        Card(
+          elevation: 1.5,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: Colors.grey.shade200, width: 0.8),
+          ),
+          margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+          child: ColorFiltered(
+            // Apply grayscale filter for unavailable jobs
+            colorFilter:
+                !isAvailable
+                    ? const ColorFilter.matrix([
+                      0.2126,
+                      0.7152,
+                      0.0722,
+                      0,
+                      0,
+                      0.2126,
+                      0.7152,
+                      0.0722,
+                      0,
+                      0,
+                      0.2126,
+                      0.7152,
+                      0.0722,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      1,
+                      0,
+                    ])
+                    : const ColorFilter.mode(
+                      Colors.transparent,
+                      BlendMode.saturation,
+                    ),
             child: InkWell(
-              borderRadius: BorderRadius.circular(kRadius12),
               onTap: () {
-                // Use different detail screen based on user type
                 if (isCandidate) {
                   Navigator.of(context).push(
-                    ParallaxSlidePageRoute(
+                    FadeThroughPageRoute(
                       page: JobDetailScreen(
                         job: job,
                         fitScore: fitPercentage,
                         matchResult: matchResultAsync?.asData?.value,
+                        company: company,
                       ),
                     ),
                   );
                 } else {
-                  // For companies, use the company job detail screen
                   Navigator.of(context).push(
-                    ParallaxSlidePageRoute(
+                    FadeThroughPageRoute(
                       page: CompanyJobDetailScreen(job: job),
                     ),
                   );
                 }
               },
+              borderRadius: BorderRadius.circular(12),
               child: Padding(
-                padding: const EdgeInsets.all(kPadding16),
-                child: Row(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: kRadius40 + kSpacing8,
-                      height: kRadius40 + kSpacing8,
-                      decoration: BoxDecoration(
-                        color: job.logoBackgroundColor ?? Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(kRadius8),
-                      ),
-                      child:
-                          company != null &&
-                                  company!.logo != null &&
-                                  company!.logo!.isNotEmpty
-                              ? ClipRRect(
-                                borderRadius: BorderRadius.circular(kRadius8),
-                                child: Image.network(
-                                  company!.logo!,
-                                  fit: BoxFit.cover,
-                                  errorBuilder:
-                                      (context, error, stackTrace) => Icon(
-                                        Icons.business,
-                                        color: Colors.grey.shade600,
-                                        size: kIconSize24,
-                                      ),
-                                ),
-                              )
-                              : Icon(
-                                Icons.business,
-                                color: Colors.grey.shade600,
-                                size: kIconSize24,
-                              ),
-                    ),
-                    const SizedBox(width: kSpacing12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            job.title,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15.0,
-                              color: Color(0xFF222B45),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                    // Company and title row
+                    Row(
+                      children: [
+                        // Company logo placeholder
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: job.logoBackgroundColor,
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          const SizedBox(height: kSpacing4 / 2),
-                          Text(
-                            job.companyName,
-                            style: TextStyle(
-                              fontSize: 13.0,
-                              color: Colors.grey.shade700,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: kSpacing8),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.location_on_outlined,
-                                size: 14,
-                                color: Colors.grey.shade600,
-                              ),
-                              const SizedBox(width: kSpacing4 / 2),
-                              Expanded(
-                                child: Text(
-                                  job.location,
-                                  style: TextStyle(
-                                    fontSize: 12.0,
-                                    color: Colors.grey.shade600,
+                          child:
+                              job.companyId != null &&
+                                      job.companyId!.isNotEmpty &&
+                                      company?.logo != null &&
+                                      company!.logo!.isNotEmpty
+                                  ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.network(
+                                      company!.logo!,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              const Icon(
+                                                Icons.business,
+                                                color: Colors.white,
+                                                size: 24,
+                                              ),
+                                    ),
+                                  )
+                                  : const Icon(
+                                    Icons.business,
+                                    color: Colors.white,
+                                    size: 24,
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                job.companyName,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.w500,
                                 ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                job.title,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 2,
                               ),
                             ],
                           ),
-                          const SizedBox(height: kSpacing4),
-                          Text(
-                            job.type,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Job details
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.location_on_outlined,
+                          size: 16,
+                          color: Colors.grey[600],
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            job.location,
                             style: TextStyle(
-                              fontSize: 12.0,
-                              color: Colors.blue.shade700,
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.work_outline,
+                          size: 16,
+                          color: Colors.grey[600],
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          job.type,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Salary range
+                    if (job.salaryMin.isNotEmpty || job.salaryMax.isNotEmpty)
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.attach_money,
+                            size: 16,
+                            color: Colors.grey[600],
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            job.salaryMin == job.salaryMax
+                                ? job.salaryMin
+                                : '${job.salaryMin} - ${job.salaryMax}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
                               fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(width: kSpacing8),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisAlignment: MainAxisAlignment.start,
+                    const SizedBox(height: 12),
+
+                    // Match percentage and apply button
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Only show fit percentage for candidates
-                        if (isCandidate)
-                          isLoadingMatch
-                              ? SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.grey.shade400,
-                                ),
-                              )
-                              : Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: kPadding8,
-                                  vertical: kSpacing4 / 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: fitColor.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(kRadius4),
-                                  border: Border.all(
-                                    color: fitColor.withOpacity(0.3),
+                        if (isCandidate) ...[
+                          if (isLoadingMatch)
+                            Row(
+                              children: [
+                                SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.grey[400],
                                   ),
                                 ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.insights,
-                                      color: fitColor,
-                                      size: 12,
-                                    ),
-                                    const SizedBox(width: kSpacing4),
-                                    Text(
-                                      '$fitPercentage% Fit',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 11.0,
-                                        color: fitColor,
-                                      ),
-                                    ),
-                                  ],
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Calculando...',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[500],
+                                  ),
                                 ),
-                              )
-                        else
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: kPadding8,
-                              vertical: kSpacing4 / 2,
+                              ],
+                            )
+                          else
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: fitColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                '$fitPercentage% Match',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: fitColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
-                            decoration: BoxDecoration(
-                              color: _getStatusColor(
-                                job.status,
-                              ).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(kRadius4),
-                              border: Border.all(
-                                color: _getStatusColor(
-                                  job.status,
-                                ).withOpacity(0.3),
+                        ] else
+                          const SizedBox(),
+                        if (isAvailable)
+                          ElevatedButton(
+                            onPressed: () {
+                              if (isCandidate) {
+                                Navigator.of(context).push(
+                                  FadeThroughPageRoute(
+                                    page: JobDetailScreen(
+                                      job: job,
+                                      fitScore: fitPercentage,
+                                      matchResult:
+                                          matchResultAsync?.asData?.value,
+                                      company: company,
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                Navigator.of(context).push(
+                                  FadeThroughPageRoute(
+                                    page: CompanyJobDetailScreen(job: job),
+                                  ),
+                                );
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
                               ),
                             ),
                             child: Text(
-                              _getDisplayStatus(job.status),
+                              isCandidate ? 'Aplicar' : 'Ver detalles',
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          )
+                        else
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade300,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              isExpired ? 'Expirado' : 'No disponible',
                               style: TextStyle(
-                                color: _getStatusColor(job.status),
-                                fontSize: 11.0,
+                                fontSize: 12,
+                                color: Colors.grey[600],
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -259,9 +369,40 @@ class SimpleJobCard extends ConsumerWidget {
               ),
             ),
           ),
-        ],
-      ),
+        ),
+
+        // Status indicator
+        Positioned(
+          top: 16,
+          right: 16,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: _getStatusColor(job.status),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(_getStatusIcon(job.status), size: 12, color: Colors.white),
+                const SizedBox(width: 4),
+                Text(
+                  _getDisplayStatus(job.status),
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
+
+    // Return the card content directly without animation wrapper
+    return cardContent;
   }
 
   // Helper method to determine color based on job status
@@ -288,7 +429,21 @@ class SimpleJobCard extends ConsumerWidget {
       case 'paused':
         return 'Pausado';
       default:
-        return status; // Return original if unknown
+        return 'Desconocido';
+    }
+  }
+
+  // Add status icon method
+  IconData _getStatusIcon(String status) {
+    switch (status.toLowerCase()) {
+      case 'open':
+        return Icons.check_circle_outline;
+      case 'closed':
+        return Icons.cancel_outlined;
+      case 'paused':
+        return Icons.pause_circle_outline;
+      default:
+        return Icons.help_outline;
     }
   }
 }

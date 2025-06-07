@@ -9,17 +9,15 @@ import 'package:job_match/config/util/form_utils.dart'; // Import FormUtils
 import 'package:intl/intl.dart';
 
 class PostJobForm extends ConsumerStatefulWidget {
-  final String companyId;
-  final Function() onJobPosted;
-  final Job? initialJob; // Optional: For editing existing job
-  final bool isEditing; // Flag to indicate if we're editing or creating new
+  final bool isEditing;
+  final Job? existingJob;
+  final Function(Job)? onJobUpdated; // Add callback for when job is updated
 
   const PostJobForm({
     super.key,
-    required this.companyId,
-    required this.onJobPosted,
-    this.initialJob,
     this.isEditing = false,
+    this.existingJob,
+    this.onJobUpdated, // Add this parameter
   });
 
   @override
@@ -63,45 +61,25 @@ class _PostJobFormState extends ConsumerState<PostJobForm> {
   @override
   void initState() {
     super.initState();
+    
+    // Initialize all controllers first
+    _titleController = TextEditingController();
+    _descriptionController = TextEditingController();
+    _locationController = TextEditingController();
+    _salaryMinController = TextEditingController();
+    _salaryMaxController = TextEditingController();
+    _skillsController = TextEditingController();
+    _maxApplicationsController = TextEditingController();
 
-    // Initialize with values from the initial job if editing
-    if (widget.initialJob != null && widget.isEditing) {
-      _titleController = TextEditingController(text: widget.initialJob!.title);
-      _descriptionController = TextEditingController(
-        text: widget.initialJob!.description,
-      );
-      _locationController = TextEditingController(
-        text: widget.initialJob!.location,
-      );
-      _salaryMinController = TextEditingController(
-        text: widget.initialJob!.salaryMin.replaceAll('S/', ''),
-      );
-      _salaryMaxController = TextEditingController(
-        text: widget.initialJob!.salaryMax.replaceAll('S/', ''),
-      );
-      _skillsController = TextEditingController(
-        text: widget.initialJob!.requiredSkills?.join(', ') ?? '',
-      );
-      _maxApplicationsController = TextEditingController(
-        text: widget.initialJob!.maxApplications?.toString() ?? '',
-      );
-      _jobType = widget.initialJob!.type;
-      _jobModality = widget.initialJob!.modality;
-      _status = widget.initialJob!.status;
-      _applicationDeadline = widget.initialJob!.applicationDeadline;
-    } else {
-      _titleController = TextEditingController();
-      _descriptionController = TextEditingController();
-      _locationController = TextEditingController();
-      _salaryMinController = TextEditingController();
-      _salaryMaxController = TextEditingController();
-      _skillsController = TextEditingController();
-      _maxApplicationsController = TextEditingController();
+    // Pre-fill form with existing job data if editing
+    if (widget.isEditing && widget.existingJob != null) {
+      _prefillFormWithJobData(widget.existingJob!);
     }
   }
 
   @override
   void dispose() {
+    // Dispose all controllers to prevent memory leaks
     _titleController.dispose();
     _descriptionController.dispose();
     _locationController.dispose();
@@ -110,6 +88,35 @@ class _PostJobFormState extends ConsumerState<PostJobForm> {
     _skillsController.dispose();
     _maxApplicationsController.dispose();
     super.dispose();
+  }
+
+  void _prefillFormWithJobData(Job job) {
+    // Set text values after controllers are initialized
+    _titleController.text = job.title;
+    _descriptionController.text = job.description;
+    _locationController.text = job.location;
+    _salaryMinController.text = job.salaryMin;
+    _salaryMaxController.text = job.salaryMax;
+    
+    // Set values for dropdown and other fields
+    _jobType = job.type;
+    _jobModality = job.modality;
+    _status = job.status;
+    _applicationDeadline = job.applicationDeadline;
+    
+    // Handle list and optional fields
+    if (job.requiredSkills != null) {
+      _skillsController.text = job.requiredSkills!.join(', ');
+    }
+    
+    if (job.maxApplications != null) {
+      _maxApplicationsController.text = job.maxApplications.toString();
+    }
+    
+    // Force a rebuild to show the pre-filled values
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Future<void> _submitForm() async {
@@ -158,13 +165,13 @@ class _PostJobFormState extends ConsumerState<PostJobForm> {
 
       // Create job data
       final jobData = {
-        'company_id': widget.companyId,
-        'title': _titleController.text,
-        'description': _descriptionController.text,
-        'location': _locationController.text,
+        'company_id': company.userId,
+        'title': _titleController.text.trim(),
+        'description': _descriptionController.text.trim(),
+        'location': _locationController.text.trim(),
         'job_type': _jobType,
-        'salary_min': _salaryMinController.text,
-        'salary_max': _salaryMaxController.text,
+        'salary_min': _salaryMinController.text.trim(),
+        'salary_max': _salaryMaxController.text.trim(),
         'modality': _jobModality,
         'status': _status,
         'application_deadline': _applicationDeadline!.toIso8601String(),
@@ -176,36 +183,62 @@ class _PostJobFormState extends ConsumerState<PostJobForm> {
       };
 
       // Add or update job
-      if (widget.isEditing && widget.initialJob != null) {
+      if (widget.isEditing && widget.existingJob != null) {
         await ref.read(
           updateJobProvider(
-            UpdateJobParams(jobId: widget.initialJob!.id, jobData: jobData),
+            UpdateJobParams(jobId: widget.existingJob!.id, jobData: jobData),
           ).future,
         );
-      } else {
-        await ref.read(createJobProvider)(jobData);
-      }
 
-      // Notify parent and reset form
-      widget.onJobPosted();
-
-      if (!widget.isEditing) {
-        _resetForm();
-      }
-
-      // Show success message
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.isEditing
-                  ? 'Trabajo actualizado exitosamente'
-                  : 'Trabajo publicado exitosamente',
-            ),
-            backgroundColor: Colors.green,
-          ),
+        // Create updated job object with new data
+        final updatedJob = widget.existingJob!.copyWith(
+          title: jobData['title'] as String,
+          description: jobData['description'] as String,
+          location: jobData['location'] as String,
+          type: jobData['job_type'] as String,
+          salaryMin: jobData['salary_min'] as String,
+          salaryMax: jobData['salary_max'] as String,
+          modality: jobData['modality'] as String,
+          status: jobData['status'] as String,
+          requiredSkills: jobData['required_skills'] as List<String>?,
+          maxApplications: jobData['max_applications'] as int?,
+          applicationDeadline: _applicationDeadline,
+          createdAt: DateTime.now(),
         );
+
+        // Call the callback to notify parent widget
+        widget.onJobUpdated?.call(updatedJob);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Trabajo actualizado exitosamente'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        // Create new job
+        jobData['created_at'] = DateTime.now().toIso8601String();
+
+        await ref.read(createJobProvider)(jobData);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Trabajo publicado exitosamente'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Clear form for new job creation
+          _clearForm();
+        }
       }
+
+      // Invalidate relevant providers to refresh data
+      ref.invalidate(jobsByCompanyIdProvider(company.userId));
+      ref.invalidate(jobsProviderWithCompanyName);
     } catch (e) {
       // Show error message
       if (mounted) {
@@ -225,7 +258,7 @@ class _PostJobFormState extends ConsumerState<PostJobForm> {
     }
   }
 
-  void _resetForm() {
+  void _clearForm() {
     _titleController.clear();
     _descriptionController.clear();
     _locationController.clear();
@@ -233,10 +266,12 @@ class _PostJobFormState extends ConsumerState<PostJobForm> {
     _salaryMaxController.clear();
     _skillsController.clear();
     _maxApplicationsController.clear();
-    _jobType = 'Full-Time';
-    _jobModality = 'Presencial';
-    _status = 'open';
-    _applicationDeadline = null;
+    setState(() {
+      _jobType = 'Full-Time';
+      _jobModality = 'Presencial';
+      _status = 'open';
+      _applicationDeadline = null;
+    });
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -307,8 +342,8 @@ class _PostJobFormState extends ConsumerState<PostJobForm> {
                 if (value == null || value.isEmpty) {
                   return 'La descripción del puesto es requerida';
                 }
-                if (value.length < 50) {
-                  return 'La descripción debe tener al menoss 50 caracteres';
+                if (value.length < 20) {
+                  return 'La descripción debe tener al menos 20 caracteres';
                 }
                 return null;
               },

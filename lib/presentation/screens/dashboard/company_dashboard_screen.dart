@@ -70,8 +70,7 @@ class _EmployerDashboardScreenState
                 ),
                 Expanded(
                   child: PostJobForm(
-                    companyId: company?.userId ?? '',
-                    onJobPosted: () async {
+                    onJobUpdated: (job) {
                       // Close dialog immediately
                       Navigator.of(dialogContext).pop();
 

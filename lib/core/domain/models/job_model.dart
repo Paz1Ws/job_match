@@ -100,6 +100,47 @@ class Job {
       viewsCount: safeInt(map['views_count'], 0),
     );
   }
+  Job copyWith({
+    String? id,
+    String? companyId,
+    String? companyName,
+    String? description,
+    String? location,
+    String? title,
+    String? type,
+    String? salaryMin,
+    String? salaryMax,
+    Color? logoBackgroundColor,
+    int? matchPercentage,
+    String? modality,
+    String? status,
+    DateTime? createdAt,
+    DateTime? applicationDeadline,
+    List<String>? requiredSkills,
+    int? maxApplications,
+    int? viewsCount,
+  }) {
+    return Job(
+      id: id ?? this.id,
+      companyId: companyId ?? this.companyId,
+      companyName: companyName ?? this.companyName,
+      description: description ?? this.description,
+      location: location ?? this.location,
+      title: title ?? this.title,
+      type: type ?? this.type,
+      salaryMin: salaryMin ?? this.salaryMin,
+      salaryMax: salaryMax ?? this.salaryMax,
+      logoBackgroundColor: logoBackgroundColor ?? this.logoBackgroundColor,
+      matchPercentage: matchPercentage ?? this.matchPercentage,
+      modality: modality ?? this.modality,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      applicationDeadline: applicationDeadline ?? this.applicationDeadline,
+      requiredSkills: requiredSkills ?? this.requiredSkills,
+      maxApplications: maxApplications ?? this.maxApplications,
+      viewsCount: viewsCount ?? this.viewsCount,
+    );
+  }
 
   Map<String, dynamic> toMap() {
     return {

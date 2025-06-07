@@ -429,7 +429,6 @@ final candidateByUserIdProvider = FutureProvider.family<Candidate?, String>((
 });
 
 // Refresca el perfil de candidato desde la base de datos y actualiza el provider
-// Refresca el perfil de candidato desde la base de datos y actualiza el provider
 Future<void> refreshCandidateProfile(WidgetRef ref) async {
   try {
     final supabase = ref.read(supabaseProvider);
@@ -474,3 +473,25 @@ Future<void> refreshCompanyProfile(WidgetRef ref) async {
     print('Error refreshing company profile: $e');
   }
 }
+
+// Add a provider to fetch a single job by ID for real-time updates
+final jobByIdProvider = FutureProvider.family<Job?, String>((ref, jobId) async {
+  if (jobId.isEmpty) return null;
+  
+  final supabase = ref.read(supabaseProvider);
+  try {
+    final response = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('id', jobId)
+        .maybeSingle();
+    
+    if (response != null) {
+      return Job.fromMap(response);
+    }
+    return null;
+  } catch (e) {
+    print('Error fetching job $jobId: $e');
+    return null;
+  }
+});

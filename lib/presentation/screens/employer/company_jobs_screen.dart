@@ -4,6 +4,7 @@ import 'package:job_match/core/data/supabase_http_requests.dart';
 import 'package:job_match/core/domain/models/company_model.dart';
 import 'package:job_match/presentation/widgets/homepage/find_job/simple_job_card.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:job_match/core/data/jobs_listener.dart'; // Add this import
 
 class CompanyJobsScreen extends ConsumerStatefulWidget {
   final String companyId;
@@ -18,23 +19,47 @@ class CompanyJobsScreen extends ConsumerStatefulWidget {
   ConsumerState<CompanyJobsScreen> createState() => _CompanyJobsScreenState();
 }
 
-class _CompanyJobsScreenState extends ConsumerState<CompanyJobsScreen> {
+class _CompanyJobsScreenState extends ConsumerState<CompanyJobsScreen>
+    with JobRealtimeUpdatesMixin {
   @override
   void initState() {
     super.initState();
-    // Ensure provider refresh happens after first frame
+
+    // Initialize existing provider
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.companyId.isNotEmpty) {
         ref.invalidate(jobsByCompanyIdProvider(widget.companyId));
       }
+
+      // Initialize the Jobs Listener after the first frame
+      // to avoid initialization during build
+      initializeJobsListener(
+        onJobCreated: (newJob) {
+          if (newJob.companyId == widget.companyId) {
+            _refreshJobs();
+          }
+        },
+        onJobUpdated: (updatedJob, oldJob) {
+          if (updatedJob.companyId == widget.companyId) {
+            _refreshJobs();
+          }
+        },
+        onJobDeleted: (deletedJob) {
+          if (deletedJob.companyId == widget.companyId) {
+            _refreshJobs();
+          }
+        },
+      );
     });
   }
 
+  // Safe refresh without causing build errors
   void _refreshJobs() {
-    // Safe refresh method that can be called from buttons
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.invalidate(jobsByCompanyIdProvider(widget.companyId));
-    });
+    if (mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.invalidate(jobsByCompanyIdProvider(widget.companyId));
+      });
+    }
   }
 
   @override
@@ -145,5 +170,11 @@ class _CompanyJobsScreenState extends ConsumerState<CompanyJobsScreen> {
         },
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    disposeJobsListener();
+    super.dispose();
   }
 }

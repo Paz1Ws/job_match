@@ -1,0 +1,78 @@
+
+
+// Singleton para usar en toda la app
+class JobsRealtimeManager {
+  static final JobsRealtimeManager _instance = JobsRealtimeManager._internal();
+  factory JobsRealtimeManager() => _instance;
+  JobsRealtimeManager._internal();
+
+  final JobsListener _listener = JobsListener();
+
+  Future<void> initialize() async {
+    await _listener.startListening(
+      onJobCreated: (job) {
+        print('🔔 Notificación: Nuevo trabajo - ${job['title']}');
+        // Aquí podrías enviar notificación push
+      },
+      onJobUpdated: (newJob, oldJob) {
+        if (oldJob != null && newJob['application_deadline'] != oldJob['application_deadline']) {
+          print('🔔 Notificación: Deadline actualizado - ${newJob['title']}');
+          // Aquí podrías enviar notificación push
+        }
+      },
+      onJobDeleted: (job) {
+        print('🔔 Notificación: Trabajo eliminado - ${job['title']}');
+      },
+    );
+  }
+
+  void dispose() {
+    _listener.stopListening();
+  }
+}
+
+USO SIMPLE: class MiWidget extends StatefulWidget {
+  @override
+  State<MiWidget> createState() => _MiWidgetState();
+}
+
+class _MiWidgetState extends State<MiWidget> {
+  final JobsListener _listener = JobsListener();
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // Listener simple
+    _listener.startListening(
+      onJobUpdated: (newJob, oldJob) {
+        print('Job actualizado: ${newJob['title']}');
+        // Tu lógica aquí
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _listener.stopListening();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(); // Tu UI
+  }
+}
+
+Resumen
+Esta implementación te da:
+
+Un solo listener general para todos los cambios en jobs
+Fácil de usar - Solo llamas startListening() y stopListening()
+Callbacks opcionales - Puedes manejar solo los eventos que necesites
+Logs automáticos - Para debugging
+Detección de cambios específicos - application_deadline, status, etc.
+Notificaciones visuales - SnackBars automáticos
+Indicador de estado - Para saber si está conectado
+
+Uso básico:

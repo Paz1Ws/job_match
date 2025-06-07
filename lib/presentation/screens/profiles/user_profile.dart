@@ -1,1100 +1,458 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:animate_do/animate_do.dart';
-import 'package:job_match/config/util/animations.dart';
 import 'package:job_match/core/data/auth_request.dart';
-import 'package:job_match/core/domain/models/candidate_model.dart';
+import 'package:job_match/core/data/jobs_listener.dart';
 import 'package:job_match/core/data/supabase_http_requests.dart';
-import 'package:job_match/presentation/screens/auth/screens/login_screen.dart';
-import 'package:job_match/presentation/screens/dashboard/candidate_dashboard_screen.dart';
-import 'package:job_match/presentation/screens/homepage/find_jobs_screen.dart';
-import 'package:job_match/presentation/widgets/auth/app_identity_bar.dart';
-import 'package:job_match/presentation/widgets/auth/profile_display_elements.dart';
-import 'package:job_match/presentation/widgets/auth/related_job_card.dart';
-import 'package:job_match/config/constants/layer_constants.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:url_launcher/url_launcher_string.dart';
-import 'package:job_match/presentation/widgets/common/profile_photo_picker.dart';
-import 'package:job_match/presentation/widgets/profile/edit_candidate_profile_dialog.dart';
+import 'package:job_match/core/domain/models/candidate_model.dart';
+import 'package:job_match/core/domain/models/job_model.dart';
+import 'package:job_match/presentation/widgets/homepage/find_job/simple_job_card.dart';
+import 'package:job_match/presentation/widgets/homepage/find_job/simple_job_card_list_view.dart';
+import 'package:animate_do/animate_do.dart';
 
 class UserProfile extends ConsumerStatefulWidget {
-  final Candidate? candidateData;
-
-  const UserProfile({super.key, this.candidateData});
+  const UserProfile({super.key});
 
   @override
   ConsumerState<UserProfile> createState() => _UserProfileState();
 }
 
-class _UserProfileState extends ConsumerState<UserProfile> {
+class _UserProfileState extends ConsumerState<UserProfile>
+    with JobRealtimeUpdatesMixin {
+  bool _initialLoad = true;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Initialize the Jobs Listener in post-frame callback
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      initializeJobsListener(
+        onJobStatusChanged: (job, newStatus) {
+          _quietlyRefreshJobs();
+        },
+        onJobDeadlineReached: (job) {
+          _quietlyRefreshJobs();
+        },
+        onJobCreated: (job) {
+          _quietlyRefreshJobs();
+        },
+        onJobUpdated: (job, oldJob) {
+          _quietlyRefreshJobs();
+        },
+        onJobDeleted: (job) {
+          _quietlyRefreshJobs();
+        },
+      );
+
+      // Set initial load to false after animations complete
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (mounted) {
+          setState(() {
+            _initialLoad = false;
+          });
+        }
+      });
+    });
+  }
+
+  // Quiet refresh without animations for real-time updates
+  void _quietlyRefreshJobs() {
+    if (mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.invalidate(jobsProviderWithCompanyName);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    disposeJobsListener();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final candidate =
-        widget.candidateData ?? ref.watch(candidateProfileProvider);
-    final isExternalProfile = widget.candidateData != null;
+    final candidate = ref.watch(candidateProfileProvider);
+    final jobsAsync = ref.watch(jobsProviderWithCompanyName);
 
     if (candidate == null) {
-      Future.microtask(() => fetchUserProfile(ref));
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        appBar: AppBar(title: const Text('Perfil')),
+        body: const Center(child: Text('No se encontró perfil de candidato')),
+      );
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final screenSize = MediaQuery.sizeOf(context);
-        final isMobile = screenSize.width < 700;
-        const double appIdentityBarHeight = 70.0;
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        title: const Text('Mi Perfil'),
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Profile Header Card
+            FadeInUp(
+              duration: const Duration(milliseconds: 600),
+              child: _buildProfileHeader(candidate),
+            ),
 
-        return Scaffold(
-          body: Column(
-            children: <Widget>[
-              AppIdentityBar(height: appIdentityBarHeight, onProfileTap: () {}),
-              Flexible(
-                child: SingleChildScrollView(
-                  child: ProfileDetailHeader(
-                    candidate: candidate,
-                    isExternalProfile: isExternalProfile,
-                    isMobile: isMobile,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
+            const SizedBox(height: 20),
 
-class ProfileDetailHeader extends ConsumerWidget {
-  final Candidate candidate;
-  final bool isExternalProfile;
-  final bool isMobile;
+            // Skills Section
+            FadeInUp(
+              duration: const Duration(milliseconds: 700),
+              delay: const Duration(milliseconds: 100),
+              child: _buildSkillsSection(candidate),
+            ),
 
-  const ProfileDetailHeader({
-    super.key,
-    required this.candidate,
-    required this.isExternalProfile,
-    required this.isMobile,
-  });
+            const SizedBox(height: 20),
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final screenSize = MediaQuery.sizeOf(context);
-    final double bannerHeight = isMobile ? 120.0 : 220.0;
-    final double cardOverlap = isMobile ? 40.0 : 70.0;
-    final double pageHorizontalPadding =
-        (isMobile ? 12.0 : kPadding28) + kSpacing4;
-    final jobsAsync = ref.watch(jobsProvider);
-    final currentAuthCandidate = ref.watch(candidateProfileProvider);
-    final bool isOwnProfile =
-        !isExternalProfile ||
-        (currentAuthCandidate?.userId == candidate.userId);
-
-    return Container(
-      color: const Color(0xFFF7F8FA),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Stack(
-            clipBehavior: Clip.none,
-            children: <Widget>[
-              // Banner (bottom layer of the Stack)
-              FadeInDownBig(
+            // Experience Section
+            if (candidate.experience != null &&
+                candidate.experience!.isNotEmpty)
+              FadeInUp(
                 duration: const Duration(milliseconds: 700),
-                child: SizedBox(
-                  height: bannerHeight,
-                  width: double.infinity,
-                  child: Image.asset(
-                    'assets/images/find_jobs_background.jpg',
-                    fit: BoxFit.cover,
-                  ),
-                ),
+                delay: const Duration(milliseconds: 200),
+                child: _buildExperienceSection(candidate),
               ),
-              // Card section (top layer of the Stack, translated to overlap)
-              Padding(
-                padding: EdgeInsets.only(top: bannerHeight),
-                child: FadeInUp(
-                  duration: const Duration(milliseconds: 700),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: pageHorizontalPadding,
-                    ),
-                    child: Container(
-                      padding: EdgeInsets.all(isMobile ? 12 : kPadding28),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(
-                          kRadius12 + kRadius4,
-                        ),
-                        border: Border.all(
-                          color: Colors.grey.shade200,
-                          width: kStroke1 * 1.2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.07),
-                            spreadRadius: kStroke1,
-                            blurRadius: kSpacing8,
-                            offset: const Offset(0, kSpacing4 / 2),
-                          ),
-                        ],
-                      ),
-                      child:
-                          isMobile
-                              ? _buildMobileHeader(context, ref, isOwnProfile)
-                              : _buildDesktopHeader(context, ref, isOwnProfile),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          // Spacing after the card (original SizedBox)
-          SizedBox(
-            height:
-                (kPadding20 + kSpacing4) - cardOverlap > 0
-                    ? (kPadding20 + kSpacing4) - cardOverlap + kPadding12
-                    : kPadding12,
-          ),
 
-          // Profile Details Section (Bio, Education, Experience, etc.)
-          // This section will now be rendered for both mobile and desktop.
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: pageHorizontalPadding),
-            child: _buildProfileDetails(context, isMobile: isMobile),
-          ),
-          const SizedBox(
-            height: kPadding20 + kSpacing4,
-          ), // Added spacing after profile details
-          if (currentAuthCandidate != null) ...[
+            const SizedBox(height: 20),
+
+            // Jobs Section with real-time updates
             FadeInUp(
               duration: const Duration(milliseconds: 700),
-              child: Padding(
-                padding: EdgeInsets.only(
-                  top: kPadding20,
-                  bottom: kPadding16,
-                  left: pageHorizontalPadding + kPadding8,
-                  right: pageHorizontalPadding,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Trabajos Recomendados',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20.0,
-                        color: Color(0xFF222B45),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              delay: const Duration(milliseconds: 300),
+              child: _buildJobsSection(jobsAsync),
             ),
-            // "Trabajos Relacionados" grid
-            FadeInUp(
-              delay: const Duration(milliseconds: 200),
-              duration: const Duration(milliseconds: 700),
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: pageHorizontalPadding,
-                ),
-                child: jobsAsync.when(
-                  loading:
-                      () => const Center(child: CircularProgressIndicator()),
-                  error: (error, stack) => Center(child: Text('Error: $error')),
-                  data: (jobs) {
-                    int crossAxisCount = 3;
-                    return LayoutBuilder(
-                      builder: (context, constraints) {
-                        double cardWidth =
-                            (constraints.maxWidth -
-                                (crossAxisCount - 1) *
-                                    (kSpacing12 + kSpacing4)) /
-                            crossAxisCount;
-                        double cardHeight = 180;
-                        if (screenSize.width < 900) crossAxisCount = 2;
-                        if (screenSize.width < 600) crossAxisCount = 1;
-                        cardWidth =
-                            (constraints.maxWidth -
-                                (crossAxisCount - 1) *
-                                    (kSpacing12 + kSpacing4)) /
-                            crossAxisCount;
-                        return GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: crossAxisCount,
-                                crossAxisSpacing: kSpacing12 + kSpacing4,
-                                mainAxisSpacing: kSpacing12 + kSpacing4,
-                                childAspectRatio: cardWidth / cardHeight,
-                              ),
-                          itemCount: jobs.length,
-                          itemBuilder: (context, index) {
-                            final job =
-                                jobs[index]; // This is already a Job model
-                            return FadeInUp(
-                              delay: Duration(milliseconds: 100 * index),
-                              child: RelatedJobCard(
-                                job: job, // Pass the Job model directly
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            ),
-            const SizedBox(height: kPadding20 + kSpacing4),
           ],
-        ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // TODO: Navigate to edit profile
+        },
+        backgroundColor: Colors.blue,
+        child: const Icon(Icons.edit, color: Colors.white),
       ),
     );
   }
 
-  Widget _buildMobileHeader(
-    BuildContext context,
-    WidgetRef ref,
-    bool isOwnProfile,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        FadeIn(
-          duration: const Duration(milliseconds: 700),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Centrar foto de perfil
-              Center(
-                child: BounceInDown(
-                  duration: const Duration(milliseconds: 900),
-                  child:
-                      isOwnProfile && !isExternalProfile
-                          ? ProfilePhotoPicker(
-                            currentPhotoUrl: candidate.photo,
-                            onPhotoUpdated: () => refreshCandidateProfile(ref),
-                          )
-                          : CircleAvatar(
-                            radius: kRadius20 + kRadius12,
-                            backgroundColor: Colors.grey.shade200,
-                            backgroundImage:
-                                candidate.photo != null &&
-                                        candidate.photo!.isNotEmpty
-                                    ? NetworkImage(candidate.photo!)
-                                    : null,
-                            child:
-                                candidate.photo == null ||
-                                        candidate.photo!.isEmpty
-                                    ? Icon(
-                                      Icons.person,
-                                      size: kRadius20 + kRadius12,
-                                      color: Colors.grey.shade400,
-                                    )
-                                    : null,
-                          ),
-                ),
-              ),
-              const SizedBox(height: kSpacing8),
-              // Nombre y ubicación centrados
-              FadeInLeft(
-                duration: const Duration(milliseconds: 700),
-                child: Center(
-                  child: SelectableText(
-                    candidate.name ?? 'Nombre no disponible',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18.0,
-                      color: Color(0xFF222B45),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: kSpacing4),
-              FadeInLeft(
-                delay: const Duration(milliseconds: 200),
-                duration: const Duration(milliseconds: 700),
-                child: Center(
-                  child: SelectableText(
-                    candidate.mainPosition ?? 'Puesto no especificado',
-                    style: const TextStyle(
-                      fontSize: 15.0,
-                      color: Color(0xFF3366FF),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: kSpacing4),
-              FadeInLeft(
-                delay: const Duration(milliseconds: 200),
-                duration: const Duration(milliseconds: 700),
-                child: Center(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.location_on_outlined,
-                        size: 16,
-                        color: Colors.grey.shade600,
-                      ),
-                      const SizedBox(width: 4),
-                      SelectableText(
-                        candidate.location ?? 'Ubicación no especificada',
-                        style: TextStyle(
-                          fontSize: 13.0,
-                          color: Color(0xFF6C757D),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: kSpacing8),
-              // Chips de habilidades en wrap centrado
-              FadeInLeft(
-                delay: const Duration(milliseconds: 300),
-                duration: const Duration(milliseconds: 700),
-                child: Center(
-                  child: Wrap(
-                    alignment: WrapAlignment.center,
-                    spacing: 6,
-                    children: [
-                      if (candidate.skills != null &&
-                          candidate.skills!.isNotEmpty)
-                        ...candidate.skills!.map(
-                          (skill) => InfoChip(
-                            label: skill,
-                            backgroundColor: const Color(0xFF3366FF),
-                            textColor: Colors.white,
-                          ),
-                        )
-                      else
-                        InfoChip(
-                          label: "Sin habilidades registradas",
-                          backgroundColor: Colors.grey.shade300,
-                          textColor: Colors.black87,
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // Botones centrados: Dashboard y Buscar Empleo
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+  Widget _buildProfileHeader(Candidate candidate) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
           children: [
-            if (isOwnProfile && !isExternalProfile) ...[
-              SizedBox(
-                height: kRadius40 + kSpacing4,
-                child: Material(
-                  color: Colors.transparent,
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.edit, size: kIconSize20 - 2),
-                    label: const Text(
-                      'Editar Perfil',
-                      style: TextStyle(fontSize: 13),
-                    ),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder:
-                            (_) => EditCandidateProfileDialog(
-                              candidate: candidate,
-                            ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.teal,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: kPadding16,
-                        vertical: 0,
-                      ),
-                      textStyle: const TextStyle(fontSize: 13.0),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(kRadius8),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-            ],
-            SizedBox(
-              height: kRadius40 + kSpacing4,
-              child: Material(
-                color: Colors.transparent,
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.arrow_forward, size: kIconSize20),
-                  label: const Text(
-                    'Dashboard',
-                    style: TextStyle(fontSize: 14),
-                  ),
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      FadeThroughPageRoute(
-                        page: const CandidateDashboardScreen(),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF3366FF),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: kPadding20,
-                      vertical: 0,
-                    ),
-                    textStyle: const TextStyle(fontSize: 14.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(kRadius8),
-                    ),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    minimumSize: Size.zero,
-                  ),
-                ),
-              ),
+            // Profile Photo
+            CircleAvatar(
+              radius: 50,
+              backgroundColor: Colors.blue.shade100,
+              backgroundImage:
+                  candidate.photo != null && candidate.photo!.isNotEmpty
+                      ? NetworkImage(candidate.photo!)
+                      : null,
+              child:
+                  candidate.photo == null || candidate.photo!.isEmpty
+                      ? Icon(
+                        Icons.person,
+                        size: 50,
+                        color: Colors.blue.shade400,
+                      )
+                      : null,
             ),
-            const SizedBox(width: 12),
-            SizedBox(
-              height: kRadius40 + kSpacing4,
-              child: Material(
-                color: Colors.transparent,
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.search, size: kIconSize20),
-                  label: const Text(
-                    'Buscar Empleo',
-                    style: TextStyle(fontSize: 14),
-                  ),
-                  onPressed: () {
-                    Navigator.of(
-                      context,
-                    ).push(FadeThroughPageRoute(page: const FindJobsScreen()));
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orangeAccent,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: kPadding20,
-                      vertical: 0,
-                    ),
-                    textStyle: const TextStyle(fontSize: 14.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(kRadius8),
-                    ),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    minimumSize: Size.zero,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-      ],
-    );
-  }
 
-  Widget _buildDesktopHeader(
-    BuildContext context,
-    WidgetRef ref,
-    bool isOwnProfile,
-  ) {
-    final currentAuthCandidate = ref.watch(candidateProfileProvider);
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.blue),
-          onPressed: () => Navigator.of(context).maybePop(),
-          tooltip: 'Atrás',
-        ),
-        BounceInDown(
-          duration: const Duration(milliseconds: 900),
-          child:
-              isOwnProfile && !isExternalProfile
-                  ? ProfilePhotoPicker(
-                    currentPhotoUrl: candidate.photo,
-                    onPhotoUpdated: () => refreshCandidateProfile(ref),
-                  )
-                  : CircleAvatar(
-                    radius: kRadius20 + kRadius12,
-                    backgroundColor: Colors.grey.shade200,
-                    backgroundImage:
-                        candidate.photo != null && candidate.photo!.isNotEmpty
-                            ? NetworkImage(candidate.photo!)
-                            : null,
-                    child:
-                        candidate.photo == null || candidate.photo!.isEmpty
-                            ? Icon(
-                              Icons.person,
-                              size: kRadius20 + kRadius12,
-                              color: Colors.grey.shade400,
-                            )
-                            : null,
-                  ),
-        ),
-        const SizedBox(width: kSpacing20),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              FadeInLeft(
-                duration: const Duration(milliseconds: 700),
-                child: SelectableText(
-                  candidate.name ?? 'Nombre no disponible',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 22.0,
-                    color: Color(0xFF222B45),
-                  ),
-                ),
-              ),
-              const SizedBox(height: kSpacing4),
-              FadeInLeft(
-                delay: const Duration(milliseconds: 100),
-                duration: const Duration(milliseconds: 700),
-                child: SelectableText(
-                  candidate.mainPosition ?? 'Puesto no especificado',
-                  style: const TextStyle(
-                    fontSize: 16.0,
-                    color: Color(0xFF3366FF),
+            const SizedBox(height: 16),
+
+            // Name and Main Position
+            Text(
+              candidate.name ?? 'Nombre no especificado',
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+
+            if (candidate.mainPosition != null &&
+                candidate.mainPosition!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text(
+                  candidate.mainPosition!,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
                     fontWeight: FontWeight.w500,
                   ),
+                  textAlign: TextAlign.center,
                 ),
               ),
-              const SizedBox(height: kSpacing4),
-              FadeInLeft(
-                delay: const Duration(milliseconds: 200),
-                duration: const Duration(milliseconds: 700),
+
+            const SizedBox(height: 12),
+
+            // Location and Contact Info
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
+                const SizedBox(width: 4),
+                Text(
+                  candidate.location ?? 'Ubicación no especificada',
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
+              ],
+            ),
+
+            if (candidate.phone != null && candidate.phone!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.location_on_outlined,
-                      size: 16,
-                      color: Colors.grey.shade600,
-                    ),
+                    Icon(Icons.phone, size: 16, color: Colors.grey[600]),
                     const SizedBox(width: 4),
-                    SelectableText(
-                      candidate.location ?? 'Ubicación no especificada',
-                      style: const TextStyle(
-                        fontSize: 15.0,
-                        color: Color(0xFF6C757D),
-                      ),
+                    Text(
+                      candidate.phone!,
+                      style: TextStyle(color: Colors.grey[600]),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: kSpacing12),
-              FadeInLeft(
-                delay: const Duration(milliseconds: 300),
-                duration: const Duration(milliseconds: 700),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      if (candidate.skills != null &&
-                          candidate.skills!.isNotEmpty)
-                        ...candidate.skills!.map(
-                          (skill) => Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
-                            child: InfoChip(
-                              label: skill,
-                              backgroundColor: const Color(0xFF3366FF),
-                              textColor: Colors.white,
-                            ),
-                          ),
-                        )
-                      else
-                        InfoChip(
-                          label: "Sin habilidades registradas",
-                          backgroundColor: Colors.grey.shade300,
-                          textColor: Colors.black87,
-                        ),
-                    ],
-                  ),
+
+            // Bio
+            if (candidate.bio != null && candidate.bio!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: Text(
+                  candidate.bio!,
+                  style: const TextStyle(fontSize: 14, height: 1.4),
+                  textAlign: TextAlign.center,
                 ),
               ),
-            ],
-          ),
+          ],
         ),
-        const SizedBox(width: kSpacing20),
-        if (isOwnProfile &&
-            !isExternalProfile &&
-            currentAuthCandidate != null) ...[
-          SizedBox(
-            height: kRadius40 + kSpacing4,
-            child: Material(
-              color: Colors.transparent,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.edit, size: kIconSize20 - 2),
-                label: const Text(
-                  'Editar Perfil',
-                  style: TextStyle(fontSize: 14),
-                ),
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder:
-                        (_) => EditCandidateProfileDialog(
-                          candidate: currentAuthCandidate,
-                        ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: kPadding16,
-                    vertical: 0,
-                  ),
-                  textStyle: const TextStyle(fontSize: 14.0),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(kRadius8),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-        ],
-        if (currentAuthCandidate != null)
-          SizedBox(
-            height: kRadius40 + kSpacing4,
-            child: Material(
-              color: Colors.transparent,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.arrow_forward, size: kIconSize20),
-                label: const Text('Dashboard', style: TextStyle(fontSize: 15)),
-                onPressed: () {
-                  Navigator.of(context).push(
-                    FadeThroughPageRoute(
-                      page: const CandidateDashboardScreen(),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF3366FF),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: kPadding20 + kSpacing4,
-                    vertical: 0,
-                  ),
-                  textStyle: const TextStyle(fontSize: 15.0),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(kRadius8),
-                  ),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  minimumSize: Size.zero,
-                ),
-              ),
-            ),
-          ),
-      ],
+      ),
     );
   }
 
-  Widget _buildProfileDetails(BuildContext context, {required bool isMobile}) {
-    return Flex(
-      direction: isMobile ? Axis.vertical : Axis.horizontal,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Flexible(
-          flex: 2,
-          fit: FlexFit.loose,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // SECCIÓN: PERFIL PROFESIONAL
-              FadeInLeft(
-                duration: const Duration(milliseconds: 700),
-                child: Container(
-                  padding: EdgeInsets.all(isMobile ? kPadding16 : kPadding20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(kRadius12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.1),
-                        spreadRadius: 1,
-                        blurRadius: 3,
-                        offset: const Offset(0, 1),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.person_outline,
-                            color: Colors.blue.shade700,
-                          ),
-                          const SizedBox(width: kSpacing8),
-                          const Text(
-                            'Perfil Profesional',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              color: Color(0xFF222B45),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: kSpacing12),
-                      JustifiedText(
-                        text:
-                            candidate.bio ??
-                            'Información biográfica no disponible',
-                      ),
-                      const SizedBox(height: kSpacing8),
-                      if (candidate.mainPosition != null &&
-                          candidate.mainPosition!.isNotEmpty)
-                        Container(
-                          margin: const EdgeInsets.only(top: 8),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.work_outline,
-                                size: 18,
-                                color: Colors.blue.shade600,
-                              ),
-                              const SizedBox(width: kSpacing8),
-                              Flexible(
-                                child: Text(
-                                  'Puesto principal: ${candidate.mainPosition}',
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    color: Colors.blue.shade700,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
+  Widget _buildSkillsSection(Candidate candidate) {
+    if (candidate.skills == null || candidate.skills!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.psychology, color: Colors.blue.shade600),
+                const SizedBox(width: 8),
+                const Text(
+                  'Habilidades',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-              ),
-
-              const SizedBox(height: kSpacing12),
-
-              // SECCIÓN: CV
-              if (candidate.resumeUrl != null &&
-                  candidate.resumeUrl!.contains("http"))
-                FadeInLeft(
-                  delay: const Duration(milliseconds: 200),
-                  duration: const Duration(milliseconds: 700),
-                  child: Container(
-                    padding: EdgeInsets.all(isMobile ? kPadding16 : kPadding20),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(kRadius12),
-                      border: Border.all(color: Colors.blue.shade200),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(kPadding12),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(kRadius8),
-                          ),
-                          child: const Icon(
-                            Icons.picture_as_pdf,
-                            color: Colors.red,
-                            size: 28,
-                          ),
-                        ),
-                        const SizedBox(width: kSpacing12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Curriculum Vitae',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              const SizedBox(height: kSpacing4),
-                              InkWell(
-                                onTap: () async {
-                                  launchUrl(
-                                    Uri.parse(candidate.resumeUrl! ?? ''),
-                                    mode: LaunchMode.externalApplication,
-                                  );
-                                 
-                                },
-                                child: Text(
-                                  'Ver CV',
-                                  style: TextStyle(
-                                    color: Colors.blue.shade700,
-                                    decoration: TextDecoration.underline,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                       
-                      ],
-                    ),
-                  ),
-                ),
-
-              if (candidate.resumeUrl != null &&
-                  candidate.resumeUrl!.contains("http"))
-                const SizedBox(height: kSpacing12),
-
-              // SECCIÓN: EDUCACIÓN
-              FadeInLeft(
-                delay: const Duration(milliseconds: 250),
-                duration: const Duration(milliseconds: 700),
-                child: Container(
-                  padding: EdgeInsets.all(isMobile ? kPadding16 : kPadding20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(kRadius12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.1),
-                        spreadRadius: 1,
-                        blurRadius: 3,
-                        offset: const Offset(0, 1),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children:
+                  candidate.skills!.map((skill) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
                       ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.school_outlined,
-                            color: Colors.blue.shade700,
-                          ),
-                          const SizedBox(width: kSpacing8),
-                          const Text(
-                            'Educación',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              color: Color(0xFF222B45),
-                            ),
-                          ),
-                        ],
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.blue.shade200),
                       ),
-                      const SizedBox(height: kSpacing12),
-                      Container(
-                        padding: const EdgeInsets.all(kPadding12),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade50,
-                          borderRadius: BorderRadius.circular(kRadius8),
-                          border: Border.all(color: Colors.grey.shade200),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              candidate.education ??
-                                  'Educación no especificada',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 15,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: kSpacing12),
-
-              // SECCIÓN: EXPERIENCIA
-              FadeInLeft(
-                delay: const Duration(milliseconds: 300),
-                duration: const Duration(milliseconds: 700),
-                child: Container(
-                  padding: EdgeInsets.all(isMobile ? kPadding16 : kPadding20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(kRadius12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.1),
-                        spreadRadius: 1,
-                        blurRadius: 3,
-                        offset: const Offset(0, 1),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.work_outline,
-                            color: Colors.orange.shade700,
-                          ),
-                          const SizedBox(width: kSpacing8),
-                          const Text(
-                            'Experiencia Laboral',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              color: Color(0xFF222B45),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: kSpacing12),
-                      Container(
-                        padding: const EdgeInsets.all(kPadding12),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade50,
-                          borderRadius: BorderRadius.circular(kRadius8),
-                          border: Border.all(color: Colors.grey.shade200),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              candidate.experience ??
-                                  'Experiencia no especificada',
-                              style: const TextStyle(fontSize: 15),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(
-          width: isMobile ? 0 : kSpacing30 + kSpacing4 / 2,
-          height: isMobile ? kSpacing12 : 0,
-        ),
-        Flexible(
-          flex: 1,
-          fit: FlexFit.loose,
-          child: Column(
-            children: [
-              // PANEL: INFORMACIÓN DE CONTACTO
-              FadeInRight(
-                duration: const Duration(milliseconds: 700),
-                child: Container(
-                  padding: EdgeInsets.all(isMobile ? kPadding16 : kPadding20),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF7F8FA),
-                    border: Border.all(
-                      color: Colors.grey.shade200,
-                      width: kStroke1,
-                    ),
-                    borderRadius: BorderRadius.circular(kRadius12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.05),
-                        spreadRadius: 1,
-                        blurRadius: 3,
-                        offset: const Offset(0, 1),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Información de Contacto',
+                      child: Text(
+                        skill,
                         style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: Color(0xFF222B45),
+                          color: Colors.blue.shade700,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const SizedBox(height: kSpacing12),
-                      ProfileOverviewItem(
-                        icon: Icons.person,
-                        label: 'Nombre',
-                        value: candidate.name ?? 'No disponible',
-                      ),
+                    );
+                  }).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-                      ProfileOverviewItem(
-                        icon: Icons.work,
-                        label: 'Puesto',
-                        value: candidate.mainPosition ?? 'No especificado',
-                      ),
-                      ProfileOverviewItem(
-                        icon: Icons.location_on,
-                        label: 'Ubicación',
-                        value: candidate.location ?? 'No disponible',
-                      ),
-                      ProfileOverviewItem(
-                        icon: Icons.phone,
-                        label: 'Teléfono',
-                        value: candidate.phone ?? 'No disponible',
-                      ),
-                      ProfileOverviewItem(
-                        icon: Icons.school,
-                        label: 'Educación',
-                        value: candidate.education ?? 'No disponible',
-                      ),
+  Widget _buildExperienceSection(Candidate candidate) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.work_history, color: Colors.blue.shade600),
+                const SizedBox(width: 8),
+                const Text(
+                  'Experiencia',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              candidate.experience!,
+              style: const TextStyle(fontSize: 14, height: 1.4),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-                      // Agregamos un botón de contacto para facilitar la comunicación
-                      const SizedBox(height: kSpacing12),
-                      if (candidate.phone != null || candidate.name != null)
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              launchUrlString(
-                                'https://wa.me/${candidate.phone}',
-                              );
-                            },
-                            icon: const Icon(Icons.email),
-                            label: const Text('Contactar'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue.shade700,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                vertical: kSpacing12,
+  Widget _buildJobsSection(AsyncValue<List<Map<String, dynamic>>> jobsAsync) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.work_outline, color: Colors.blue.shade600),
+                const SizedBox(width: 8),
+                const Text(
+                  'Empleos Disponibles',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Use the same job list component with real-time updates
+            jobsAsync.when(
+              loading:
+                  () => const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20.0),
+                      child: CircularProgressIndicator(),
+                    ),
+                  ),
+              error:
+                  (error, stack) => Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            size: 48,
+                            color: Colors.red,
+                          ),
+                          const SizedBox(height: 8),
+                          Text('Error cargando empleos: $error'),
+                          const SizedBox(height: 8),
+                          ElevatedButton(
+                            onPressed:
+                                () =>
+                                    ref.invalidate(jobsProviderWithCompanyName),
+                            child: const Text('Reintentar'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              data: (jobsData) {
+                if (jobsData.isEmpty) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20.0),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.work_off_outlined,
+                            size: 48,
+                            color: Colors.grey,
+                          ),
+                          SizedBox(height: 8),
+                          Text('No hay empleos disponibles'),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                // Take only the first 5 jobs for the profile view
+                final limitedJobs = jobsData.take(5).toList();
+
+                return Column(
+                  children: [
+                    // Job cards using the same component as SimpleJobCardListView
+                    ...limitedJobs.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final jobData = entry.value;
+                      final job = Job.fromMap(jobData);
+
+                      // Only animate on initial load, with a subtle staggered effect
+                      return _initialLoad
+                          ? FadeInUp(
+                            duration: const Duration(milliseconds: 300),
+                            delay: Duration(milliseconds: index * 50),
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: SimpleJobCard(
+                                job: job,
+                                skipAnimation: false,
                               ),
                             ),
+                          )
+                          : Padding(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: SimpleJobCard(job: job, skipAnimation: true),
+                          );
+                    }),
+
+                    // Show "Ver más empleos" button if there are more jobs
+                    if (jobsData.length > 5)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16.0),
+                        child: OutlinedButton(
+                          onPressed: () {
+                            // TODO: Navigate to full jobs list
+                          },
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.blue,
+                            side: const BorderSide(color: Colors.blue),
+                          ),
+                          child: Text(
+                            'Ver más empleos (${jobsData.length - 5} adicionales)',
                           ),
                         ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: kSpacing12),
-
-              // PANEL: MATCH CON EMPLEOS
-            ],
-          ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
